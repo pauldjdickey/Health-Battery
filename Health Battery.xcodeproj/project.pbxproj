@@ -16,6 +16,7 @@
 		2D674A5525393FD200040B66 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 2D674A5325393FD200040B66 /* LaunchScreen.storyboard */; };
 		2D674A6025393FD300040B66 /* Health_BatteryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D674A5F25393FD300040B66 /* Health_BatteryTests.swift */; };
 		2D674A6B25393FD300040B66 /* Health_BatteryUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D674A6A25393FD300040B66 /* Health_BatteryUITests.swift */; };
+		2D674A7C2539401200040B66 /* HealthKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D674A7B2539401200040B66 /* HealthKitManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -51,6 +52,7 @@
 		2D674A6625393FD300040B66 /* Health BatteryUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Health BatteryUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2D674A6A25393FD300040B66 /* Health_BatteryUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Health_BatteryUITests.swift; sourceTree = "<group>"; };
 		2D674A6C25393FD300040B66 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		2D674A7B2539401200040B66 /* HealthKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -104,6 +106,7 @@
 				2D674A4525393FCF00040B66 /* AppDelegate.swift */,
 				2D674A4725393FCF00040B66 /* SceneDelegate.swift */,
 				2D674A4925393FCF00040B66 /* ContentView.swift */,
+				2D674A7B2539401200040B66 /* HealthKitManager.swift */,
 				2D674A4E25393FD200040B66 /* Assets.xcassets */,
 				2D674A5325393FD200040B66 /* LaunchScreen.storyboard */,
 				2D674A5625393FD200040B66 /* Info.plist */,
@@ -272,6 +275,7 @@
 				2D674A4625393FCF00040B66 /* AppDelegate.swift in Sources */,
 				2D674A4825393FCF00040B66 /* SceneDelegate.swift in Sources */,
 				2D674A4A25393FCF00040B66 /* ContentView.swift in Sources */,
+				2D674A7C2539401200040B66 /* HealthKitManager.swift in Sources */,
 				2D674A4D25393FCF00040B66 /* Health_Battery.xcdatamodeld in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
