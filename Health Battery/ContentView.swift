@@ -100,15 +100,15 @@ struct ContentView: View {
                     hkm.variability(from: startDate, to: Date()) {
                       (results) in
                         
-                        var lastVariability = 0.0
+                        var Variability = 0.0
                         
                         // results is an array of [HKQuantitySample]
                       // example conversion to BPM:
                       for result in results {
-                        lastVariability = result.quantity.doubleValue(for: .variabilityUnit)
-                        print("\(lastVariability)")
+                        Variability = result.quantity.doubleValue(for: .variabilityUnit)
+                        print("\(Variability)")
                       }
-                        self.variabilityValue = Int(lastVariability)
+                        self.variabilityValue = Int(Variability)
                     }
                 }) {
                     // How the button looks like

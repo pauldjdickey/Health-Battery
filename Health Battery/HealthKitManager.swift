@@ -62,6 +62,26 @@ class HealthKitManager {
         health.execute(query)
     }
     
+    //This will find the MOST recent Resting Heart Rate reading from the dates inputted in ContentView when running function
+    public func restingHeartRateMostRecent(from: Date, to: Date, handler: @escaping ([HKQuantitySample]) -> ()) {
+        // HealthKit query
+        let predicate = HKQuery.predicateForSamples(withStart: from, end: to, options: [.strictStartDate, .strictEndDate])
+        let sortDescriptor = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
+        let query = HKSampleQuery(sampleType: .restingHeartRateType, predicate: predicate, limit: 1, sortDescriptors: [sortDescriptor]) { (query, samples, error) in
+            guard let samples = samples as? [HKQuantitySample] else {
+                NSLog("HealthKitManager: restingHeartRate: nil RHR samples.. auth'd?")
+                return
+            }
+            // found sample(s)
+            handler(samples)
+        }
+        health.execute(query)
+    }
+    
+    //This will find the maximum Resting Heart Rate reading from the dates inputted in ContentView when running function
+
+    
+    
     /**
      Fetches daily steps info.
      - Parameter handler: closure handling the HKStatisticsCollection object
@@ -107,9 +127,6 @@ class HealthKitManager {
         // HealthKit query
         let predicate = HKQuery.predicateForSamples(withStart: from, end: to, options: [.strictStartDate, .strictEndDate])
         //Looks at data from a day to a day
-        let sortDescriptor = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
-        //Creates a sort descriptor of descending paramaters
-        //Did this push?
         let query = HKSampleQuery(sampleType: .variabilityType, predicate: predicate, limit: HKObjectQueryNoLimit, sortDescriptors: nil) { (query, samples, error) in
             //If we change our limit to 1 and sortDescriptors to above, itll find the most recent...?
             //Yup! Just have to use [sortDescriptor]
@@ -124,6 +141,34 @@ class HealthKitManager {
         }
         health.execute(query)
     }
+    
+    //This will find the MOST recent variability reading from the dates inputted in ContentView when running function
+    public func variabilityMostRecent(from: Date, to: Date, handler: @escaping ([HKQuantitySample]) -> ()) {
+        // HealthKit query
+        let predicate = HKQuery.predicateForSamples(withStart: from, end: to, options: [.strictStartDate, .strictEndDate])
+        //Looks at data from a day to a day
+        let sortDescriptor = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
+        //Creates a sort descriptor of descending paramaters
+        //Did this push?
+        let query = HKSampleQuery(sampleType: .variabilityType, predicate: predicate, limit: 1, sortDescriptors: [sortDescriptor]) { (query, samples, error) in
+            //If we change our limit to 1 and sortDescriptors to above, itll find the most recent...?
+            //Yup! Just have to use [sortDescriptor]
+            //I think I may be able to use this to queryStatistics for an average, a low / high for a certain period (Week, month) remove outliers. Make multiple of these functions to use for algorithm!
+            //??How do make a query for "7 Days Ago"
+            guard let samples = samples as? [HKQuantitySample] else {
+                NSLog("HealthKitManager: variability: nil variability samples.. auth'd?")
+                return
+            }
+            // found sample(s)
+            handler(samples)
+        }
+        health.execute(query)
+    }
+    
+    //This will find the maximum variability reading from the dates inputted in ContentView when running function
+    //Need to find how to use statistics variability requests to find the max somehow...
+    //Use dailysteps above as an example!
+    
     
     /**
      Fetches workouts recorded in the given date range.
