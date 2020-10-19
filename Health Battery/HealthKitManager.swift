@@ -168,6 +168,30 @@ class HealthKitManager {
     //This will find the maximum variability reading from the dates inputted in ContentView when running function
     //Need to find how to use statistics variability requests to find the max somehow...
     //Use dailysteps above as an example!
+    //Still trying to figure this out...https://github.com/sobri909/ArcMini/blob/2395c925aa5da094a9168c8a0d8ac156603d79c3/Arc%20Mini/Models/External/Health.swift ?
+    //Could also just put everything into an array and find min max from there?
+    public func variabilityMax(handler: @escaping (HKStatisticsCollection) -> ()) {
+        let calendar = NSCalendar.current
+        var interval = DateComponents()
+        interval.day = 1
+        
+        var anchorComponents = calendar.dateComponents([.day, .month, .year], from: Date())
+        anchorComponents.hour = 0
+        let anchorDate = calendar.date(from: anchorComponents)
+        
+        // Define 1-day intervals starting from 0:00
+        let variabilityMaxQuery = HKStatisticsCollectionQuery(quantityType: .variabilityType, quantitySamplePredicate: nil, options: .discreteMax, anchorDate: anchorDate!, intervalComponents: interval)
+        
+        // Set the results handler
+        variabilityMaxQuery.initialResultsHandler = { query, results, error in
+            if let results = results {
+                handler(results)
+            } else {
+                print(error!.localizedDescription)
+            }
+        }
+        health.execute(variabilityMaxQuery)
+    }
     
     
     /**

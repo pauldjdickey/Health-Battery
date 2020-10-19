@@ -28,6 +28,7 @@ func authorizeHealthKit(completion: @escaping (Bool, Error?) -> Swift.Void) {
           let bodyMass = HKObjectType.quantityType(forIdentifier: .bodyMass),
           let variability = HKObjectType.quantityType(forIdentifier: .heartRateVariabilitySDNN),
           let restingHR = HKObjectType.quantityType(forIdentifier: .restingHeartRate),
+          let stepsTest = HKObjectType.quantityType(forIdentifier: .stepCount),
           let activeEnergy = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) else {
           
           completion(false, HealthkitSetupError.dataTypeNotAvailable)
@@ -43,6 +44,7 @@ func authorizeHealthKit(completion: @escaping (Bool, Error?) -> Swift.Void) {
                                                  biologicalSex,
                                                  bodyMassIndex,
                                                  height,
+                                                 stepsTest,
                                                  variability,
                                                  restingHR,
                                                  bodyMass,
@@ -63,12 +65,15 @@ struct ContentView: View {
     
     @State private var variabilityValue = 0
     @State private var restingHRValue = 0
+    @State private var stepsExample = 0
 
     var body: some View {
         NavigationView {
             VStack {
                     Text("Last HRV Recording is: \(variabilityValue)ms")
                     Text("Last Resting HR Recording is: \(restingHRValue)ms")
+                    Text("Total Steps for Day: \(stepsExample)")
+
                 Button(action: {
                     // What to perform
                     // Need to look back to see how to accept healthkit authorizations
@@ -113,6 +118,12 @@ struct ContentView: View {
                 }) {
                     // How the button looks like
                     Text("Get HRV")
+                }
+                Button(action: {
+                    // What to perform - Get max HRV for day?
+                }) {
+                    // How the button looks like
+                    Text("Get Max HRV")
                 }
                 Button(action: {
                     // What to perform
