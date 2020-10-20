@@ -135,6 +135,7 @@ struct ContentView: View {
                         Variability = result.quantity.doubleValue(for: .variabilityUnit)
                         print("\(Variability)")
                         //We are getting an error if we try to mutate a @State variable (arrayPrivateTest). The fix is to run the @state change (Appending) on main queue.
+                        
                         arrayPrivateTest.append(Variability)
                         print(arrayPrivateTest)
                         
