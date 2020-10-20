@@ -67,38 +67,16 @@ struct ContentView: View {
     @State private var restingHRValue = 0
     @State private var stepsExample = 0
     @State private var arrayPrivateTest = [Double]()
+    @State var sliderValue: Double = 0
 
     var body: some View {
         NavigationView {
             VStack {
-                    Text("Last HRV Recording is: \(variabilityValue)ms")
                     Text("Last Resting HR Recording is: \(restingHRValue)ms")
-                    Text("Total Steps for Day: \(stepsExample)")
+                    Text("52%")
+                        .fontWeight(.regular)
+                        .font(.system(size: 70))
 
-                Button(action: {
-                    // What to perform
-                    // Need to look back to see how to accept healthkit authorizations
-                    authorizeHealthKit { (authorized, error) in
-                          
-                      guard authorized else {
-                            
-                        let baseMessage = "HealthKit Authorization Failed"
-                            
-                        if let error = error {
-                          print("\(baseMessage). Reason: \(error.localizedDescription)")
-                        } else {
-                          print(baseMessage)
-                        }
-                            
-                        return
-                      }
-                          
-                      print("HealthKit Successfully Authorized.")
-                    }
-                }) {
-                    // How the button looks like
-                    Text("Authorize")
-                }
                 Button(action: {
                     // What to perform
                     let calendar = Calendar.current
@@ -148,13 +126,6 @@ struct ContentView: View {
                 }
                 Button(action: {
                     // What to perform - Get max HRV for day?
-                    print(arrayPrivateTest)
-                }) {
-                    // How the button looks like
-                    Text("Print Array Externally")
-                }
-                Button(action: {
-                    // What to perform - Get max HRV for day?
                     print(arrayPrivateTest.max()!)
                 }) {
                     // How the button looks like
@@ -177,11 +148,44 @@ struct ContentView: View {
                       }
                         self.restingHRValue = Int(lastRestingHR)
                     }
-                }) {
+                }){
                     // How the button looks like
                     Text("Get Resting Heart Rate")
                 }
+                Button(action: {
+                    // What to perform - Get max HRV for day?
+                    //
+                }) {
+                    // How the button looks like
+                    Text("Calculate Recovery Score")
                 }
+                Slider(value: $sliderValue, in: 0...100)
+                Text("This is how recovered I actually feel: \(sliderValue, specifier: "%.0f")%")
+            }.padding()
             }
+        Button(action: {
+            // What to perform
+            // Need to look back to see how to accept healthkit authorizations
+            authorizeHealthKit { (authorized, error) in
+                  
+              guard authorized else {
+                    
+                let baseMessage = "HealthKit Authorization Failed"
+                    
+                if let error = error {
+                  print("\(baseMessage). Reason: \(error.localizedDescription)")
+                } else {
+                  print(baseMessage)
+                }
+                    
+                return
+              }
+                  
+              print("HealthKit Successfully Authorized.")
+            }
+        }) {
+            // How the button looks like
+            Text("Authorize HealthKit")
+        }
         }
     }
