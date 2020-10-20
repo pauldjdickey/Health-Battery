@@ -66,6 +66,7 @@ struct ContentView: View {
     @State private var variabilityValue = 0
     @State private var restingHRValue = 0
     @State private var stepsExample = 0
+    @State private var arrayPrivateTest = [Double]()
 
     var body: some View {
         NavigationView {
@@ -121,9 +122,42 @@ struct ContentView: View {
                 }
                 Button(action: {
                     // What to perform - Get max HRV for day?
+                    let calendar = Calendar.current
+                    let startDate = calendar.startOfDay(for: Date())
+                    hkm.variability(from: startDate, to: Date()) {
+                      (results) in
+                        
+                        var Variability = 0.0
+                        
+                        // results is an array of [HKQuantitySample]
+                      // example conversion to BPM:
+                      for result in results {
+                        Variability = result.quantity.doubleValue(for: .variabilityUnit)
+                        print("\(Variability)")
+                        //We are getting an error if we try to mutate a @State variable (arrayPrivateTest). The fix is to run the @state change (Appending) on main queue.
+                        arrayPrivateTest.append(Variability)
+                        print(arrayPrivateTest)
+                        
+                      }
+                        self.variabilityValue = Int(Variability)
+                    }
                 }) {
                     // How the button looks like
-                    Text("Get Max HRV")
+                    Text("Append Variabilities to Array")
+                }
+                Button(action: {
+                    // What to perform - Get max HRV for day?
+                    print(arrayPrivateTest)
+                }) {
+                    // How the button looks like
+                    Text("Print Array Externally")
+                }
+                Button(action: {
+                    // What to perform - Get max HRV for day?
+                    print(arrayPrivateTest.max()!)
+                }) {
+                    // How the button looks like
+                    Text("Print Max Array Externally")
                 }
                 Button(action: {
                     // What to perform
