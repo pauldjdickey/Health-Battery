@@ -57,13 +57,34 @@ func authorizeHealthKit(completion: @escaping (Bool, Error?) -> Swift.Void) {
   
 }
 
+extension Date {
+    static var yesterday: Date { return Date().dayBefore }
+    static var tomorrow:  Date { return Date().dayAfter }
+    var dayBefore: Date {
+        return Calendar.current.date(byAdding: .day, value: -1, to: noon)!
+    }
+    var dayAfter: Date {
+        return Calendar.current.date(byAdding: .day, value: 1, to: noon)!
+    }
+    var noon: Date {
+        return Calendar.current.date(bySettingHour: 12, minute: 0, second: 0, of: self)!
+    }
+    var month: Int {
+        return Calendar.current.component(.month,  from: self)
+    }
+    var isLastDayOfMonth: Bool {
+        return dayAfter.month != month
+    }
+}
+
 
 
 //MARK: - ContentView
 
 struct ContentView: View {
     
-    @State private var variabilityValue = 0
+    @State private var lastVariabilityValue = 0
+    @State private var lastRHRValue = 0
     @State private var restingHRValue = 0
     @State private var stepsExample = 0
     @State private var arrayPrivateTest = [Double]()
@@ -79,24 +100,11 @@ struct ContentView: View {
 
                 Button(action: {
                     // What to perform
-                    let calendar = Calendar.current
-                    let startDate = calendar.startOfDay(for: Date())
-                    hkm.variability(from: startDate, to: Date()) {
-                      (results) in
-                        
-                        var Variability = 0.0
-                        
-                        // results is an array of [HKQuantitySample]
-                      // example conversion to BPM:
-                      for result in results {
-                        Variability = result.quantity.doubleValue(for: .variabilityUnit)
-                        print("\(Variability)")
-                      }
-                        self.variabilityValue = Int(Variability)
-                    }
+                    
+                    print(lastVariabilityValue)
                 }) {
                     // How the button looks like
-                    Text("Get HRV")
+                    Text("Print HRV")
                 }
                 Button(action: {
                     // What to perform - Get max HRV for day?
@@ -118,7 +126,7 @@ struct ContentView: View {
                         print(arrayPrivateTest)
                         
                       }
-                        self.variabilityValue = Int(Variability)
+                        self.lastVariabilityValue = Int(Variability)
                     }
                 }) {
                     // How the button looks like
@@ -154,13 +162,52 @@ struct ContentView: View {
                 }
                 Button(action: {
                     // What to perform - Get max HRV for day?
-                    //
+                    // Setup Date Extension
+                    // Set Constants to share
+                    let calendar = Calendar.current
+                    //let startDate = calendar.startOfDay(for: Date())
+                    let yesterdayStartDate = calendar.startOfDay(for: Date.yesterday)
+                    // Get Last HRV and put to state var
+                    hkm.variabilityMostRecent(from: yesterdayStartDate, to: Date()) {
+                      (results) in
+                        
+                        var lastHRV = 0.0
+                        
+                        // results is an array of [HKQuantitySample]
+                      // example conversion to BPM:
+                      for result in results {
+                        lastHRV = result.quantity.doubleValue(for: .variabilityUnit)
+                        print("\(lastHRV)")
+                      }
+                        self.lastVariabilityValue = Int(lastHRV)
+                    }
+                    // Get Last RHR and put to state var
+                    hkm.restingHeartRateMostRecent(from: yesterdayStartDate, to: Date()) {
+                      (results) in
+                        
+                        var lastRestingHR = 0.0
+                        // results is an array of [HKQuantitySample]
+                      // example conversion to BPM:
+                      for result in results {
+                        lastRestingHR = result.quantity.doubleValue(for: .heartRateUnit)
+                        print("\(lastRestingHR)")
+                      }
+                        self.lastRHRValue = Int(lastRestingHR)
+                    }
+                    // Get 7 Day Array for HRV and append to state var
+                    // Get 7 Day Array for RHR and append to state var
+                    // Find Max of HRV
+                    // Find Min of HRV
+                    // Find Max of RHR
+                    // Find Min of RHR
+                    
+                    
                 }) {
                     // How the button looks like
                     Text("Calculate Recovery Score")
                 }
                 Slider(value: $sliderValue, in: 0...100)
-                Text("This is how recovered I actually feel: \(sliderValue, specifier: "%.0f")%")
+                Text("How Recovered I Actually Feel: \(sliderValue, specifier: "%.0f")%")
             }.padding()
             }
         Button(action: {
