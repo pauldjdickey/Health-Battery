@@ -60,11 +60,19 @@ func authorizeHealthKit(completion: @escaping (Bool, Error?) -> Swift.Void) {
 extension Date {
     static var yesterday: Date { return Date().dayBefore }
     static var tomorrow:  Date { return Date().dayAfter }
+    static var weekAgo: Date { return Date().weekAgo }
+    static var monthAgo: Date { return Date().monthAgo }
     var dayBefore: Date {
         return Calendar.current.date(byAdding: .day, value: -1, to: noon)!
     }
     var dayAfter: Date {
         return Calendar.current.date(byAdding: .day, value: 1, to: noon)!
+    }
+    var weekAgo: Date {
+        return Calendar.current.date(byAdding: .day, value: -7, to: noon)!
+    }
+    var monthAgo: Date {
+        return Calendar.current.date(byAdding: .month, value: -1, to: noon)!
     }
     var noon: Date {
         return Calendar.current.date(bySettingHour: 12, minute: 0, second: 0, of: self)!
@@ -87,13 +95,14 @@ struct ContentView: View {
     @State private var lastRHRValue = 0
     @State private var restingHRValue = 0
     @State private var stepsExample = 0
-    @State private var arrayPrivateTest = [Double]()
+    @State private var arrayVariability7Day = [Double]()
     @State var sliderValue: Double = 0
 
     var body: some View {
         NavigationView {
             VStack {
                     Text("Last Resting HR Recording is: \(restingHRValue)ms")
+                // Put calculated score below
                     Text("52%")
                         .fontWeight(.regular)
                         .font(.system(size: 70))
@@ -122,8 +131,8 @@ struct ContentView: View {
                         print("\(Variability)")
                         //We are getting an error if we try to mutate a @State variable (arrayPrivateTest). The fix is to run the @state change (Appending) on main queue.
                         
-                        arrayPrivateTest.append(Variability)
-                        print(arrayPrivateTest)
+                        arrayVariability7Day.append(Variability)
+                        print(arrayVariability7Day)
                         
                       }
                         self.lastVariabilityValue = Int(Variability)
@@ -134,7 +143,7 @@ struct ContentView: View {
                 }
                 Button(action: {
                     // What to perform - Get max HRV for day?
-                    print(arrayPrivateTest.max()!)
+                    print(arrayVariability7Day.max()!)
                 }) {
                     // How the button looks like
                     Text("Print Max Array Externally")
@@ -165,8 +174,10 @@ struct ContentView: View {
                     // Setup Date Extension
                     // Set Constants to share
                     let calendar = Calendar.current
-                    //let startDate = calendar.startOfDay(for: Date())
+                    let startDate = calendar.startOfDay(for: Date())
                     let yesterdayStartDate = calendar.startOfDay(for: Date.yesterday)
+                    let weekAgoStartDate = calendar.startOfDay(for: Date.weekAgo)
+                    let monthAgoStartDate = calendar.startOfDay(for: Date.monthAgo)
                     // Get Last HRV and put to state var
                     hkm.variabilityMostRecent(from: yesterdayStartDate, to: Date()) {
                       (results) in
@@ -177,7 +188,7 @@ struct ContentView: View {
                       // example conversion to BPM:
                       for result in results {
                         lastHRV = result.quantity.doubleValue(for: .variabilityUnit)
-                        print("\(lastHRV)")
+                        print("Last HRV: \(lastHRV)")
                       }
                         self.lastVariabilityValue = Int(lastHRV)
                     }
@@ -190,16 +201,33 @@ struct ContentView: View {
                       // example conversion to BPM:
                       for result in results {
                         lastRestingHR = result.quantity.doubleValue(for: .heartRateUnit)
-                        print("\(lastRestingHR)")
+                        print("Last RHR: \(lastRestingHR)")
                       }
                         self.lastRHRValue = Int(lastRestingHR)
                     }
                     // Get 7 Day Array for HRV and append to state var
+                    hkm.variability(from: weekAgoStartDate, to: Date()) {
+                      (results) in
+                        
+                        var Variability = 0.0
+                        
+                        // results is an array of [HKQuantitySample]
+                      // example conversion to BPM:
+                      for result in results {
+                        Variability = result.quantity.doubleValue(for: .variabilityUnit)
+                        //Need to run this in a main queue becuase its so much
+                        arrayVariability7Day.append(Variability)
+
+                      }
+                        print("Array for Variability: \(arrayVariability7Day)")
+                    }
                     // Get 7 Day Array for RHR and append to state var
+                    
                     // Find Max of HRV
                     // Find Min of HRV
                     // Find Max of RHR
                     // Find Min of RHR
+                    // What's Next?
                     
                     
                 }) {
