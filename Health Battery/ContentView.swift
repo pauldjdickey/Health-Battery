@@ -210,6 +210,7 @@ func weekRHRMin() {
 
 // MARK: - HRV Calculate Rating per Min/Max
 
+
 // MARK: - RHR Calculate Rating per Min/Max
 
 // MARK: - Final Function
