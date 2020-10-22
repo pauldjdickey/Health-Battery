@@ -8,6 +8,22 @@ import SwiftUI
 
 let hkm = HealthKitManager()
 
+var arrayVariability7Day2 = [Double]()
+var arrayRHR7Day2 = [Double]()
+var mostRecentHRV = 0
+var mostRecentRHR = 0
+var max7DayHRV = 0.0
+var min7DayHRV = 0.0
+var max7DayRHR = 0.0
+var min7DayRHR = 0.0
+
+
+let calendar = Calendar.current
+let startDate = calendar.startOfDay(for: Date())
+let yesterdayStartDate = calendar.startOfDay(for: Date.yesterday)
+let weekAgoStartDate = calendar.startOfDay(for: Date.weekAgo)
+let monthAgoStartDate = calendar.startOfDay(for: Date.monthAgo)
+
 private enum HealthkitSetupError: Error {
   case notAvailableOnDevice
   case dataTypeNotAvailable
@@ -85,6 +101,129 @@ extension Date {
     }
 }
 
+// MARK: - Most Recent Variability Function
+
+func mostRecentHRVFunction() {
+    hkm.variabilityMostRecent(from: yesterdayStartDate, to: Date()) {
+      (results) in
+        
+        var lastHRV = 0.0
+        
+        // results is an array of [HKQuantitySample]
+      // example conversion to BPM:
+      for result in results {
+        lastHRV = result.quantity.doubleValue(for: .variabilityUnit)
+      }
+        mostRecentHRV = Int(lastHRV)
+        print("Last HRV: \(mostRecentHRV)")
+
+    }
+}
+
+// MARK: - Most Recent RHR Function
+
+func mostRecentRHRFunction() {
+    hkm.restingHeartRateMostRecent(from: yesterdayStartDate, to: Date()) {
+      (results) in
+        
+        var lastRestingHR = 0.0
+        // results is an array of [HKQuantitySample]
+      // example conversion to BPM:
+      for result in results {
+        lastRestingHR = result.quantity.doubleValue(for: .heartRateUnit)
+      }
+        mostRecentRHR = Int(lastRestingHR)
+        print("Last RHR: \(mostRecentRHR)")
+
+    }
+}
+
+// MARK: - 7 Day Variability Function
+
+func weekVariabilityArrayFunction() {
+    //arrayVariability7Day2.removeAll()
+    hkm.variability(from: weekAgoStartDate, to: Date()) {
+      (results) in
+        
+        var Variability = 0.0
+        
+        // results is an array of [HKQuantitySample]
+      // example conversion to BPM:
+      for result in results {
+        Variability = result.quantity.doubleValue(for: .variabilityUnit)
+        //Need to run this in a main queue becuase its so much
+            arrayVariability7Day2.append(Variability)
+
+      }
+        print("Array for Variability: \(arrayVariability7Day2)")
+        weekHRVMax()
+        weekHRVMin()
+    }
+}
+// MARK: - 7 Day RHR Function
+
+func weekRHRArrayFunction() {
+    //arrayRHR7Day2.removeAll()
+    hkm.restingHeartRate(from: weekAgoStartDate, to: Date()) {
+      (results) in
+        
+        var RHR = 0.0
+        
+        // results is an array of [HKQuantitySample]
+      // example conversion to BPM:
+      for result in results {
+        RHR = result.quantity.doubleValue(for: .heartRateUnit)
+        //Need to run this in a main queue becuase its so much
+            arrayRHR7Day2.append(RHR)
+
+      }
+        print("Array for RHR: \(arrayRHR7Day2)")
+        weekRHRMax()
+        weekRHRMin()
+    }
+}
+
+// MARK: - 7 Day Max HRV Function
+func weekHRVMax() {
+    max7DayHRV = arrayVariability7Day2.max() ?? 0
+    print("Max 7 Day HRV:\(max7DayHRV)")
+}
+
+
+// MARK: - 7 Day Min HRV Function
+func weekHRVMin() {
+    min7DayHRV = arrayVariability7Day2.min() ?? 0
+    print("Min 7 Day HRV:\(min7DayHRV)")
+}
+
+// MARK: - 7 Day Max RHR Function
+func weekRHRMax() {
+    max7DayRHR = arrayRHR7Day2.max() ?? 0
+    print("Max 7 Day RHR:\(max7DayRHR)")
+}
+
+// MARK: - 7 Day Min RHR Function
+func weekRHRMin() {
+    min7DayRHR = arrayRHR7Day2.min() ?? 0
+    print("Min 7 day RHR:\(min7DayRHR)")
+}
+
+// MARK: - HRV Calculate Rating per Min/Max
+
+// MARK: - RHR Calculate Rating per Min/Max
+
+// MARK: - Final Function
+func calculateScore() {
+    weekVariabilityArrayFunction()
+    weekRHRArrayFunction()
+    mostRecentHRVFunction()
+    mostRecentRHRFunction()
+    //weekHRVMax()
+    //weekHRVMin()
+    //weekRHRMax()
+    //weekRHRMin()
+}
+
 
 
 //MARK: - ContentView
@@ -109,11 +248,10 @@ struct ContentView: View {
 
                 Button(action: {
                     // What to perform
-                    
-                    print(lastVariabilityValue)
+                    calculateScore()
                 }) {
                     // How the button looks like
-                    Text("Print HRV")
+                    Text("Test")
                 }
                 Button(action: {
                     // What to perform - Get max HRV for day?
@@ -216,7 +354,7 @@ struct ContentView: View {
                       for result in results {
                         Variability = result.quantity.doubleValue(for: .variabilityUnit)
                         //Need to run this in a main queue becuase its so much
-                        arrayVariability7Day.append(Variability)
+                            arrayVariability7Day.append(Variability)
 
                       }
                         print("Array for Variability: \(arrayVariability7Day)")
