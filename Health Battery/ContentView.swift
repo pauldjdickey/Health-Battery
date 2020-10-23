@@ -21,6 +21,8 @@ var recoveryHRVPercentageValue = 0.0
 var finalRecoveryPercentageValue = 0.0
 
 
+
+
 let calendar = Calendar.current
 let startDate = calendar.startOfDay(for: Date())
 let yesterdayStartDate = calendar.startOfDay(for: Date.yesterday)
@@ -121,6 +123,7 @@ func mostRecentHRVFunction() {
         print("Last HRV: \(mostRecentHRV)")
 
     }
+    finalRecoveryPercentage()
 }
 
 // MARK: - Most Recent RHR Function
@@ -139,6 +142,7 @@ func mostRecentRHRFunction() {
         print("Last RHR: \(mostRecentRHR)")
 
     }
+    finalRecoveryPercentage()
 }
 
 // MARK: - 7 Day Variability Function
@@ -162,6 +166,7 @@ func weekVariabilityArrayFunction() {
         weekHRVMax()
         weekHRVMin()
         recoveryHRVPercentage()
+        finalRecoveryPercentage()
     }
 }
 // MARK: - 7 Day RHR Function
@@ -185,6 +190,7 @@ func weekRHRArrayFunction() {
         weekRHRMax()
         weekRHRMin()
         recoveryRHRPercentage()
+        finalRecoveryPercentage()
     }
 }
 
@@ -229,6 +235,7 @@ func recoveryRHRPercentage() {
 func finalRecoveryPercentage() {
     finalRecoveryPercentageValue = (recoveryHRVPercentageValue + recoveryRHRPercentageValue) / 2
     print("Final Recovery %: \(finalRecoveryPercentageValue)")
+    
 }
 
 // MARK: - Second to Last Function
@@ -253,26 +260,23 @@ struct ContentView: View {
     @State private var lastRHRValue = 0
     @State private var restingHRValue = 0
     @State private var stepsExample = 0
-    @State private var arrayVariability7Day = [Double]()
     @State private var finalRecoveryPercentage = 0
+    @State private var arrayVariability7Day = [Double]()
     @State var sliderValue: Double = 0
 
     var body: some View {
         NavigationView {
             VStack {
-                    Text("Last Resting HR Recording is: \(restingHRValue)ms")
+                    Text("Last RHR Value: \(lastRHRValue) BPM")
                 // Put calculated score below
-                    Text("52%")
+                    Text("\(finalRecoveryPercentage)%")
                         .fontWeight(.regular)
                         .font(.system(size: 70))
 
                 Button(action: {
-                    DispatchQueue.main.async {
                         calculateScore()
-                        Health_Battery.finalRecoveryPercentage()
-                    }
-                    
-                    
+                    self.finalRecoveryPercentage = Int(finalRecoveryPercentageValue)
+                    print("@state is: \(finalRecoveryPercentage)")
                 }) {
                     // How the button looks like
                     Text("Test")
