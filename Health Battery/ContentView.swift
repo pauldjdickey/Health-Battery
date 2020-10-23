@@ -10,12 +10,15 @@ let hkm = HealthKitManager()
 
 var arrayVariability7Day2 = [Double]()
 var arrayRHR7Day2 = [Double]()
-var mostRecentHRV = 0
-var mostRecentRHR = 0
+var mostRecentHRV = 0.0
+var mostRecentRHR = 0.0
 var max7DayHRV = 0.0
 var min7DayHRV = 0.0
 var max7DayRHR = 0.0
 var min7DayRHR = 0.0
+var recoveryRHRPercentageValue = 0.0
+var recoveryHRVPercentageValue = 0.0
+var finalRecoveryPercentageValue = 0.0
 
 
 let calendar = Calendar.current
@@ -114,7 +117,7 @@ func mostRecentHRVFunction() {
       for result in results {
         lastHRV = result.quantity.doubleValue(for: .variabilityUnit)
       }
-        mostRecentHRV = Int(lastHRV)
+        mostRecentHRV = Double(lastHRV)
         print("Last HRV: \(mostRecentHRV)")
 
     }
@@ -132,7 +135,7 @@ func mostRecentRHRFunction() {
       for result in results {
         lastRestingHR = result.quantity.doubleValue(for: .heartRateUnit)
       }
-        mostRecentRHR = Int(lastRestingHR)
+        mostRecentRHR = Double(lastRestingHR)
         print("Last RHR: \(mostRecentRHR)")
 
     }
@@ -158,6 +161,7 @@ func weekVariabilityArrayFunction() {
         print("Array for Variability: \(arrayVariability7Day2)")
         weekHRVMax()
         weekHRVMin()
+        recoveryHRVPercentage()
     }
 }
 // MARK: - 7 Day RHR Function
@@ -180,6 +184,7 @@ func weekRHRArrayFunction() {
         print("Array for RHR: \(arrayRHR7Day2)")
         weekRHRMax()
         weekRHRMin()
+        recoveryRHRPercentage()
     }
 }
 
@@ -209,21 +214,34 @@ func weekRHRMin() {
 }
 
 // MARK: - HRV Calculate Rating per Min/Max
-
+func recoveryHRVPercentage() {
+    recoveryHRVPercentageValue = ((mostRecentHRV - min7DayHRV) / (max7DayHRV - min7DayHRV))*100
+    print("Recovery HRV %: \(recoveryHRVPercentageValue)")
+}
 
 // MARK: - RHR Calculate Rating per Min/Max
+func recoveryRHRPercentage() {
+    recoveryRHRPercentageValue = ((mostRecentRHR - min7DayRHR) / (max7DayRHR - min7DayRHR))*100
+    print("Recovery RHR %: \(recoveryRHRPercentageValue)")
+}
+
+// MARK: - 50/50 Recovery Calculation
+func finalRecoveryPercentage() {
+    finalRecoveryPercentageValue = (recoveryHRVPercentageValue + recoveryRHRPercentageValue) / 2
+    print("Final Recovery %: \(finalRecoveryPercentageValue)")
+}
+
+// MARK: - Second to Last Function
+func calculateScore() {
+        mostRecentHRVFunction()
+        mostRecentRHRFunction()
+        weekVariabilityArrayFunction()
+        weekRHRArrayFunction()
+
+}
 
 // MARK: - Final Function
-func calculateScore() {
-    weekVariabilityArrayFunction()
-    weekRHRArrayFunction()
-    mostRecentHRVFunction()
-    mostRecentRHRFunction()
-    //weekHRVMax()
-    //weekHRVMin()
-    //weekRHRMax()
-    //weekRHRMin()
-}
+
 
 
 
@@ -236,6 +254,7 @@ struct ContentView: View {
     @State private var restingHRValue = 0
     @State private var stepsExample = 0
     @State private var arrayVariability7Day = [Double]()
+    @State private var finalRecoveryPercentage = 0
     @State var sliderValue: Double = 0
 
     var body: some View {
@@ -248,37 +267,21 @@ struct ContentView: View {
                         .font(.system(size: 70))
 
                 Button(action: {
-                    // What to perform
-                    calculateScore()
+                    DispatchQueue.main.async {
+                        calculateScore()
+                        Health_Battery.finalRecoveryPercentage()
+                    }
+                    
+                    
                 }) {
                     // How the button looks like
                     Text("Test")
                 }
                 Button(action: {
-                    // What to perform - Get max HRV for day?
-                    let calendar = Calendar.current
-                    let startDate = calendar.startOfDay(for: Date())
-                    hkm.variability(from: startDate, to: Date()) {
-                      (results) in
-                        
-                        var Variability = 0.0
-                        
-                        // results is an array of [HKQuantitySample]
-                      // example conversion to BPM:
-                      for result in results {
-                        Variability = result.quantity.doubleValue(for: .variabilityUnit)
-                        print("\(Variability)")
-                        //We are getting an error if we try to mutate a @State variable (arrayPrivateTest). The fix is to run the @state change (Appending) on main queue.
-                        
-                        arrayVariability7Day.append(Variability)
-                        print(arrayVariability7Day)
-                        
-                      }
-                        self.lastVariabilityValue = Int(Variability)
-                    }
+                    Health_Battery.finalRecoveryPercentage()
                 }) {
                     // How the button looks like
-                    Text("Append Variabilities to Array")
+                    Text("Initial Recovery Test")
                 }
                 Button(action: {
                     // What to perform - Get max HRV for day?
