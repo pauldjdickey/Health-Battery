@@ -227,7 +227,7 @@ func recoveryHRVPercentage() {
 
 // MARK: - RHR Calculate Rating per Min/Max
 func recoveryRHRPercentage() {
-    recoveryRHRPercentageValue = ((mostRecentRHR - min7DayRHR) / (max7DayRHR - min7DayRHR))*100
+    recoveryRHRPercentageValue = (1-((mostRecentRHR - min7DayRHR) / (max7DayRHR - min7DayRHR)))*100
     print("Recovery RHR %: \(recoveryRHRPercentageValue)")
 }
 
