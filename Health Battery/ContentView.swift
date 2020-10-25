@@ -152,6 +152,7 @@ func weekVariabilityArrayFunction() {
     hkm.variability(from: weekAgoStartDate, to: Date()) {
       (results) in
         
+        arrayVariability7Day2.removeAll()
         var Variability = 0.0
         
         // results is an array of [HKQuantitySample]
@@ -175,7 +176,7 @@ func weekRHRArrayFunction() {
     //arrayRHR7Day2.removeAll()
     hkm.restingHeartRate(from: weekAgoStartDate, to: Date()) {
       (results) in
-        
+        arrayRHR7Day2.removeAll()
         var RHR = 0.0
         
         // results is an array of [HKQuantitySample]
@@ -227,6 +228,7 @@ func recoveryHRVPercentage() {
 
 // MARK: - RHR Calculate Rating per Min/Max
 func recoveryRHRPercentage() {
+    // 1- is becuase RHR is better the lower it is.
     recoveryRHRPercentageValue = (1-((mostRecentRHR - min7DayRHR) / (max7DayRHR - min7DayRHR)))*100
     print("Recovery RHR %: \(recoveryRHRPercentageValue)")
 }
@@ -238,7 +240,7 @@ func finalRecoveryPercentage() {
     
 }
 
-// MARK: - Second to Last Function
+// MARK: - Calculate Score Function
 func calculateScore() {
         mostRecentHRVFunction()
         mostRecentRHRFunction()
@@ -247,8 +249,87 @@ func calculateScore() {
 
 }
 
-// MARK: - Final Function
+// MARK: - Nested Function Test
+// Start with just one thing first, HRV
+func nestedFunctionsFinal() {
+    hkm.variabilityMostRecent(from: yesterdayStartDate, to: Date()) {
+      (results) in
 
+        var lastHRV = 0.0
+        
+      for result in results {
+        lastHRV = result.quantity.doubleValue(for: .variabilityUnit)
+        mostRecentHRV = Double(lastHRV)
+        print("Last HRV: \(mostRecentHRV)")
+      }
+        hkm.variability(from: weekAgoStartDate, to: Date()) {
+          (results) in
+            
+            var Variability = 0.0
+   
+          for result in results {
+            Variability = result.quantity.doubleValue(for: .variabilityUnit)
+                arrayVariability7Day2.append(Variability)
+          }
+            print("Array for Variability: \(arrayVariability7Day2)")
+            max7DayHRV = arrayVariability7Day2.max() ?? 0
+            print("Max 7 Day HRV:\(max7DayHRV)")
+            min7DayHRV = arrayVariability7Day2.min() ?? 0
+            print("Min 7 Day HRV:\(min7DayHRV)")
+            recoveryHRVPercentageValue = ((mostRecentHRV - min7DayHRV) / (max7DayHRV - min7DayHRV))*100
+            print("Recovery HRV %: \(recoveryHRVPercentageValue)")
+            finalRecoveryPercentageValue = (recoveryHRVPercentageValue + recoveryRHRPercentageValue) / 2
+            print("Final Recovery %: \(finalRecoveryPercentageValue)")
+            
+        }
+
+    }
+    //RHR goes here followed by final recover % calculation
+    hkm.restingHeartRateMostRecent(from: yesterdayStartDate, to: Date()) {
+      (results) in
+        
+        var lastRestingHR = 0.0
+        // results is an array of [HKQuantitySample]
+      // example conversion to BPM:
+      for result in results {
+        lastRestingHR = result.quantity.doubleValue(for: .heartRateUnit)
+        mostRecentRHR = Double(lastRestingHR)
+        print("Last RHR: \(mostRecentRHR)")
+      }
+        hkm.restingHeartRate(from: weekAgoStartDate, to: Date()) {
+          (results) in
+            
+            var RHR = 0.0
+            
+            // results is an array of [HKQuantitySample]
+          // example conversion to BPM:
+          for result in results {
+            RHR = result.quantity.doubleValue(for: .heartRateUnit)
+            //Need to run this in a main queue becuase its so much
+                arrayRHR7Day2.append(RHR)
+
+          }
+            print("Array for RHR: \(arrayRHR7Day2)")
+            max7DayRHR = arrayRHR7Day2.max() ?? 0
+            print("Max 7 Day RHR:\(max7DayRHR)")
+            min7DayRHR = arrayRHR7Day2.min() ?? 0
+            print("Min 7 day RHR:\(min7DayRHR)")
+            recoveryRHRPercentageValue = (1-((mostRecentRHR - min7DayRHR) / (max7DayRHR - min7DayRHR)))*100
+            print("Recovery RHR %: \(recoveryRHRPercentageValue)")
+            finalRecoveryPercentageValue = (recoveryHRVPercentageValue + recoveryRHRPercentageValue) / 2
+            print("Final Recovery %: \(finalRecoveryPercentageValue)")
+            
+        }
+        
+        
+
+    }
+    
+    
+    
+    
+    
+}
 
 
 
@@ -292,6 +373,16 @@ struct ContentView: View {
                     // How the button looks like
                     Text("Press Me Twice")
                 }
+//                Button(action: {
+//                    nestedFunctionsFinal()
+//                    self.finalRecoveryPercentage = Int(finalRecoveryPercentageValue)
+//                    self.finalRHRPercentage = Int(recoveryRHRPercentageValue)
+//                    self.finalHRVPercentage = Int(recoveryHRVPercentageValue)
+//                    self.lastHRVValue = Int(mostRecentHRV)
+//                    self.lastRHRValue = Int(mostRecentRHR)
+//                }) {
+//                    Text("Testing Nested Function")
+//                }
                 Slider(value: $sliderValue, in: 0...100)
                 Text("How Recovered I Actually Feel: \(sliderValue, specifier: "%.0f")%")
             }.padding()
