@@ -251,6 +251,7 @@ func calculateScore() {
 
 // MARK: - Nested Function Test
 // Start with just one thing first, HRV
+//So, this works. The issue comes about when working with @state variables. It runs them first then this function. ???
 func nestedFunctionsFinal() {
     hkm.variabilityMostRecent(from: yesterdayStartDate, to: Date()) {
       (results) in
