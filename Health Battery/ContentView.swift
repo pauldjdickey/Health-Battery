@@ -454,30 +454,41 @@ struct ContentView: View {
 //MARK: - SettingsView
 struct SettingsView: View {
     var body: some View {
-        Button(action: {
-            // What to perform
-            // Need to look back to see how to accept healthkit authorizations
-            authorizeHealthKit { (authorized, error) in
-                  
-              guard authorized else {
-                    
-                let baseMessage = "HealthKit Authorization Failed"
-                    
-                if let error = error {
-                  print("\(baseMessage). Reason: \(error.localizedDescription)")
-                } else {
-                  print(baseMessage)
+        NavigationView {
+            VStack {
+                Text("When loading the application for the first time, press the Authorize Healthkit button:")
+                    .multilineTextAlignment(.center)
+                Button(action: {
+                    // What to perform
+                    // Need to look back to see how to accept healthkit authorizations
+                    authorizeHealthKit { (authorized, error) in
+                          
+                      guard authorized else {
+                            
+                        let baseMessage = "HealthKit Authorization Failed"
+                            
+                        if let error = error {
+                          print("\(baseMessage). Reason: \(error.localizedDescription)")
+                        } else {
+                          print(baseMessage)
+                        }
+                            
+                        return
+                      }
+                          
+                      print("HealthKit Successfully Authorized.")
+                    }
+                }) {
+                    // How the button looks like
+                    Text("Authorize HealthKit")
                 }
-                    
-                return
-              }
-                  
-              print("HealthKit Successfully Authorized.")
+                Text("Now, every morning just put on your watch and double tap the recovery button.")
+                    .multilineTextAlignment(.center)
+                Text("Indicate using the sliding bar how you actually feel, take a screen shot, and send it to me!")
+                    .multilineTextAlignment(.center)
             }
-        }) {
-            // How the button looks like
-            Text("Authorize HealthKit")
         }
+        
     }
 }
 //MARK: - StressView
