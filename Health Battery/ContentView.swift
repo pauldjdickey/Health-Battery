@@ -20,6 +20,7 @@ var recoveryRHRPercentageValue = 0.0
 var recoveryHRVPercentageValue = 0.0
 var finalRecoveryPercentageValue = 0.0
 
+typealias FinishedGettingHealthData = () -> ()
 
 
 
@@ -249,43 +250,30 @@ func calculateScore() {
 
 }
 
-// MARK: - Nested Function Test
-// Start with just one thing first, HRV
-//So, this works. The issue comes about when working with @state variables. It runs them first then this function. ???
-func nestedFunctionsFinal() {
+// MARK: - Asynchronous Functions Test
+// MARK: - Most Recent Variability Function - Async
+
+func mostRecentHRVFunctionAsync(completionHandler: @escaping () -> Void) {
     hkm.variabilityMostRecent(from: yesterdayStartDate, to: Date()) {
       (results) in
-
+        
         var lastHRV = 0.0
         
+        // results is an array of [HKQuantitySample]
+      // example conversion to BPM:
       for result in results {
         lastHRV = result.quantity.doubleValue(for: .variabilityUnit)
+      }
         mostRecentHRV = Double(lastHRV)
         print("Last HRV: \(mostRecentHRV)")
-      }
-        hkm.variability(from: weekAgoStartDate, to: Date()) {
-          (results) in
-            
-            var Variability = 0.0
-   
-          for result in results {
-            Variability = result.quantity.doubleValue(for: .variabilityUnit)
-                arrayVariability7Day2.append(Variability)
-          }
-            print("Array for Variability: \(arrayVariability7Day2)")
-            max7DayHRV = arrayVariability7Day2.max() ?? 0
-            print("Max 7 Day HRV:\(max7DayHRV)")
-            min7DayHRV = arrayVariability7Day2.min() ?? 0
-            print("Min 7 Day HRV:\(min7DayHRV)")
-            recoveryHRVPercentageValue = ((mostRecentHRV - min7DayHRV) / (max7DayHRV - min7DayHRV))*100
-            print("Recovery HRV %: \(recoveryHRVPercentageValue)")
-            finalRecoveryPercentageValue = (recoveryHRVPercentageValue + recoveryRHRPercentageValue) / 2
-            print("Final Recovery %: \(finalRecoveryPercentageValue)")
-            
-        }
 
     }
-    //RHR goes here followed by final recover % calculation
+    completionHandler()
+}
+
+// MARK: - Most Recent RHR Function - Async
+
+func mostRecentRHRFunctionASync(completionHandler: @escaping () -> Void) {
     hkm.restingHeartRateMostRecent(from: yesterdayStartDate, to: Date()) {
       (results) in
         
@@ -294,44 +282,116 @@ func nestedFunctionsFinal() {
       // example conversion to BPM:
       for result in results {
         lastRestingHR = result.quantity.doubleValue(for: .heartRateUnit)
+      }
         mostRecentRHR = Double(lastRestingHR)
         print("Last RHR: \(mostRecentRHR)")
-      }
-        hkm.restingHeartRate(from: weekAgoStartDate, to: Date()) {
-          (results) in
-            
-            var RHR = 0.0
-            
-            // results is an array of [HKQuantitySample]
-          // example conversion to BPM:
-          for result in results {
-            RHR = result.quantity.doubleValue(for: .heartRateUnit)
-            //Need to run this in a main queue becuase its so much
-                arrayRHR7Day2.append(RHR)
-
-          }
-            print("Array for RHR: \(arrayRHR7Day2)")
-            max7DayRHR = arrayRHR7Day2.max() ?? 0
-            print("Max 7 Day RHR:\(max7DayRHR)")
-            min7DayRHR = arrayRHR7Day2.min() ?? 0
-            print("Min 7 day RHR:\(min7DayRHR)")
-            recoveryRHRPercentageValue = (1-((mostRecentRHR - min7DayRHR) / (max7DayRHR - min7DayRHR)))*100
-            print("Recovery RHR %: \(recoveryRHRPercentageValue)")
-            finalRecoveryPercentageValue = (recoveryHRVPercentageValue + recoveryRHRPercentageValue) / 2
-            print("Final Recovery %: \(finalRecoveryPercentageValue)")
-            
-        }
-        
-        
 
     }
-    
-    
-    
-    
+    completionHandler()
+}
+
+// MARK: - 7 Day Variability Function - Async
+
+func weekVariabilityArrayFunctionAsync(completionHandler: @escaping () -> Void) {
+    //arrayVariability7Day2.removeAll()
+    hkm.variability(from: weekAgoStartDate, to: Date()) {
+      (results) in
+        
+        arrayVariability7Day2.removeAll()
+        var Variability = 0.0
+        
+        // results is an array of [HKQuantitySample]
+      // example conversion to BPM:
+      for result in results {
+        Variability = result.quantity.doubleValue(for: .variabilityUnit)
+        //Need to run this in a main queue becuase its so much
+            arrayVariability7Day2.append(Variability)
+
+      }
+        print("Array for Variability: \(arrayVariability7Day2)")
+    }
+    completionHandler()
+}
+// MARK: - 7 Day RHR Function - Async
+
+func weekRHRArrayFunctionAsync(completionHandler: @escaping () -> Void) {
+    //arrayRHR7Day2.removeAll()
+    hkm.restingHeartRate(from: weekAgoStartDate, to: Date()) {
+      (results) in
+        arrayRHR7Day2.removeAll()
+        var RHR = 0.0
+        
+        // results is an array of [HKQuantitySample]
+      // example conversion to BPM:
+      for result in results {
+        RHR = result.quantity.doubleValue(for: .heartRateUnit)
+        //Need to run this in a main queue becuase its so much
+            arrayRHR7Day2.append(RHR)
+
+      }
+        print("Array for RHR: \(arrayRHR7Day2)")
+    }
+    completionHandler()
+}
+
+// MARK: - 7 Day Max HRV Function - Async
+func weekHRVMaxAsync(completionHandler: @escaping () -> Void) {
+    max7DayHRV = arrayVariability7Day2.max() ?? 0
+    print("Max 7 Day HRV:\(max7DayHRV)")
+    completionHandler()
+}
+
+
+// MARK: - 7 Day Min HRV Function - Async
+func weekHRVMinAsync(completionHandler: @escaping () -> Void) {
+    min7DayHRV = arrayVariability7Day2.min() ?? 0
+    print("Min 7 Day HRV:\(min7DayHRV)")
+    completionHandler()
+}
+
+// MARK: - 7 Day Max RHR Function - Async
+func weekRHRMaxASync(completionHandler: @escaping () -> Void) {
+    max7DayRHR = arrayRHR7Day2.max() ?? 0
+    print("Max 7 Day RHR:\(max7DayRHR)")
+    completionHandler()
+}
+
+// MARK: - 7 Day Min RHR Function - Async
+func weekRHRMinASync(completionHandler: @escaping () -> Void) {
+    min7DayRHR = arrayRHR7Day2.min() ?? 0
+    print("Min 7 day RHR:\(min7DayRHR)")
+    completionHandler()
+}
+
+// MARK: - HRV Calculate Rating per Min/Max - Async
+func recoveryHRVPercentageASync(completionHandler: @escaping () -> Void) {
+    recoveryHRVPercentageValue = ((mostRecentHRV - min7DayHRV) / (max7DayHRV - min7DayHRV))*100
+    print("Recovery HRV %: \(recoveryHRVPercentageValue)")
+    completionHandler()
+}
+
+// MARK: - RHR Calculate Rating per Min/Max - Async
+func recoveryRHRPercentageASync(completionHandler: @escaping () -> Void) {
+    // 1- is becuase RHR is better the lower it is.
+    recoveryRHRPercentageValue = (1-((mostRecentRHR - min7DayRHR) / (max7DayRHR - min7DayRHR)))*100
+    print("Recovery RHR %: \(recoveryRHRPercentageValue)")
+    completionHandler()
+}
+
+// MARK: - 50/50 Recovery Calculation - Async
+func finalRecoveryPercentageASync(completionHandler: @escaping () -> Void) {
+    finalRecoveryPercentageValue = (recoveryHRVPercentageValue + recoveryRHRPercentageValue) / 2
+    print("Final Recovery %: \(finalRecoveryPercentageValue)")
+    completionHandler()
     
 }
 
+//MARK: - Initial Call With Completion Handler
+func mainFunctionWithoutFinalPercent(completed: FinishedGettingHealthData) {
+    
+    
+    completed()
+}
 
 
 //MARK: - ContentView
@@ -388,6 +448,12 @@ struct ContentView: View {
                 Text("How Recovered I Actually Feel: \(sliderValue, specifier: "%.0f")%")
             }.padding()
             }
+        }
+    }
+
+//MARK: - SettingsView
+struct SettingsView: View {
+    var body: some View {
         Button(action: {
             // What to perform
             // Need to look back to see how to accept healthkit authorizations
@@ -412,5 +478,52 @@ struct ContentView: View {
             // How the button looks like
             Text("Authorize HealthKit")
         }
+    }
+}
+//MARK: - StressView
+struct StressView: View {
+    var body: some View {
+        Text("Coming Soon")
+    }
+}
+//MARK: - JournalView
+struct JournalView: View {
+    var body: some View {
+        Text("Coming Soon")
+    }
+}
+
+//MARK: - AppView to Create Tabs
+struct AppView: View {
+    var body: some View {
+        TabView {
+            ContentView()
+                .tabItem {
+                    Image(systemName: "battery.100")
+                    Text("Recovery")
+                }
+            StressView()
+                .tabItem {
+                    Image(systemName: "bolt.fill")
+                    Text("Stress")
+                }
+            JournalView()
+                .tabItem {
+                    Image(systemName: "book.fill")
+                    Text("Journal")
+                }
+            SettingsView()
+                .tabItem {
+                    Image(systemName: "gear")
+                    Text("Get Started")
+                }
         }
     }
+}
+
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        AppView()
+            .previewDevice("iPhone 11 Pro")
+    }
+}
