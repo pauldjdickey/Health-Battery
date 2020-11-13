@@ -19,6 +19,7 @@
 		2D1EAA38255E29A80073427F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2D1EAA37255E29A80073427F /* Assets.xcassets */; };
 		2D1EAA3B255E29A80073427F /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2D1EAA3A255E29A80073427F /* Preview Assets.xcassets */; };
 		2D1EAA40255E29A80073427F /* HealthBattery.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 2D1EAA1A255E29A60073427F /* HealthBattery.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		2D5B8BCE255F287300F63554 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D5B8BCD255F287300F63554 /* HealthKit.framework */; };
 		2D674A4625393FCF00040B66 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D674A4525393FCF00040B66 /* AppDelegate.swift */; };
 		2D674A4825393FCF00040B66 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D674A4725393FCF00040B66 /* SceneDelegate.swift */; };
 		2D674A4A25393FCF00040B66 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D674A4925393FCF00040B66 /* ContentView.swift */; };
@@ -104,6 +105,8 @@
 		2D1EAA3A255E29A80073427F /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		2D1EAA3C255E29A80073427F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		2D1EAA3D255E29A80073427F /* PushNotificationPayload.apns */ = {isa = PBXFileReference; lastKnownFileType = text; path = PushNotificationPayload.apns; sourceTree = "<group>"; };
+		2D5B8BCC255F287300F63554 /* HealthBattery Extension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "HealthBattery Extension.entitlements"; sourceTree = "<group>"; };
+		2D5B8BCD255F287300F63554 /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = Platforms/WatchOS.platform/Developer/SDKs/WatchOS7.1.sdk/System/Library/Frameworks/HealthKit.framework; sourceTree = DEVELOPER_DIR; };
 		2D674A4225393FCF00040B66 /* Health Battery.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Health Battery.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2D674A4525393FCF00040B66 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		2D674A4725393FCF00040B66 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -129,6 +132,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2D5B8BCE255F287300F63554 /* HealthKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -170,6 +174,7 @@
 		2D1EAA2A255E29A70073427F /* HealthBattery Extension */ = {
 			isa = PBXGroup;
 			children = (
+				2D5B8BCC255F287300F63554 /* HealthBattery Extension.entitlements */,
 				2D1EAA2B255E29A70073427F /* HostingController.swift */,
 				2D1EAA2D255E29A70073427F /* ContentView.swift */,
 				2D1EAA2F255E29A70073427F /* ExtensionDelegate.swift */,
@@ -263,6 +268,7 @@
 		2D674A81253940B400040B66 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				2D5B8BCD255F287300F63554 /* HealthKit.framework */,
 				2D674A82253940B400040B66 /* HealthKit.framework */,
 			);
 			name = Frameworks;
@@ -588,6 +594,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_COMPLICATION_NAME = Complication;
+				CODE_SIGN_ENTITLEMENTS = "HealthBattery Extension/HealthBattery Extension.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"HealthBattery Extension/Preview Content\"";
 				DEVELOPMENT_TEAM = S6TAY9VTDK;
@@ -613,6 +620,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_COMPLICATION_NAME = Complication;
+				CODE_SIGN_ENTITLEMENTS = "HealthBattery Extension/HealthBattery Extension.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"HealthBattery Extension/Preview Content\"";
 				DEVELOPMENT_TEAM = S6TAY9VTDK;
