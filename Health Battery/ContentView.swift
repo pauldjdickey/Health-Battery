@@ -5,6 +5,7 @@ import Foundation
 import HealthKit
 import UIKit
 import SwiftUI
+import CoreData
 
 let hkm = HealthKitManager()
 
@@ -19,6 +20,14 @@ var min7DayRHR = 0.0
 var recoveryRHRPercentageValue = 0.0
 var recoveryHRVPercentageValue = 0.0
 var finalRecoveryPercentageValue = 0.0
+
+//Core Data Initialization
+let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+
+let newRecovery = Recovery(context: context)
+
+
 
 typealias FinishedGettingHealthData = () -> ()
 
@@ -104,6 +113,16 @@ extension Date {
     }
     var isLastDayOfMonth: Bool {
         return dayAfter.month != month
+    }
+}
+
+// MARK: - Model Manipulation Methods
+
+func saveItems() {
+    do {
+        try context.save()
+    } catch {
+        print("Error saving context \(error)")
     }
 }
 
@@ -247,6 +266,8 @@ func calculateScore() {
         mostRecentRHRFunction()
         weekVariabilityArrayFunction()
         weekRHRArrayFunction()
+        newRecovery.date = Date()n
+        saveItems()
 
 }
 
@@ -398,6 +419,8 @@ func mainFunctionWithoutFinalPercent(completed: FinishedGettingHealthData) {
 
 struct ContentView: View {
     
+    
+    
     @State private var lastVariabilityValue = 0
     @State private var lastHRVValue = 0
     @State private var lastRHRValue = 0
@@ -410,6 +433,7 @@ struct ContentView: View {
     @State var sliderValue: Double = 0
 
     var body: some View {
+        
         NavigationView {
             VStack {
                     Text("Last RHR Value: \(lastRHRValue) BPM")
@@ -433,6 +457,12 @@ struct ContentView: View {
                 }) {
                     // How the button looks like
                     Text("Press Me Twice")
+                }
+                Button(action: {
+                    print(dataFilePath)
+                }) {
+                    // How the button looks like
+                    Text("Find Data Path")
                 }
 //                Button(action: {
 //                    nestedFunctionsFinal()
