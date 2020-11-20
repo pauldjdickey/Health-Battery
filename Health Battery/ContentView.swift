@@ -353,7 +353,34 @@ struct ContentView: View {
             
         }
         
-        // MARK: - Recovery Calculation Functions
+        // MARK: - New Recovery Calculation Functions
+        // MARK: - New Recovery Calculation Variables
+        
+        // Array
+    var arrayHRV = [Double]()
+    var arrayRHR = [Double]()
+    var recentHRV = 0.0
+    var recentRHR = 0.0
+    var arrayHRVDone = false
+    var arrayRHRDone = false
+        // Min/Max
+    var maxHRV = 0.0
+    var minHRV = 0.0
+    var maxRHR = 0.0
+    var minRHR = 0.0
+    var minHRVDone = false
+    var maxHRVDone = false
+    var minRHRDone = false
+    var maxRHRDone = false
+        // HRV/RHR Calculation
+    var hrvRecoveryPercentage = 0.0
+    var rhrRecoveryPercentage = 0.0
+    var hrvPercentageDone = false
+    var rhrPercentageDone = false
+        // Final Calculation
+    var finalRecoveryPercentage2 = 0.0
+    var finalRecoveryIndicator = false
+    
         
         // MARK: - Take recent data from healthkit and put into an array in CoreData
         // Goal of this is to take the most recent HRV and RHR data and append it to our 30 day array in core data
