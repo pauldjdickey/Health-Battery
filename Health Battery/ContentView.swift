@@ -21,6 +21,31 @@ var recoveryRHRPercentageValue = 0.0
 var recoveryHRVPercentageValue = 0.0
 var finalRecoveryPercentageValue = 0.0
 
+var arrayHRV = [Double]()
+var arrayRHR = [Double]()
+var recentHRV = 0.0
+var recentRHR = 0.0
+var arrayHRVDone = false
+var arrayRHRDone = false
+    // Min/Max
+var maxHRV = 0.0
+var minHRV = 0.0
+var maxRHR = 0.0
+var minRHR = 0.0
+var minHRVDone = false
+var maxHRVDone = false
+var minRHRDone = false
+var maxRHRDone = false
+    // HRV/RHR Calculation
+var hrvRecoveryPercentage = 0.0
+var rhrRecoveryPercentage = 0.0
+var hrvPercentageDone = false
+var rhrPercentageDone = false
+    // Final Calculation
+var finalRecoveryPercentage2 = 0.0
+var finalRecoveryIndicator = false
+
+
 typealias FinishedGettingHealthData = () -> ()
 
 
@@ -269,6 +294,12 @@ struct ContentView: View {
     @Environment(\.managedObjectContext) var managedObjectContext
     let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
     
+    //So this should be working...
+    @FetchRequest(
+    entity: Array30Day.entity(),
+        sortDescriptors: []
+        ) var variableArray30Day: FetchedResults<Array30Day>
+    
     @State private var lastVariabilityValue = 0
     @State private var lastHRVValue = 0
     @State private var lastRHRValue = 0
@@ -318,7 +349,7 @@ struct ContentView: View {
                 Button(action: {
                     print(dataFilePath)
                     writeHRVDatatoArray()
-                    //writeRHRDatatoArray()
+                    writeRHRDatatoArray()
                 }) {
                     // How the button looks like
                     Text("New Test Button")
@@ -357,29 +388,29 @@ struct ContentView: View {
         // MARK: - New Recovery Calculation Variables
         
         // Array
-    var arrayHRV = [Double]()
-    var arrayRHR = [Double]()
-    var recentHRV = 0.0
-    var recentRHR = 0.0
-    var arrayHRVDone = false
-    var arrayRHRDone = false
-        // Min/Max
-    var maxHRV = 0.0
-    var minHRV = 0.0
-    var maxRHR = 0.0
-    var minRHR = 0.0
-    var minHRVDone = false
-    var maxHRVDone = false
-    var minRHRDone = false
-    var maxRHRDone = false
-        // HRV/RHR Calculation
-    var hrvRecoveryPercentage = 0.0
-    var rhrRecoveryPercentage = 0.0
-    var hrvPercentageDone = false
-    var rhrPercentageDone = false
-        // Final Calculation
-    var finalRecoveryPercentage2 = 0.0
-    var finalRecoveryIndicator = false
+//    var arrayHRV = [Double]()
+//    var arrayRHR = [Double]()
+//    var recentHRV = 0.0
+//    var recentRHR = 0.0
+//    var arrayHRVDone = false
+//    var arrayRHRDone = false
+//        // Min/Max
+//    var maxHRV = 0.0
+//    var minHRV = 0.0
+//    var maxRHR = 0.0
+//    var minRHR = 0.0
+//    var minHRVDone = false
+//    var maxHRVDone = false
+//    var minRHRDone = false
+//    var maxRHRDone = false
+//        // HRV/RHR Calculation
+//    var hrvRecoveryPercentage = 0.0
+//    var rhrRecoveryPercentage = 0.0
+//    var hrvPercentageDone = false
+//    var rhrPercentageDone = false
+//        // Final Calculation
+//    var finalRecoveryPercentage2 = 0.0
+//    var finalRecoveryIndicator = false
     
         
         // MARK: - Take recent data from healthkit and put into an array in CoreData
@@ -389,54 +420,59 @@ struct ContentView: View {
         // Then we can create a conditional statement that runs code (not here) that calculates % and using the conditional statement to make sure things are run before it calculates so we only have to press one time.
         
         func writeHRVDatatoArray() {
-            //1 - Access most recent hrv value
+            //1 - Access most recent hrv value between midnight yesterday and right this second
             hkm.variabilityMostRecent(from: yesterdayStartDate, to: Date()) {
                 (results) in
                 
                 var lastHRV = 0.0
-                
                 // results is an array of [HKQuantitySample]
                 // example conversion to BPM:
                 for result in results {
                     lastHRV = result.quantity.doubleValue(for: .variabilityUnit)
                 }
-                mostRecentHRV = Double(lastHRV)
-                print("Last HRV: \(mostRecentHRV)")
+                recentHRV = Double(lastHRV)
+                print("Last HRV: \(recentHRV)")
                 
+                //2 - Append most recent hrv value to 30 day core data array
                 let newHRVArrayData = Array30Day(context: managedObjectContext)
-                newHRVArrayData.hrv = mostRecentHRV
+                newHRVArrayData.hrv = recentHRV
+                //This is also saving 2 contexts when i have it in both, and not together. I want them to be saved together after both run... May need to use conditional.
                 saveContext()
-                
-                
+                //3 - Get data from core data and put into variable array
+                //But when we print the array it has EVERYTHING and i cant access the properties? Stuck here.
+                print(variableArray30Day.count)
+                //4 - Work with array to adjust core data
+                //5 - Change HRVdone to true
+                arrayHRVDone = true
+                print("HRV Done = \(arrayHRVDone)")
             }
-            //2 - Append most recent hrv value to 30 day core data array
-            
-            //3 - Check how big array is, add or remove as necessary
         }
         
         func writeRHRDatatoArray() {
-            //1 - Access most recent rhr value
+            //1 - Access most recent rhr value between midnight yesterday and right this second
             hkm.restingHeartRateMostRecent(from: yesterdayStartDate, to: Date()) {
                 (results) in
                 
-                var lastRestingHR = 0.0
+                var lastRHR = 0.0
                 // results is an array of [HKQuantitySample]
                 // example conversion to BPM:
                 for result in results {
-                    lastRestingHR = result.quantity.doubleValue(for: .heartRateUnit)
+                    lastRHR = result.quantity.doubleValue(for: .heartRateUnit)
                 }
-                mostRecentRHR = Double(lastRestingHR)
-                print("Last RHR: \(mostRecentRHR)")
+                recentRHR = Double(lastRHR)
+                print("Last RHR: \(recentRHR)")
                 
+                //2 - Append most recent rhr value to 30 day core data array
                 let newRHRArrayData = Array30Day(context: managedObjectContext)
-                newRHRArrayData.rhr = mostRecentRHR
+                newRHRArrayData.rhr = recentRHR
                 saveContext()
-                
+                //3 - Get data from core data and put into variable array
+                //4 - Work with array to adjust core data
+                //5 - Change RHRdone to true
+                arrayRHRDone = true
+                print("RHR Done = \(arrayRHRDone)")
             }
-            //2 - Append most recent rhr value to 30 day core data array
-            
             //3 - Check how big array is, add or remove as necessary
-            
         }
         
         // MARK: - Compare recent data to array to find % recovery and record to core data
