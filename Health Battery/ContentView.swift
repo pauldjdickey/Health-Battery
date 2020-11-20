@@ -261,148 +261,6 @@ func calculateScore() {
     
 }
 
-// MARK: - Asynchronous Functions Test
-// MARK: - Most Recent Variability Function - Async
-
-func mostRecentHRVFunctionAsync(completionHandler: @escaping () -> Void) {
-    hkm.variabilityMostRecent(from: yesterdayStartDate, to: Date()) {
-        (results) in
-        
-        var lastHRV = 0.0
-        
-        // results is an array of [HKQuantitySample]
-        // example conversion to BPM:
-        for result in results {
-            lastHRV = result.quantity.doubleValue(for: .variabilityUnit)
-        }
-        mostRecentHRV = Double(lastHRV)
-        print("Last HRV: \(mostRecentHRV)")
-        
-    }
-    completionHandler()
-}
-
-// MARK: - Most Recent RHR Function - Async
-
-func mostRecentRHRFunctionASync(completionHandler: @escaping () -> Void) {
-    hkm.restingHeartRateMostRecent(from: yesterdayStartDate, to: Date()) {
-        (results) in
-        
-        var lastRestingHR = 0.0
-        // results is an array of [HKQuantitySample]
-        // example conversion to BPM:
-        for result in results {
-            lastRestingHR = result.quantity.doubleValue(for: .heartRateUnit)
-        }
-        mostRecentRHR = Double(lastRestingHR)
-        print("Last RHR: \(mostRecentRHR)")
-        
-    }
-    completionHandler()
-}
-
-// MARK: - 7 Day Variability Function - Async
-
-func weekVariabilityArrayFunctionAsync(completionHandler: @escaping () -> Void) {
-    //arrayVariability7Day2.removeAll()
-    hkm.variability(from: weekAgoStartDate, to: Date()) {
-        (results) in
-        
-        arrayVariability7Day2.removeAll()
-        var Variability = 0.0
-        
-        // results is an array of [HKQuantitySample]
-        // example conversion to BPM:
-        for result in results {
-            Variability = result.quantity.doubleValue(for: .variabilityUnit)
-            //Need to run this in a main queue becuase its so much
-            arrayVariability7Day2.append(Variability)
-            
-        }
-        print("Array for Variability: \(arrayVariability7Day2)")
-    }
-    completionHandler()
-}
-// MARK: - 7 Day RHR Function - Async
-
-func weekRHRArrayFunctionAsync(completionHandler: @escaping () -> Void) {
-    //arrayRHR7Day2.removeAll()
-    hkm.restingHeartRate(from: weekAgoStartDate, to: Date()) {
-        (results) in
-        arrayRHR7Day2.removeAll()
-        var RHR = 0.0
-        
-        // results is an array of [HKQuantitySample]
-        // example conversion to BPM:
-        for result in results {
-            RHR = result.quantity.doubleValue(for: .heartRateUnit)
-            //Need to run this in a main queue becuase its so much
-            arrayRHR7Day2.append(RHR)
-            
-        }
-        print("Array for RHR: \(arrayRHR7Day2)")
-    }
-    completionHandler()
-}
-
-// MARK: - 7 Day Max HRV Function - Async
-func weekHRVMaxAsync(completionHandler: @escaping () -> Void) {
-    max7DayHRV = arrayVariability7Day2.max() ?? 0
-    print("Max 7 Day HRV:\(max7DayHRV)")
-    completionHandler()
-}
-
-
-// MARK: - 7 Day Min HRV Function - Async
-func weekHRVMinAsync(completionHandler: @escaping () -> Void) {
-    min7DayHRV = arrayVariability7Day2.min() ?? 0
-    print("Min 7 Day HRV:\(min7DayHRV)")
-    completionHandler()
-}
-
-// MARK: - 7 Day Max RHR Function - Async
-func weekRHRMaxASync(completionHandler: @escaping () -> Void) {
-    max7DayRHR = arrayRHR7Day2.max() ?? 0
-    print("Max 7 Day RHR:\(max7DayRHR)")
-    completionHandler()
-}
-
-// MARK: - 7 Day Min RHR Function - Async
-func weekRHRMinASync(completionHandler: @escaping () -> Void) {
-    min7DayRHR = arrayRHR7Day2.min() ?? 0
-    print("Min 7 day RHR:\(min7DayRHR)")
-    completionHandler()
-}
-
-// MARK: - HRV Calculate Rating per Min/Max - Async
-func recoveryHRVPercentageASync(completionHandler: @escaping () -> Void) {
-    recoveryHRVPercentageValue = ((mostRecentHRV - min7DayHRV) / (max7DayHRV - min7DayHRV))*100
-    print("Recovery HRV %: \(recoveryHRVPercentageValue)")
-    completionHandler()
-}
-
-// MARK: - RHR Calculate Rating per Min/Max - Async
-func recoveryRHRPercentageASync(completionHandler: @escaping () -> Void) {
-    // 1- is becuase RHR is better the lower it is.
-    recoveryRHRPercentageValue = (1-((mostRecentRHR - min7DayRHR) / (max7DayRHR - min7DayRHR)))*100
-    print("Recovery RHR %: \(recoveryRHRPercentageValue)")
-    completionHandler()
-}
-
-// MARK: - 50/50 Recovery Calculation - Async
-func finalRecoveryPercentageASync(completionHandler: @escaping () -> Void) {
-    finalRecoveryPercentageValue = (recoveryHRVPercentageValue + recoveryRHRPercentageValue) / 2
-    print("Final Recovery %: \(finalRecoveryPercentageValue)")
-    completionHandler()
-    
-}
-
-//MARK: - Initial Call With Completion Handler
-func mainFunctionWithoutFinalPercent(completed: FinishedGettingHealthData) {
-    completed()
-}
-
-
 //MARK: - ContentView
 
 struct ContentView: View {
@@ -460,7 +318,7 @@ struct ContentView: View {
                 Button(action: {
                     print(dataFilePath)
                     writeHRVDatatoArray()
-                    writeRHRDatatoArray()
+                    //writeRHRDatatoArray()
                 }) {
                     // How the button looks like
                     Text("New Test Button")
@@ -499,6 +357,9 @@ struct ContentView: View {
         
         // MARK: - Take recent data from healthkit and put into an array in CoreData
         // Goal of this is to take the most recent HRV and RHR data and append it to our 30 day array in core data
+    
+        // Let's us conditional statements to check if the array has 30 points, if so then run the code that removes the oldest point and adds a new one, if not, itll run another code that takes the last x amount of days to populate it
+        // Then we can create a conditional statement that runs code (not here) that calculates % and using the conditional statement to make sure things are run before it calculates so we only have to press one time.
         
         func writeHRVDatatoArray() {
             //1 - Access most recent hrv value
@@ -518,6 +379,7 @@ struct ContentView: View {
                 let newHRVArrayData = Array30Day(context: managedObjectContext)
                 newHRVArrayData.hrv = mostRecentHRV
                 saveContext()
+                
                 
             }
             //2 - Append most recent hrv value to 30 day core data array
