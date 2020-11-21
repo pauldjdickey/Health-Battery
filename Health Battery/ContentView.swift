@@ -23,6 +23,8 @@ var finalRecoveryPercentageValue = 0.0
 
 var arrayHRV = [Double]()
 var arrayRHR = [Double]()
+var arrayNumbers = [NSManagedObject]()
+
 var recentHRV = 0.0
 var recentRHR = 0.0
 var arrayHRVDone = false
@@ -436,11 +438,15 @@ struct ContentView: View {
                 //2 - Append most recent hrv value to 30 day core data array
                 let newHRVArrayData = Array30Day(context: managedObjectContext)
                 newHRVArrayData.hrv = recentHRV
+                
                 //This is also saving 2 contexts when i have it in both, and not together. I want them to be saved together after both run... May need to use conditional.
                 saveContext()
                 //3 - Get data from core data and put into variable array
-                //But when we print the array it has EVERYTHING and i cant access the properties? Stuck here.
-                print(variableArray30Day.count)
+                arrayHRV = variableArray30Day.map {$0.hrv}
+                
+                print("Array HRV = \(arrayHRV)")
+                print(arrayHRV.count)
+                
                 //4 - Work with array to adjust core data
                 //5 - Change HRVdone to true
                 arrayHRVDone = true
@@ -467,6 +473,10 @@ struct ContentView: View {
                 newRHRArrayData.rhr = recentRHR
                 saveContext()
                 //3 - Get data from core data and put into variable array
+                arrayRHR = variableArray30Day.map {$0.rhr}
+                
+                print("Array RHR = \(arrayRHR)")
+                print(arrayRHR.count)
                 //4 - Work with array to adjust core data
                 //5 - Change RHRdone to true
                 arrayRHRDone = true
