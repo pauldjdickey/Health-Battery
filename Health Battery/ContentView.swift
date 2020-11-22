@@ -389,7 +389,6 @@ struct ContentView: View {
     
     //Core Data SwiftUI Object Management + Filepath Location
     @Environment(\.managedObjectContext) var managedObjectContext
-    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
     
     //So this should be working...
     @FetchRequest(
@@ -436,23 +435,16 @@ struct ContentView: View {
                     //(D)
                 }) {
                     // How the button looks like
-                    Text("Press Me Twice")
-                }
-                Button(action: {
-                    print(dataFilePath)
-                    
-                }) {
-                    // How the button looks like
-                    Text("Find Data Path")
-                }
-                Button(action: {
-//                    print(dataFilePath)
-//                    writeHRVDatatoArray()
-//                    writeRHRDatatoArray()
-                    testFunction()
-                }) {
-                    // How the button looks like
-                    Text("New Test Button")
+                    Text("Calculate Recovery")
+                                //.frame(minWidth: 0, maxWidth: .infinity)
+                                .fontWeight(.bold)
+                                .font(.system(size: 18))
+                                .padding()
+                                .foregroundColor(.black)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .stroke(Color.black, lineWidth: 3)
+                                )
                 }
                 Slider(value: $sliderValue, in: 0...100)
                 Text("How Recovered I Actually Feel: \(sliderValue, specifier: "%.0f")%")
@@ -644,6 +636,9 @@ struct ContentView: View {
     
     //MARK: - SettingsView
     struct SettingsView: View {
+        
+        let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+
         var body: some View {
             NavigationView {
                 VStack {
@@ -677,6 +672,13 @@ struct ContentView: View {
                         .multilineTextAlignment(.center)
                     Text("Indicate using the sliding bar how you actually feel, take a screen shot, and send it to me!")
                         .multilineTextAlignment(.center)
+                    Button(action: {
+                        print(dataFilePath)
+                        
+                    }) {
+                        // How the button looks like
+                        Text("Find Data Path")
+                    }
                 }
             }
             
