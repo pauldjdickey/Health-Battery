@@ -6,6 +6,7 @@ import HealthKit
 import UIKit
 import SwiftUI
 import CoreData
+import Dispatch
 
 let hkm = HealthKitManager()
 
@@ -147,7 +148,7 @@ extension Date {
 
 // MARK: - Most Recent Variability Function
 
-func mostRecentHRVFunction() {
+func mostRecentHRVFunction(_ completion : @escaping()->()) {
     hkm.variabilityMostRecent(from: yesterdayStartDate, to: Date()) {
         (results) in
         
@@ -160,14 +161,15 @@ func mostRecentHRVFunction() {
         }
         mostRecentHRV = Double(lastHRV)
         print("Last HRV: \(mostRecentHRV)")
+        print("first")
+        completion()
         
     }
-    finalRecoveryPercentage()
 }
 
 // MARK: - Most Recent RHR Function
 
-func mostRecentRHRFunction() {
+func mostRecentRHRFunction(_ completion : @escaping()->()) {
     hkm.restingHeartRateMostRecent(from: yesterdayStartDate, to: Date()) {
         (results) in
         
@@ -179,14 +181,15 @@ func mostRecentRHRFunction() {
         }
         mostRecentRHR = Double(lastRestingHR)
         print("Last RHR: \(mostRecentRHR)")
-        
+        print("second")
+        completion()
+
     }
-    finalRecoveryPercentage()
 }
 
 // MARK: - 7 Day Variability Function
 
-func weekVariabilityArrayFunction() {
+func weekVariabilityArrayFunction(_ completion : @escaping()->()) {
     //arrayVariability7Day2.removeAll()
     hkm.variability(from: weekAgoStartDate, to: Date()) {
         (results) in
@@ -203,15 +206,14 @@ func weekVariabilityArrayFunction() {
             
         }
         print("Array for Variability: \(arrayVariability7Day2)")
-        weekHRVMax()
-        weekHRVMin()
-        recoveryHRVPercentage()
-        finalRecoveryPercentage()
+        print("third")
+        completion()
+
     }
 }
 // MARK: - 7 Day RHR Function
 
-func weekRHRArrayFunction() {
+func weekRHRArrayFunction(_ completion : @escaping()->()) {
     //arrayRHR7Day2.removeAll()
     hkm.restingHeartRate(from: weekAgoStartDate, to: Date()) {
         (results) in
@@ -227,66 +229,159 @@ func weekRHRArrayFunction() {
             
         }
         print("Array for RHR: \(arrayRHR7Day2)")
-        weekRHRMax()
-        weekRHRMin()
-        recoveryRHRPercentage()
-        finalRecoveryPercentage()
+        print("fourth")
+        completion()
+
+//        weekRHRMax()
+//        weekRHRMin()
+//        recoveryRHRPercentage()
+//        finalRecoveryPercentage()
     }
 }
 
 // MARK: - 7 Day Max HRV Function
-func weekHRVMax() {
+func weekHRVMax(_ completion : @escaping()->()) {
     max7DayHRV = arrayVariability7Day2.max() ?? 0
     print("Max 7 Day HRV:\(max7DayHRV)")
+    print("fifth")
+    completion()
+
 }
 
 
 // MARK: - 7 Day Min HRV Function
-func weekHRVMin() {
+func weekHRVMin(_ completion : @escaping()->()) {
     min7DayHRV = arrayVariability7Day2.min() ?? 0
     print("Min 7 Day HRV:\(min7DayHRV)")
+    print("sixth")
+    completion()
+
 }
 
 // MARK: - 7 Day Max RHR Function
-func weekRHRMax() {
+func weekRHRMax(_ completion : @escaping()->()) {
     max7DayRHR = arrayRHR7Day2.max() ?? 0
     print("Max 7 Day RHR:\(max7DayRHR)")
+    print("seventh")
+    completion()
+
 }
 
 // MARK: - 7 Day Min RHR Function
-func weekRHRMin() {
+func weekRHRMin(_ completion : @escaping()->()) {
     min7DayRHR = arrayRHR7Day2.min() ?? 0
     print("Min 7 day RHR:\(min7DayRHR)")
+    print("eighth")
+    completion()
+
 }
 
 // MARK: - HRV Calculate Rating per Min/Max
-func recoveryHRVPercentage() {
+func recoveryHRVPercentage(_ completion : @escaping()->()) {
     recoveryHRVPercentageValue = ((mostRecentHRV - min7DayHRV) / (max7DayHRV - min7DayHRV))*100
     print("Recovery HRV %: \(recoveryHRVPercentageValue)")
+    print("nineth")
+    completion()
+
 }
 
 // MARK: - RHR Calculate Rating per Min/Max
-func recoveryRHRPercentage() {
+func recoveryRHRPercentage(_ completion : @escaping()->()) {
     // 1- is becuase RHR is better the lower it is.
     recoveryRHRPercentageValue = (1-((mostRecentRHR - min7DayRHR) / (max7DayRHR - min7DayRHR)))*100
     print("Recovery RHR %: \(recoveryRHRPercentageValue)")
+    print("tenth")
+    completion()
+
 }
 
 // MARK: - 50/50 Recovery Calculation
-func finalRecoveryPercentage() {
+func finalRecoveryPercentageFunction() {
     finalRecoveryPercentageValue = (recoveryHRVPercentageValue + recoveryRHRPercentageValue) / 2
     print("Final Recovery %: \(finalRecoveryPercentageValue)")
+    print("last")
+
     
 }
 
 // MARK: - Calculate Score Function
-func calculateScore() {
-    mostRecentHRVFunction()
-    mostRecentRHRFunction()
-    weekVariabilityArrayFunction()
-    weekRHRArrayFunction()
+//func calculateScore() {
+//
+//        mostRecentHRVFunction()
+//        mostRecentRHRFunction()
+//        weekVariabilityArrayFunction()
+//        weekRHRArrayFunction()
+//}
+
+
+//THIS IS WORKING
+func first(_ completion : @escaping()->()){
+    hkm.restingHeartRate(from: weekAgoStartDate, to: Date()) {
+        (results) in
+        arrayRHR7Day2.removeAll()
+        var RHR = 0.0
+        
+        // results is an array of [HKQuantitySample]
+        // example conversion to BPM:
+        for result in results {
+            RHR = result.quantity.doubleValue(for: .heartRateUnit)
+            //Need to run this in a main queue becuase its so much
+            arrayRHR7Day2.append(RHR)
+            
+        }
+        print("Array for RHR: \(arrayRHR7Day2)")
+//        weekRHRMax()
+//        weekRHRMin()
+//        recoveryRHRPercentage()
+//        finalRecoveryPercentage()
+        print("first")
+        completion()
+    }
+   
+}
+
+func second(_ completion : @escaping()->()){
+    finalRecoveryPercentageValue = (recoveryHRVPercentageValue + recoveryRHRPercentageValue) / 2
+    print("Final Recovery %: \(finalRecoveryPercentageValue)")
+    print("second")
+    completion()
+}
+
+func third(){
+    hkm.variability(from: weekAgoStartDate, to: Date()) {
+        (results) in
+        
+        arrayVariability7Day2.removeAll()
+        var Variability = 0.0
+        
+        // results is an array of [HKQuantitySample]
+        // example conversion to BPM:
+        for result in results {
+            Variability = result.quantity.doubleValue(for: .variabilityUnit)
+            //Need to run this in a main queue becuase its so much
+            arrayVariability7Day2.append(Variability)
+            
+        }
+        print("Array for Variability: \(arrayVariability7Day2)")
+        print("third")
+    }
+   
+}
+
+
+func testFunction() {
+    first{
+         second{
+              third()
+         }
+
+       }
     
 }
+
+
+
+
 
 //MARK: - ContentView
 
@@ -326,17 +421,19 @@ struct ContentView: View {
                     .font(.system(size: 70))
                 
                 Button(action: {
-                    calculateScore()
+//                    calculateScore()
                     
-                    self.finalRecoveryPercentage = Int(finalRecoveryPercentageValue)
-                    self.finalRHRPercentage = Int(recoveryRHRPercentageValue)
-                    self.finalHRVPercentage = Int(recoveryHRVPercentageValue)
-                    self.lastHRVValue = Int(mostRecentHRV)
-                    self.lastRHRValue = Int(mostRecentRHR)
+                    // Everything in my final function test is running in order, now the issue is that (B) is running before (A)
+                    //(A)
+                    finalFunctionTest()
                     
-                    writeDataTest()
+                    //(B)
                     
-                    print("@state is: \(finalRecoveryPercentage)")
+                    
+                    //(C)
+                    //writeDataTest()
+                    
+                    //(D)
                 }) {
                     // How the button looks like
                     Text("Press Me Twice")
@@ -349,9 +446,10 @@ struct ContentView: View {
                     Text("Find Data Path")
                 }
                 Button(action: {
-                    print(dataFilePath)
-                    writeHRVDatatoArray()
-                    writeRHRDatatoArray()
+//                    print(dataFilePath)
+//                    writeHRVDatatoArray()
+//                    writeRHRDatatoArray()
+                    testFunction()
                 }) {
                     // How the button looks like
                     Text("New Test Button")
@@ -361,6 +459,41 @@ struct ContentView: View {
                 }.padding()
             }
         }
+    
+    func finalFunctionTest() {
+        //IT WORKS! Now take these functions and change them to my new ones
+        //1 - Create new functions
+        //2 - Replace these
+        mostRecentHRVFunction {
+            mostRecentRHRFunction {
+                weekVariabilityArrayFunction {
+                    weekRHRArrayFunction {
+                        weekHRVMax {
+                            weekHRVMin {
+                                weekRHRMax {
+                                    weekRHRMin {
+                                        recoveryHRVPercentage {
+                                            recoveryRHRPercentage {
+                                                finalRecoveryPercentageFunction()
+                                                self.finalRecoveryPercentage = Int(finalRecoveryPercentageValue)
+                                                self.finalRHRPercentage = Int(recoveryRHRPercentageValue)
+                                                self.finalHRVPercentage = Int(recoveryHRVPercentageValue)
+                                                self.lastHRVValue = Int(mostRecentHRV)
+                                                self.lastRHRValue = Int(mostRecentRHR)
+                                                print("Final @state is: \(finalRecoveryPercentage)")
+
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+    }
         // MARK: - CRUD Functions
         
         //This is just a test. This is a type of function I could use to write data to my DB
@@ -420,7 +553,7 @@ struct ContentView: View {
     
         // Let's us conditional statements to check if the array has 30 points, if so then run the code that removes the oldest point and adds a new one, if not, itll run another code that takes the last x amount of days to populate it
         // Then we can create a conditional statement that runs code (not here) that calculates % and using the conditional statement to make sure things are run before it calculates so we only have to press one time.
-        
+    
         func writeHRVDatatoArray() {
             //1 - Access most recent hrv value between midnight yesterday and right this second
             hkm.variabilityMostRecent(from: yesterdayStartDate, to: Date()) {
@@ -443,11 +576,8 @@ struct ContentView: View {
                 saveContext()
                 //3 - Get data from core data and put into variable array
                 arrayHRV = variableArray30Day.map {$0.hrv}
-                
                 print("Array HRV = \(arrayHRV)")
                 print(arrayHRV.count)
-                
-                //4 - Work with array to adjust core data
                 //5 - Change HRVdone to true
                 arrayHRVDone = true
                 print("HRV Done = \(arrayHRVDone)")
@@ -472,12 +602,11 @@ struct ContentView: View {
                 let newRHRArrayData = Array30Day(context: managedObjectContext)
                 newRHRArrayData.rhr = recentRHR
                 saveContext()
+                
                 //3 - Get data from core data and put into variable array
                 arrayRHR = variableArray30Day.map {$0.rhr}
-                
                 print("Array RHR = \(arrayRHR)")
                 print(arrayRHR.count)
-                //4 - Work with array to adjust core data
                 //5 - Change RHRdone to true
                 arrayRHRDone = true
                 print("RHR Done = \(arrayRHRDone)")
