@@ -429,13 +429,9 @@ struct ContentView: View {
                     // How the button looks like
                     Text("Calculate Recovery")
                                 //.frame(minWidth: 0, maxWidth: .infinity)
-                                .fontWeight(.bold)
-                                .font(.system(size: 18))
+                        .foregroundColor(Color.white).bold()
                                 .padding()
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 10)
-                                        .stroke(lineWidth: 3)
-                                )
+                        .background(RoundedRectangle(cornerRadius: 15).opacity(0.5).foregroundColor(.gray))
                 }
                 .alert(isPresented: self.$showsAlert) {
                     Alert(title: Text("Not Enough Data to Calculate Recovery"), message: Text("Try again tomorrow morning to calculate your first recovery"))
