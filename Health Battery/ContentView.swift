@@ -22,10 +22,12 @@ var recoveryRHRPercentageValue = 0.0
 var recoveryHRVPercentageValue = 0.0
 var finalRecoveryPercentageValue = 0.0
 
+
+    //Array
 var arrayHRV = [Double]()
 var arrayRHR = [Double]()
 var arrayNumbers = [NSManagedObject]()
-
+    //Recent
 var recentHRV = 0.0
 var recentRHR = 0.0
 var arrayHRVDone = false
@@ -420,19 +422,7 @@ struct ContentView: View {
                     .font(.system(size: 70))
                 
                 Button(action: {
-//                    calculateScore()
-                    
-                    // Everything in my final function test is running in order, now the issue is that (B) is running before (A)
-                    //(A)
-                    finalFunctionTest()
-                    
-                    //(B)
-                    
-                    
-                    //(C)
-                    //writeDataTest()
-                    
-                    //(D)
+                    finalFunction()
                 }) {
                     // How the button looks like
                     Text("Calculate Recovery")
@@ -539,14 +529,46 @@ struct ContentView: View {
 //    var finalRecoveryPercentage2 = 0.0
 //    var finalRecoveryIndicator = false
     
-        
+  
+    
+    //The Final function that takes everything into account and calls other functions in a sync manor
+    func finalFunction() {
+        writeHRVRecentDatatoCD {
+            writeRHRRecentDatatoCD {
+                saveBothRecents {
+                    getHRVArrayfromCD {
+                        getRHRArrayfromCD {
+                            findMinMaxHRV {
+                                findMinMaxRHR {
+                                    hrvRecoveryCalculation {
+                                        rhrRecoveryCalculation {
+                                            calculateFinalRecovery()
+                                            self.finalRecoveryPercentage = Int(finalRecoveryPercentage2)
+                                            self.finalRHRPercentage = Int(rhrRecoveryPercentage)
+                                            self.finalHRVPercentage = Int(hrvRecoveryPercentage)
+                                            self.lastHRVValue = Int(recentHRV)
+                                            self.lastRHRValue = Int(recentRHR)
+                                            print("Final @state is: \(finalRecoveryPercentage2)")
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    
         // MARK: - Take recent data from healthkit and put into an array in CoreData
         // Goal of this is to take the most recent HRV and RHR data and append it to our 30 day array in core data
     
         // Let's us conditional statements to check if the array has 30 points, if so then run the code that removes the oldest point and adds a new one, if not, itll run another code that takes the last x amount of days to populate it
         // Then we can create a conditional statement that runs code (not here) that calculates % and using the conditional statement to make sure things are run before it calculates so we only have to press one time.
-    
-        func writeHRVDatatoArray() {
+
+        //Takes the most recent HRV recording from yesterday until today and appends it to CoreData
+        func writeHRVRecentDatatoCD(_ completion : @escaping()->()) {
             //1 - Access most recent hrv value between midnight yesterday and right this second
             hkm.variabilityMostRecent(from: yesterdayStartDate, to: Date()) {
                 (results) in
@@ -561,22 +583,22 @@ struct ContentView: View {
                 print("Last HRV: \(recentHRV)")
                 
                 //2 - Append most recent hrv value to 30 day core data array
-                let newHRVArrayData = Array30Day(context: managedObjectContext)
-                newHRVArrayData.hrv = recentHRV
+//                let newHRVWriteData = Array30Day(context: managedObjectContext)
+//                newHRVWriteData.hrv = recentHRV
                 
                 //This is also saving 2 contexts when i have it in both, and not together. I want them to be saved together after both run... May need to use conditional.
-                saveContext()
+                //saveContext()
                 //3 - Get data from core data and put into variable array
-                arrayHRV = variableArray30Day.map {$0.hrv}
-                print("Array HRV = \(arrayHRV)")
-                print(arrayHRV.count)
+                
                 //5 - Change HRVdone to true
                 arrayHRVDone = true
                 print("HRV Done = \(arrayHRVDone)")
+                completion()
             }
         }
         
-        func writeRHRDatatoArray() {
+        //Takes most recent RHR recording from yesterday until today and appends it to CoreData
+        func writeRHRRecentDatatoCD(_ completion : @escaping()->()) {
             //1 - Access most recent rhr value between midnight yesterday and right this second
             hkm.restingHeartRateMostRecent(from: yesterdayStartDate, to: Date()) {
                 (results) in
@@ -591,39 +613,111 @@ struct ContentView: View {
                 print("Last RHR: \(recentRHR)")
                 
                 //2 - Append most recent rhr value to 30 day core data array
-                let newRHRArrayData = Array30Day(context: managedObjectContext)
-                newRHRArrayData.rhr = recentRHR
-                saveContext()
+//                let newRHRWriteData = Array30Day(context: managedObjectContext)
+//                newRHRWriteData.rhr = recentRHR
+                
+                //saveContext()
                 
                 //3 - Get data from core data and put into variable array
-                arrayRHR = variableArray30Day.map {$0.rhr}
-                print("Array RHR = \(arrayRHR)")
-                print(arrayRHR.count)
+                
                 //5 - Change RHRdone to true
                 arrayRHRDone = true
                 print("RHR Done = \(arrayRHRDone)")
+                completion()
             }
             //3 - Check how big array is, add or remove as necessary
         }
+    
+    func saveBothRecents(_ completion : @escaping()->()) {
+        let newWriteData = Array30Day(context: managedObjectContext)
+        newWriteData.hrv = recentHRV
+        newWriteData.rhr = recentRHR
+        saveContext()
+        completion()
+    }
+    
+    
+    
+    //This saves our current context. Runs after both RHR and HRV are complete so it saves them together.
+//    func saveContextClosure(_ completion : @escaping()->()) {
+//        // THis is a save context function that has a closure so i can write both RHR and HRV at once
+//
+//        do {
+//            try managedObjectContext.save()
+//            completion()
+//        } catch {
+//            print("Error saving managed object context: \(error)")
+//        }
+//    }
+    
+    //This takes all of our data from CD and appends it to a workable array variable
+    func getHRVArrayfromCD(_ completion : @escaping()->()) {
+        // Access core data and write array to variable
+        arrayHRV = variableArray30Day.map {$0.hrv}
+        print("Array HRV = \(arrayHRV)")
+        print(arrayHRV.count)
+        completion()
+    }
+    
+    //This takes all of our data from CD and appends it to a workable array variable
+    func getRHRArrayfromCD(_ completion : @escaping()->()) {
+        // Access core data and write array to variable
+        arrayRHR = variableArray30Day.map {$0.rhr}
+        print("Array RHR = \(arrayRHR)")
+        print(arrayRHR.count)
+        completion()
+    }
+    
+    //Takes our variable array for HRV and finds the min and max
+    func findMinMaxHRV(_ completion : @escaping()->()) {
+        // Find min and max of HRV from core data array and write to variable
+        
+        maxHRV = arrayHRV.max() ?? 0
+        minHRV = arrayHRV.min() ?? 0
+        print("HRV min: \(minHRV) and max: \(maxHRV)")
+        completion()
+    }
+    
+    //Takes our variable array for RHR and finds the min and max
+    func findMinMaxRHR(_ completion : @escaping()->()) {
+        // Find min and max of HRV from core data array and write to variable
+        
+        maxRHR = arrayRHR.max() ?? 0
+        minRHR = arrayRHR.min() ?? 0
+        print("RHR min: \(minRHR) and max: \(maxRHR)")
+        completion()
+        
+    }
+    
+    // Eventually i want to create varaibles that look at quartiles, IQR, and removes outliers
         
         // MARK: - Compare recent data to array to find % recovery and record to core data
         // Goal of this is to take the most recent healthkit values, compare them to our 30 day coredata array, and come up with a % recovery for each
         // Goal of this is to record that calculation and data to core data
         
-        func hrvRecoveryCalculation() {
-            
+        //Calculates HRV recovery % based off min/max and last reading
+        func hrvRecoveryCalculation(_ completion : @escaping()->()) {
+            hrvRecoveryPercentage = ((recentHRV - minHRV) / (maxHRV - minHRV))*100
+            print("Recovery HRV %: \(hrvRecoveryPercentage)")
+            completion()
         }
         
-        func rhrRecoveryCalculation() {
-            
+        //Calculates RHR recovery % (-1) based off min/max and last reading
+        func rhrRecoveryCalculation(_ completion : @escaping()->()) {
+            rhrRecoveryPercentage = (1-((recentRHR - minRHR) / (maxRHR - minRHR)))*100
+            print("Recovery RHR %: \(rhrRecoveryPercentage)")
+            completion()
         }
         
         // MARK: - Compute final recovery %
         // Goal is to take both of today's calculations and come up with a final %
         // Goal is to take that final percentage and record it to core data
         
+    
+        //Final recovery that takes RHR and HRV %
         func calculateFinalRecovery() {
-            
+           finalRecoveryPercentage2 = (rhrRecoveryPercentage + hrvRecoveryPercentage) / 2
+            print("Final Recovery Percentage: \(finalRecoveryPercentage2)")
         }
         
     }
@@ -679,9 +773,31 @@ struct ContentView: View {
                         // How the button looks like
                         Text("Find Data Path")
                     }
+                    Button(action: {
+                        deleteAllRecords()
+                        
+                    }) {
+                        // How the button looks like
+                        Text("Delete Array Records")
+                    }
                 }
             }
             
+        }
+        
+        func deleteAllRecords() {
+            let delegate = UIApplication.shared.delegate as! AppDelegate
+            let context = delegate.persistentContainer.viewContext
+
+            let deleteFetch = NSFetchRequest<NSFetchRequestResult>(entityName: "Array30Day")
+            let deleteRequest = NSBatchDeleteRequest(fetchRequest: deleteFetch)
+
+            do {
+                try context.execute(deleteRequest)
+                try context.save()
+            } catch {
+                print ("There was an error")
+            }
         }
     }
     //MARK: - StressView
