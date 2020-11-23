@@ -409,6 +409,8 @@ struct ContentView: View {
     @State private var arrayVariability7Day = [Double]()
     @State var sliderValue: Double = 0
     
+    @State var showsAlert = false
+    
     var body: some View {
         NavigationView {
             VStack {
@@ -430,12 +432,14 @@ struct ContentView: View {
                                 .fontWeight(.bold)
                                 .font(.system(size: 18))
                                 .padding()
-                                .foregroundColor(.black)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 10)
-                                        .stroke(Color.black, lineWidth: 3)
+                                        .stroke(lineWidth: 3)
                                 )
                 }
+                .alert(isPresented: self.$showsAlert) {
+                    Alert(title: Text("Not Enough Data to Calculate Recovery"), message: Text("Try again tomorrow morning to calculate your first recovery"))
+                        }
                 Slider(value: $sliderValue, in: 0...100)
                 Text("How Recovered I Actually Feel: \(sliderValue, specifier: "%.0f")%")
                 }.padding()
@@ -540,15 +544,17 @@ struct ContentView: View {
                         getRHRArrayfromCD {
                             findMinMaxHRV {
                                 findMinMaxRHR {
-                                    hrvRecoveryCalculation {
-                                        rhrRecoveryCalculation {
-                                            calculateFinalRecovery()
-                                            self.finalRecoveryPercentage = Int(finalRecoveryPercentage2)
-                                            self.finalRHRPercentage = Int(rhrRecoveryPercentage)
-                                            self.finalHRVPercentage = Int(hrvRecoveryPercentage)
-                                            self.lastHRVValue = Int(recentHRV)
-                                            self.lastRHRValue = Int(recentRHR)
-                                            print("Final @state is: \(finalRecoveryPercentage2)")
+                                    checkDataforErrors {
+                                        hrvRecoveryCalculation {
+                                            rhrRecoveryCalculation {
+                                                calculateFinalRecovery()
+                                                self.finalRecoveryPercentage = Int(finalRecoveryPercentage2)
+                                                self.finalRHRPercentage = Int(rhrRecoveryPercentage)
+                                                self.finalHRVPercentage = Int(hrvRecoveryPercentage)
+                                                self.lastHRVValue = Int(recentHRV)
+                                                self.lastRHRValue = Int(recentRHR)
+                                                print("Final @state is: \(finalRecoveryPercentage2)")
+                                            }
                                         }
                                     }
                                 }
@@ -687,6 +693,18 @@ struct ContentView: View {
         print("RHR min: \(minRHR) and max: \(maxRHR)")
         completion()
         
+    }
+    
+    func checkDataforErrors (_ completion : @escaping()->()) {
+        guard arrayRHR.count > 1 && arrayHRV.count > 1 && maxHRV != minHRV && maxRHR != minHRV else {
+            print("Guard is running and it all stops")
+            // Make a message popup and then be dismissed?
+            showsAlert.toggle()
+            return //break?
+        }
+        
+        print("Guard didnt activate")
+        completion()
     }
     
     // Eventually i want to create varaibles that look at quartiles, IQR, and removes outliers
