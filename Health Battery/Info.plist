@@ -22,6 +22,8 @@
 	<true/>
 	<key>NSHealthClinicalHealthRecordsShareUsageDescription</key>
 	<string>Need Health Data to Calculate %</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Need Health Data to Calculate %</string>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>Need Health Data to Calculate %</string>
 	<key>UIApplicationSceneManifest</key>
@@ -60,7 +62,5 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>NSHealthShareUsageDescription</key>
-	<string>Need Health Data to Calculate %</string>
 </dict>
 </plist>

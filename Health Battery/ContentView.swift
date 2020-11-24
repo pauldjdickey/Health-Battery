@@ -410,6 +410,7 @@ struct ContentView: View {
     @State var sliderValue: Double = 0
     
     @State var showsAlert = false
+    @State var showsAlert1 = false
     
     var body: some View {
         NavigationView {
@@ -435,6 +436,9 @@ struct ContentView: View {
                 }
                 .alert(isPresented: self.$showsAlert) {
                     Alert(title: Text("Not Enough Data to Calculate Recovery"), message: Text("Try again tomorrow morning to calculate your first recovery"))
+                        }
+                .alert(isPresented: self.$showsAlert1) {
+                    Alert(title: Text("No HRV or RHR Data Available"), message: Text("Use the breathe app on your watch to force HRV"))
                         }
                 Slider(value: $sliderValue, in: 0...100)
                 Text("How Recovered I Actually Feel: \(sliderValue, specifier: "%.0f")%")
@@ -535,21 +539,23 @@ struct ContentView: View {
     func finalFunction() {
         writeHRVRecentDatatoCD {
             writeRHRRecentDatatoCD {
-                saveBothRecents {
-                    getHRVArrayfromCD {
-                        getRHRArrayfromCD {
-                            findMinMaxHRV {
-                                findMinMaxRHR {
-                                    checkDataforErrors {
-                                        hrvRecoveryCalculation {
-                                            rhrRecoveryCalculation {
-                                                calculateFinalRecovery()
-                                                self.finalRecoveryPercentage = Int(finalRecoveryPercentage2)
-                                                self.finalRHRPercentage = Int(rhrRecoveryPercentage)
-                                                self.finalHRVPercentage = Int(hrvRecoveryPercentage)
-                                                self.lastHRVValue = Int(recentHRV)
-                                                self.lastRHRValue = Int(recentRHR)
-                                                print("Final @state is: \(finalRecoveryPercentage2)")
+                checkIfRecentRHRHRVZero {
+                    saveBothRecents {
+                        getHRVArrayfromCD {
+                            getRHRArrayfromCD {
+                                findMinMaxHRV {
+                                    findMinMaxRHR {
+                                        checkDataforErrors {
+                                            hrvRecoveryCalculation {
+                                                rhrRecoveryCalculation {
+                                                    calculateFinalRecovery()
+                                                    self.finalRecoveryPercentage = Int(finalRecoveryPercentage2)
+                                                    self.finalRHRPercentage = Int(rhrRecoveryPercentage)
+                                                    self.finalHRVPercentage = Int(hrvRecoveryPercentage)
+                                                    self.lastHRVValue = Int(recentHRV)
+                                                    self.lastRHRValue = Int(recentRHR)
+                                                    print("Final @state is: \(finalRecoveryPercentage2)")
+                                                }
                                             }
                                         }
                                     }
@@ -630,10 +636,24 @@ struct ContentView: View {
             //3 - Check how big array is, add or remove as necessary
         }
     
+    func checkIfRecentRHRHRVZero(_ completion : @escaping()->()) {
+        guard recentHRV != 0.0 && recentRHR != 0.0 else {
+            print("Guard is running and it all stops")
+            // Make a message popup and then be dismissed?
+            showsAlert1.toggle()
+            return //break?
+        }
+        
+        print("Guard didnt activate")
+        completion()
+    }
+    
     func saveBothRecents(_ completion : @escaping()->()) {
         let newWriteData = Array30Day(context: managedObjectContext)
         newWriteData.hrv = recentHRV
         newWriteData.rhr = recentRHR
+        
+        //Its crashing for sam on saveContext, both when she pressed the app and when she left the app... Maybe its trying to save nothing?
         saveContext()
         completion()
     }
