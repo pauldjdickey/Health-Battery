@@ -548,13 +548,15 @@ struct ContentView: View {
                                         checkDataforErrors {
                                             hrvRecoveryCalculation {
                                                 rhrRecoveryCalculation {
-                                                    calculateFinalRecovery()
-                                                    self.finalRecoveryPercentage = Int(finalRecoveryPercentage2)
-                                                    self.finalRHRPercentage = Int(rhrRecoveryPercentage)
-                                                    self.finalHRVPercentage = Int(hrvRecoveryPercentage)
-                                                    self.lastHRVValue = Int(recentHRV)
-                                                    self.lastRHRValue = Int(recentRHR)
-                                                    print("Final @state is: \(finalRecoveryPercentage2)")
+                                                    calculateFinalRecovery {
+                                                        finalRecoverySave()
+                                                        self.finalRecoveryPercentage = Int(finalRecoveryPercentage2)
+                                                        self.finalRHRPercentage = Int(rhrRecoveryPercentage)
+                                                        self.finalHRVPercentage = Int(hrvRecoveryPercentage)
+                                                        self.lastHRVValue = Int(recentHRV)
+                                                        self.lastRHRValue = Int(recentRHR)
+                                                        print("Final @state is: \(finalRecoveryPercentage2)")
+                                                    }
                                                 }
                                             }
                                         }
@@ -652,6 +654,7 @@ struct ContentView: View {
         let newWriteData = Array30Day(context: managedObjectContext)
         newWriteData.hrv = recentHRV
         newWriteData.rhr = recentRHR
+        newWriteData.date = Date()
         
         //Its crashing for sam on saveContext, both when she pressed the app and when she left the app... Maybe its trying to save nothing?
         saveContext()
@@ -749,9 +752,23 @@ struct ContentView: View {
         
     
         //Final recovery that takes RHR and HRV %
-        func calculateFinalRecovery() {
+        func calculateFinalRecovery(_ completion : @escaping()->()) {
            finalRecoveryPercentage2 = (rhrRecoveryPercentage + hrvRecoveryPercentage) / 2
             print("Final Recovery Percentage: \(finalRecoveryPercentage2)")
+            completion()
+        }
+    
+        func finalRecoverySave() {
+            let finalWriteData = Recovery(context: managedObjectContext)
+            finalWriteData.date = Date()
+            finalWriteData.hrvValue = recentHRV
+            finalWriteData.hrvPercent = hrvRecoveryPercentage
+            finalWriteData.rhrValue = recentRHR
+            finalWriteData.rhrPercent = rhrRecoveryPercentage
+            finalWriteData.overallPercent = finalRecoveryPercentage2
+            
+            saveContext()
+            print("Final Recovery Saved!")
         }
         
     }
@@ -814,6 +831,13 @@ struct ContentView: View {
                         // How the button looks like
                         Text("Delete Array Records")
                     }
+                    Button(action: {
+                        deleteAllRecordsRecovery()
+                        
+                    }) {
+                        // How the button looks like
+                        Text("Delete Recovery Records")
+                    }
                 }
             }
             
@@ -824,6 +848,21 @@ struct ContentView: View {
             let context = delegate.persistentContainer.viewContext
 
             let deleteFetch = NSFetchRequest<NSFetchRequestResult>(entityName: "Array30Day")
+            let deleteRequest = NSBatchDeleteRequest(fetchRequest: deleteFetch)
+
+            do {
+                try context.execute(deleteRequest)
+                try context.save()
+            } catch {
+                print ("There was an error")
+            }
+        }
+        
+        func deleteAllRecordsRecovery() {
+            let delegate = UIApplication.shared.delegate as! AppDelegate
+            let context = delegate.persistentContainer.viewContext
+
+            let deleteFetch = NSFetchRequest<NSFetchRequestResult>(entityName: "Recovery")
             let deleteRequest = NSBatchDeleteRequest(fetchRequest: deleteFetch)
 
             do {
