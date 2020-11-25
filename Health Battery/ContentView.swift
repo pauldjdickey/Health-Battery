@@ -138,253 +138,6 @@ extension Date {
     }
 }
 
-// MARK: - Model Manipulation Methods
-
-//func saveItems() {
-//    do {
-//        try context.save()
-//    } catch {
-//        print("Error saving context \(error)")
-//    }
-//}
-
-// MARK: - Most Recent Variability Function
-
-func mostRecentHRVFunction(_ completion : @escaping()->()) {
-    hkm.variabilityMostRecent(from: yesterdayStartDate, to: Date()) {
-        (results) in
-        
-        var lastHRV = 0.0
-        
-        // results is an array of [HKQuantitySample]
-        // example conversion to BPM:
-        for result in results {
-            lastHRV = result.quantity.doubleValue(for: .variabilityUnit)
-        }
-        mostRecentHRV = Double(lastHRV)
-        print("Last HRV: \(mostRecentHRV)")
-        print("first")
-        completion()
-        
-    }
-}
-
-// MARK: - Most Recent RHR Function
-
-func mostRecentRHRFunction(_ completion : @escaping()->()) {
-    hkm.restingHeartRateMostRecent(from: yesterdayStartDate, to: Date()) {
-        (results) in
-        
-        var lastRestingHR = 0.0
-        // results is an array of [HKQuantitySample]
-        // example conversion to BPM:
-        for result in results {
-            lastRestingHR = result.quantity.doubleValue(for: .heartRateUnit)
-        }
-        mostRecentRHR = Double(lastRestingHR)
-        print("Last RHR: \(mostRecentRHR)")
-        print("second")
-        completion()
-
-    }
-}
-
-// MARK: - 7 Day Variability Function
-
-func weekVariabilityArrayFunction(_ completion : @escaping()->()) {
-    //arrayVariability7Day2.removeAll()
-    hkm.variability(from: weekAgoStartDate, to: Date()) {
-        (results) in
-        
-        arrayVariability7Day2.removeAll()
-        var Variability = 0.0
-        
-        // results is an array of [HKQuantitySample]
-        // example conversion to BPM:
-        for result in results {
-            Variability = result.quantity.doubleValue(for: .variabilityUnit)
-            //Need to run this in a main queue becuase its so much
-            arrayVariability7Day2.append(Variability)
-            
-        }
-        print("Array for Variability: \(arrayVariability7Day2)")
-        print("third")
-        completion()
-
-    }
-}
-// MARK: - 7 Day RHR Function
-
-func weekRHRArrayFunction(_ completion : @escaping()->()) {
-    //arrayRHR7Day2.removeAll()
-    hkm.restingHeartRate(from: weekAgoStartDate, to: Date()) {
-        (results) in
-        arrayRHR7Day2.removeAll()
-        var RHR = 0.0
-        
-        // results is an array of [HKQuantitySample]
-        // example conversion to BPM:
-        for result in results {
-            RHR = result.quantity.doubleValue(for: .heartRateUnit)
-            //Need to run this in a main queue becuase its so much
-            arrayRHR7Day2.append(RHR)
-            
-        }
-        print("Array for RHR: \(arrayRHR7Day2)")
-        print("fourth")
-        completion()
-
-//        weekRHRMax()
-//        weekRHRMin()
-//        recoveryRHRPercentage()
-//        finalRecoveryPercentage()
-    }
-}
-
-// MARK: - 7 Day Max HRV Function
-func weekHRVMax(_ completion : @escaping()->()) {
-    max7DayHRV = arrayVariability7Day2.max() ?? 0
-    print("Max 7 Day HRV:\(max7DayHRV)")
-    print("fifth")
-    completion()
-
-}
-
-
-// MARK: - 7 Day Min HRV Function
-func weekHRVMin(_ completion : @escaping()->()) {
-    min7DayHRV = arrayVariability7Day2.min() ?? 0
-    print("Min 7 Day HRV:\(min7DayHRV)")
-    print("sixth")
-    completion()
-
-}
-
-// MARK: - 7 Day Max RHR Function
-func weekRHRMax(_ completion : @escaping()->()) {
-    max7DayRHR = arrayRHR7Day2.max() ?? 0
-    print("Max 7 Day RHR:\(max7DayRHR)")
-    print("seventh")
-    completion()
-
-}
-
-// MARK: - 7 Day Min RHR Function
-func weekRHRMin(_ completion : @escaping()->()) {
-    min7DayRHR = arrayRHR7Day2.min() ?? 0
-    print("Min 7 day RHR:\(min7DayRHR)")
-    print("eighth")
-    completion()
-
-}
-
-// MARK: - HRV Calculate Rating per Min/Max
-func recoveryHRVPercentage(_ completion : @escaping()->()) {
-    recoveryHRVPercentageValue = ((mostRecentHRV - min7DayHRV) / (max7DayHRV - min7DayHRV))*100
-    print("Recovery HRV %: \(recoveryHRVPercentageValue)")
-    print("nineth")
-    completion()
-
-}
-
-// MARK: - RHR Calculate Rating per Min/Max
-func recoveryRHRPercentage(_ completion : @escaping()->()) {
-    // 1- is becuase RHR is better the lower it is.
-    recoveryRHRPercentageValue = (1-((mostRecentRHR - min7DayRHR) / (max7DayRHR - min7DayRHR)))*100
-    print("Recovery RHR %: \(recoveryRHRPercentageValue)")
-    print("tenth")
-    completion()
-
-}
-
-// MARK: - 50/50 Recovery Calculation
-func finalRecoveryPercentageFunction() {
-    finalRecoveryPercentageValue = (recoveryHRVPercentageValue + recoveryRHRPercentageValue) / 2
-    print("Final Recovery %: \(finalRecoveryPercentageValue)")
-    print("last")
-
-    
-}
-
-// MARK: - Calculate Score Function
-//func calculateScore() {
-//
-//        mostRecentHRVFunction()
-//        mostRecentRHRFunction()
-//        weekVariabilityArrayFunction()
-//        weekRHRArrayFunction()
-//}
-
-
-//THIS IS WORKING
-func first(_ completion : @escaping()->()){
-    hkm.restingHeartRate(from: weekAgoStartDate, to: Date()) {
-        (results) in
-        arrayRHR7Day2.removeAll()
-        var RHR = 0.0
-        
-        // results is an array of [HKQuantitySample]
-        // example conversion to BPM:
-        for result in results {
-            RHR = result.quantity.doubleValue(for: .heartRateUnit)
-            //Need to run this in a main queue becuase its so much
-            arrayRHR7Day2.append(RHR)
-            
-        }
-        print("Array for RHR: \(arrayRHR7Day2)")
-//        weekRHRMax()
-//        weekRHRMin()
-//        recoveryRHRPercentage()
-//        finalRecoveryPercentage()
-        print("first")
-        completion()
-    }
-   
-}
-
-func second(_ completion : @escaping()->()){
-    finalRecoveryPercentageValue = (recoveryHRVPercentageValue + recoveryRHRPercentageValue) / 2
-    print("Final Recovery %: \(finalRecoveryPercentageValue)")
-    print("second")
-    completion()
-}
-
-func third(){
-    hkm.variability(from: weekAgoStartDate, to: Date()) {
-        (results) in
-        
-        arrayVariability7Day2.removeAll()
-        var Variability = 0.0
-        
-        // results is an array of [HKQuantitySample]
-        // example conversion to BPM:
-        for result in results {
-            Variability = result.quantity.doubleValue(for: .variabilityUnit)
-            //Need to run this in a main queue becuase its so much
-            arrayVariability7Day2.append(Variability)
-            
-        }
-        print("Array for Variability: \(arrayVariability7Day2)")
-        print("third")
-    }
-   
-}
-
-
-func testFunction() {
-    first{
-         second{
-              third()
-         }
-
-       }
-    
-}
-
-
-
-
-
 //MARK: - ContentView
 
 struct ContentView: View {
@@ -392,11 +145,21 @@ struct ContentView: View {
     //Core Data SwiftUI Object Management + Filepath Location
     @Environment(\.managedObjectContext) var managedObjectContext
     
-    //So this should be working...
+    //So this should be working to request array
     @FetchRequest(
     entity: Array30Day.entity(),
         sortDescriptors: []
         ) var variableArray30Day: FetchedResults<Array30Day>
+    
+    
+    //Need to make this so it loads the most recent item within midnight and this second, put into function that can be called and then takes these results and changes the @statevariable accordingly
+    @FetchRequest(
+        entity: Recovery.entity(),
+        sortDescriptors: []
+    ) var lastRecovery: FetchedResults<Recovery>
+    
+    
+    
     
     @State private var lastVariabilityValue = 0
     @State private var lastHRVValue = 0
@@ -433,7 +196,9 @@ struct ContentView: View {
                         .foregroundColor(Color.white).bold()
                                 .padding()
                         .background(RoundedRectangle(cornerRadius: 15).opacity(0.5).foregroundColor(.gray))
-                }
+                }.onAppear(perform: {
+                    print("Recovery Appeared using OnAppear")
+                })
                 .alert(isPresented: self.$showsAlert) {
                     Alert(title: Text("Not Enough Data to Calculate Recovery"), message: Text("Try again tomorrow morning to calculate your first recovery"))
                         }
@@ -445,41 +210,6 @@ struct ContentView: View {
                 }.padding()
             }
         }
-    
-    func finalFunctionTest() {
-        //IT WORKS! Now take these functions and change them to my new ones
-        //1 - Create new functions
-        //2 - Replace these
-        mostRecentHRVFunction {
-            mostRecentRHRFunction {
-                weekVariabilityArrayFunction {
-                    weekRHRArrayFunction {
-                        weekHRVMax {
-                            weekHRVMin {
-                                weekRHRMax {
-                                    weekRHRMin {
-                                        recoveryHRVPercentage {
-                                            recoveryRHRPercentage {
-                                                finalRecoveryPercentageFunction()
-                                                self.finalRecoveryPercentage = Int(finalRecoveryPercentageValue)
-                                                self.finalRHRPercentage = Int(recoveryRHRPercentageValue)
-                                                self.finalHRVPercentage = Int(recoveryHRVPercentageValue)
-                                                self.lastHRVValue = Int(mostRecentHRV)
-                                                self.lastRHRValue = Int(mostRecentRHR)
-                                                print("Final @state is: \(finalRecoveryPercentage)")
-
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        
-    }
         // MARK: - CRUD Functions
         
         //This is just a test. This is a type of function I could use to write data to my DB
@@ -506,35 +236,6 @@ struct ContentView: View {
         }
         
         // MARK: - New Recovery Calculation Functions
-        // MARK: - New Recovery Calculation Variables
-        
-        // Array
-//    var arrayHRV = [Double]()
-//    var arrayRHR = [Double]()
-//    var recentHRV = 0.0
-//    var recentRHR = 0.0
-//    var arrayHRVDone = false
-//    var arrayRHRDone = false
-//        // Min/Max
-//    var maxHRV = 0.0
-//    var minHRV = 0.0
-//    var maxRHR = 0.0
-//    var minRHR = 0.0
-//    var minHRVDone = false
-//    var maxHRVDone = false
-//    var minRHRDone = false
-//    var maxRHRDone = false
-//        // HRV/RHR Calculation
-//    var hrvRecoveryPercentage = 0.0
-//    var rhrRecoveryPercentage = 0.0
-//    var hrvPercentageDone = false
-//    var rhrPercentageDone = false
-//        // Final Calculation
-//    var finalRecoveryPercentage2 = 0.0
-//    var finalRecoveryIndicator = false
-    
-  
-    
     //The Final function that takes everything into account and calls other functions in a sync manor
     func finalFunction() {
         writeHRVRecentDatatoCD {
@@ -661,20 +362,6 @@ struct ContentView: View {
         completion()
     }
     
-    
-    
-    //This saves our current context. Runs after both RHR and HRV are complete so it saves them together.
-//    func saveContextClosure(_ completion : @escaping()->()) {
-//        // THis is a save context function that has a closure so i can write both RHR and HRV at once
-//
-//        do {
-//            try managedObjectContext.save()
-//            completion()
-//        } catch {
-//            print("Error saving managed object context: \(error)")
-//        }
-//    }
-    
     //This takes all of our data from CD and appends it to a workable array variable
     func getHRVArrayfromCD(_ completion : @escaping()->()) {
         // Access core data and write array to variable
@@ -770,8 +457,13 @@ struct ContentView: View {
             saveContext()
             print("Final Recovery Saved!")
         }
+    
+        func retrieveLastRecordedRecovery() {
+        }
         
     }
+
+        
 
 
     
