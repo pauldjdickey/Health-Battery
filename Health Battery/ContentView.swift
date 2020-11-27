@@ -49,17 +49,37 @@ var rhrPercentageDone = false
     // Final Calculation
 var finalRecoveryPercentage2 = 0.0
 var finalRecoveryIndicator = false
+    // Loading Last Recovery
+var lastRecoveryArray = [Double]()
+var lastHRVValueArray = [Double]()
+var lastRHRValueArray = [Double]()
+var lastHRVPercentArray = [Double]()
+var lastRHRPercentArray = [Double]()
+var lastRecoveryVar = 0.0
+var lastHRVVar = 0.0
+var lastRHRVar = 0.0
+var lastHRVPercentVar = 0.0
+var lastRHRPercentVar = 0.0
+    // Core Data Check
+var hasRecoveryHappened = [Double]()
 
 
 typealias FinishedGettingHealthData = () -> ()
 
+//var date = NSDate()
+//let cal = NSCalendar(calendarIdentifier: NSCalendar.Identifier.gregorian)!
+//var lastMidnight = cal.startOfDay(for: date as Date)
 
+//let date: Date = Date()
+//let cal: Calendar = Calendar(identifier: .gregorian)
+//let lastMidnight: Date = cal.date(bySettingHour: 0, minute: 0, second: 0, of: date)!
 
 let calendar = Calendar.current
 let startDate = calendar.startOfDay(for: Date())
 let yesterdayStartDate = calendar.startOfDay(for: Date.yesterday)
 let weekAgoStartDate = calendar.startOfDay(for: Date.weekAgo)
 let monthAgoStartDate = calendar.startOfDay(for: Date.monthAgo)
+let lastMidnight = calendar.startOfDay(for: Date())
 
 private enum HealthkitSetupError: Error {
     case notAvailableOnDevice
@@ -147,15 +167,18 @@ struct ContentView: View {
     
     //So this should be working to request array
     @FetchRequest(
-    entity: Array30Day.entity(),
+        entity: Array30Day.entity(),
         sortDescriptors: []
         ) var variableArray30Day: FetchedResults<Array30Day>
     
     
     //Need to make this so it loads the most recent item within midnight and this second, put into function that can be called and then takes these results and changes the @statevariable accordingly
+    
+    // This is working and fetches all core date from midnight until right now, organize by most recent first in the array
     @FetchRequest(
         entity: Recovery.entity(),
-        sortDescriptors: []
+        sortDescriptors: [NSSortDescriptor(keyPath: \Recovery.date, ascending: false)],
+        predicate: NSPredicate(format: "date >= %@", lastMidnight as NSDate)
     ) var lastRecovery: FetchedResults<Recovery>
     
     
@@ -196,6 +219,18 @@ struct ContentView: View {
                         .foregroundColor(Color.white).bold()
                                 .padding()
                         .background(RoundedRectangle(cornerRadius: 15).opacity(0.5).foregroundColor(.gray))
+                }
+                Button(action: {
+                    todaysRecoveryRequest()
+                }) {
+                    // How the button looks like
+                    Text("Test Request Recovery from CD")
+                }
+                Button(action: {
+                    hasUserCalculatedRecovery()
+                }) {
+                    // How the button looks like
+                    Text("Test Check for Recovery Happened")
                 }.onAppear(perform: {
                     print("Recovery Appeared using OnAppear")
                     todaysRecoveryRequest()
@@ -230,12 +265,78 @@ struct ContentView: View {
             newTest.date = Date()
             saveContext()
         }
+    
+        // MARK: - Core Data Request Functions
         
         //Searches for and loads today's recovery % Data from Model
         func todaysRecoveryRequest() {
             print("Recovery Request Function Called!")
             //This works! Now let's get the last item from core data from midnight until right now, apply those details to variables that then change the @state variables. There should be an if-then statement checking if there is data to make sure it doesnt pull no data. Maybe a guard?
+            
+            lastRecoveryArray = lastRecovery.map {$0.overallPercent}
+            lastHRVValueArray = lastRecovery.map {$0.hrvValue}
+            lastRHRValueArray = lastRecovery.map {$0.rhrValue}
+            lastHRVPercentArray = lastRecovery.map {$0.hrvPercent}
+            lastRHRPercentArray = lastRecovery.map {$0.rhrPercent}
+            //This is an array of all items from midnight to right now
+            print("Full recovery Array: \(lastRecoveryArray)")
+            
+            //So... This function should have a guard or if then that checks if any data is pulled, if no data is pulled between midnight and right now, that means a calculation has not been done yet and we dont have to run this function. If there is data that is pulled, we should find the most recent one and apply it to our @state variables on .appear. Then if that works, we can change the text of our button to say "Recalculate". Then we can do this to all our variables to load!
+            // Guard statement goes here!
+            // Guard checks if we got data (Array county is empty)
+            guard lastRecoveryArray.count >= 1 else {
+                print("Guard is running and it all stops")
+                // If array is empty, we simply return and dont run the rest of function
+                self.finalRecoveryPercentage = Int(0)
+                self.finalRHRPercentage = Int(0)
+                self.finalHRVPercentage = Int(0)
+                self.lastHRVValue = Int(0)
+                self.lastRHRValue = Int(0)
+                
+                return
+            }
+            // If array has something, we run the function below
+            print("Guard didnt activate")
+            
+            
+            //For now, assume we will get data to test
+            
+            lastRecoveryVar = lastRecoveryArray.first ?? 0
+            lastHRVVar = lastHRVValueArray.first ?? 0
+            lastRHRVar = lastRHRValueArray.first ?? 0
+            lastHRVPercentVar = lastHRVPercentArray.first ?? 0
+            lastRHRPercentVar = lastRHRPercentArray.first ?? 0
+            
+            print("Recovery %: \(lastRecoveryVar)")
+            print("Last HRV Value: \(lastHRVVar)")
+            print("Last RHR Value: \(lastRHRVar)")
+            print("Last HRV %: \(lastHRVPercentVar)")
+            print("Last RHR %: \(lastRHRPercentVar)")
+            
+            self.finalRecoveryPercentage = Int(lastRecoveryVar)
+            self.finalRHRPercentage = Int(lastRHRPercentVar)
+            self.finalHRVPercentage = Int(lastHRVPercentVar)
+            self.lastHRVValue = Int(lastHRVVar)
+            self.lastRHRValue = Int(lastRHRVar)
+            
+            
+            
         }
+    
+    func hasUserCalculatedRecovery() {
+        // Gets core data array
+        // Conditional statement checking count of array -> If count == 0, then closure
+        // If count >= 1, then prompt asking for redo
+        hasRecoveryHappened = lastRecovery.map {$0.overallPercent}
+        print(hasRecoveryHappened.count)
+        
+        if hasRecoveryHappened.count == 0 {
+            print("User has not calculated recovery, enact closure to continue as usual")
+        } else {
+            print("User has calculated recovery, prompt to continue to recalculate or not? and either closure or break")
+        }
+        
+    }
         
         // MARK: - New Recovery Calculation Functions
     //The Final function that takes everything into account and calls other functions in a sync manor
@@ -259,6 +360,10 @@ struct ContentView: View {
                                                         self.lastHRVValue = Int(recentHRV)
                                                         self.lastRHRValue = Int(recentRHR)
                                                         print("Final @state is: \(finalRecoveryPercentage2)")
+                                                        
+                                                        
+                                                        print("Current Date: \(Date())")
+                                                        print("Midnight: \(lastMidnight)")
                                                     }
                                                 }
                                             }
