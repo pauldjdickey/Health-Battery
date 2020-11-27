@@ -35,7 +35,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             self.window = window
             
             print("Scene Delegate before root view Was Triggered")
-
+            
             
             window.makeKeyAndVisible()
             

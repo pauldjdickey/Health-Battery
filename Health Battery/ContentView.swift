@@ -171,7 +171,7 @@ struct ContentView: View {
     @State private var finalHRVPercentage = 0
     @State private var arrayVariability7Day = [Double]()
     @State var sliderValue: Double = 0
-    
+        
     @State var showsAlert = false
     @State var showsAlert1 = false
     
@@ -198,6 +198,7 @@ struct ContentView: View {
                         .background(RoundedRectangle(cornerRadius: 15).opacity(0.5).foregroundColor(.gray))
                 }.onAppear(perform: {
                     print("Recovery Appeared using OnAppear")
+                    todaysRecoveryRequest()
                 })
                 .alert(isPresented: self.$showsAlert) {
                     Alert(title: Text("Not Enough Data to Calculate Recovery"), message: Text("Try again tomorrow morning to calculate your first recovery"))
@@ -231,8 +232,9 @@ struct ContentView: View {
         }
         
         //Searches for and loads today's recovery % Data from Model
-        func todaysRecoveryRequest () {
-            
+        func todaysRecoveryRequest() {
+            print("Recovery Request Function Called!")
+            //This works! Now let's get the last item from core data from midnight until right now, apply those details to variables that then change the @state variables. There should be an if-then statement checking if there is data to make sure it doesnt pull no data. Maybe a guard?
         }
         
         // MARK: - New Recovery Calculation Functions
