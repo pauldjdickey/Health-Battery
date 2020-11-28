@@ -197,6 +197,7 @@ struct ContentView: View {
         
     @State var showsAlert = false
     @State var showsAlert1 = false
+    @State var showsAlertRecoveryCheck = false
     
     var body: some View {
         NavigationView {
@@ -225,9 +226,11 @@ struct ContentView: View {
                 }) {
                     // How the button looks like
                     Text("Test Request Recovery from CD")
-                }
+                }.alert(isPresented: self.$showsAlert1) {
+                    Alert(title: Text("No HRV or RHR Data Available"), message: Text("Use the breathe app on your watch to force HRV"))
+                        }
                 Button(action: {
-                    hasUserCalculatedRecovery()
+                    //hasUserCalculatedRecovery()
                 }) {
                     // How the button looks like
                     Text("Test Check for Recovery Happened")
@@ -238,9 +241,16 @@ struct ContentView: View {
                 .alert(isPresented: self.$showsAlert) {
                     Alert(title: Text("Not Enough Data to Calculate Recovery"), message: Text("Try again tomorrow morning to calculate your first recovery"))
                         }
-                .alert(isPresented: self.$showsAlert1) {
-                    Alert(title: Text("No HRV or RHR Data Available"), message: Text("Use the breathe app on your watch to force HRV"))
+                .alert(isPresented: self.$showsAlertRecoveryCheck) {
+                    Alert(
+                        title: Text("Recovery has Already Been Calculated for The Day"),
+                        message: Text("Would you like to recalculate your recovery?"),
+                        primaryButton: .default(Text("Keep Current Calculation")),
+                        secondaryButton: .destructive(Text("Recalculate")){
+                            print("Recalculate Button Pressed")
+                            finalFunctionWithoutRecoveryCheck()
                         }
+                        )}
                 Slider(value: $sliderValue, in: 0...100)
                 Text("How Recovered I Actually Feel: \(sliderValue, specifier: "%.0f")%")
                 }.padding()
@@ -323,24 +333,65 @@ struct ContentView: View {
             
         }
     
-    func hasUserCalculatedRecovery() {
+    func hasUserCalculatedRecovery(_ completion : @escaping()->()) {
         // Gets core data array
         // Conditional statement checking count of array -> If count == 0, then closure
         // If count >= 1, then prompt asking for redo
         hasRecoveryHappened = lastRecovery.map {$0.overallPercent}
         print(hasRecoveryHappened.count)
         
-        if hasRecoveryHappened.count == 0 {
-            print("User has not calculated recovery, enact closure to continue as usual")
-        } else {
+        guard hasRecoveryHappened.count == 0 else {
             print("User has calculated recovery, prompt to continue to recalculate or not? and either closure or break")
+            showsAlertRecoveryCheck.toggle()
+            return
         }
-        
+        print("User has not calculated recovery, enact closure to continue as usual")
+        completion()
     }
         
         // MARK: - New Recovery Calculation Functions
     //The Final function that takes everything into account and calls other functions in a sync manor
     func finalFunction() {
+        hasUserCalculatedRecovery {
+            writeHRVRecentDatatoCD {
+                writeRHRRecentDatatoCD {
+                    checkIfRecentRHRHRVZero {
+                        saveBothRecents {
+                            getHRVArrayfromCD {
+                                getRHRArrayfromCD {
+                                    findMinMaxHRV {
+                                        findMinMaxRHR {
+                                            checkDataforErrors {
+                                                hrvRecoveryCalculation {
+                                                    rhrRecoveryCalculation {
+                                                        calculateFinalRecovery {
+                                                            finalRecoverySave()
+                                                            self.finalRecoveryPercentage = Int(finalRecoveryPercentage2)
+                                                            self.finalRHRPercentage = Int(rhrRecoveryPercentage)
+                                                            self.finalHRVPercentage = Int(hrvRecoveryPercentage)
+                                                            self.lastHRVValue = Int(recentHRV)
+                                                            self.lastRHRValue = Int(recentRHR)
+                                                            print("Final @state is: \(finalRecoveryPercentage2)")
+                                                            
+                                                            
+                                                            print("Current Date: \(Date())")
+                                                            print("Midnight: \(lastMidnight)")
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    func finalFunctionWithoutRecoveryCheck() {
         writeHRVRecentDatatoCD {
             writeRHRRecentDatatoCD {
                 checkIfRecentRHRHRVZero {
