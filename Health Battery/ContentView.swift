@@ -518,7 +518,7 @@ struct ContentView: View {
         completion()
     }
     
-    // MARK: - Check to make sure we have HRV data before saving most recent, should be more than 0. This will only be triggered if the user forces the HRV above and it doesnt work through the breathing app and they force it anyways. Prompt them the same as the RHR function above, different text to wear the watch more or to try to force HRV again.
+    // MARK: - Check to make sure we have HRV data before saving most recent, should be more than 0. This will only be triggered if the user forces the HRV above and it doesnt work through the breathing app and they force it anyways and it cant find any HRV from yesterday either. Prompt them the same as the RHR function above, different text to wear the watch more or to try to force HRV again. "Unfortunately we can not process your recovery. Please either force your HRV in the breathing app or come back again tomorrow after wearing your watch all day"
     
     
     func saveBothRecents(_ completion : @escaping()->()) {
