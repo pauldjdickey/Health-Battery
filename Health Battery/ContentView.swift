@@ -333,21 +333,7 @@ struct ContentView: View {
             
         }
     
-    func hasUserCalculatedRecovery(_ completion : @escaping()->()) {
-        // Gets core data array
-        // Conditional statement checking count of array -> If count == 0, then closure
-        // If count >= 1, then prompt asking for redo
-        hasRecoveryHappened = lastRecovery.map {$0.overallPercent}
-        print(hasRecoveryHappened.count)
-        
-        guard hasRecoveryHappened.count == 0 else {
-            print("User has calculated recovery, prompt to continue to recalculate or not? and either closure or break")
-            showsAlertRecoveryCheck.toggle()
-            return
-        }
-        print("User has not calculated recovery, enact closure to continue as usual")
-        completion()
-    }
+    
         
         // MARK: - New Recovery Calculation Functions
     //The Final function that takes everything into account and calls other functions in a sync manor
@@ -435,6 +421,24 @@ struct ContentView: View {
     
         // Let's us conditional statements to check if the array has 30 points, if so then run the code that removes the oldest point and adds a new one, if not, itll run another code that takes the last x amount of days to populate it
         // Then we can create a conditional statement that runs code (not here) that calculates % and using the conditional statement to make sure things are run before it calculates so we only have to press one time.
+    
+        // MARK: - User Calculated Recovery Guard
+    
+        func hasUserCalculatedRecovery(_ completion : @escaping()->()) {
+            // Gets core data array
+            // Conditional statement checking count of array -> If count == 0, then closure
+            // If count >= 1, then prompt asking for redo
+            hasRecoveryHappened = lastRecovery.map {$0.overallPercent}
+            print(hasRecoveryHappened.count)
+            
+            guard hasRecoveryHappened.count == 0 else {
+                print("User has calculated recovery, prompt to continue to recalculate or not? and either closure or break")
+                showsAlertRecoveryCheck.toggle()
+                return
+            }
+            print("User has not calculated recovery, enact closure to continue as usual")
+            completion()
+        }
 
         //Takes the most recent HRV recording from yesterday until today and appends it to CoreData
         func writeHRVRecentDatatoCD(_ completion : @escaping()->()) {
@@ -497,6 +501,11 @@ struct ContentView: View {
             //3 - Check how big array is, add or remove as necessary
         }
     
+    
+    
+    // MARK: - ADD FUNCTION - Guard to check if any RHR from last 2 days - Just stops and tells to wear watch more if there arent so we dont even have to continue and fail
+
+    // MARK: - Check if HRV was in past day guard, otherwise prompt to go back to breathe app. Need to change variable +=, and if user decides to run the recovery anyways, it will need to then change most recent HRV to be yesterday. If past recording since midnight was 0.0, then we know we need to look back farther. What if the user forces and it has no HRV recovery data?
     func checkIfRecentRHRHRVZero(_ completion : @escaping()->()) {
         guard recentHRV != 0.0 && recentRHR != 0.0 else {
             print("Guard is running and it all stops")
@@ -508,6 +517,9 @@ struct ContentView: View {
         print("Guard didnt activate")
         completion()
     }
+    
+    // MARK: - Check to make sure we have HRV data before saving most recent, should be more than 0. This will only be triggered if the user forces the HRV above and it doesnt work through the breathing app and they force it anyways. Prompt them the same as the RHR function above, different text to wear the watch more or to try to force HRV again.
+    
     
     func saveBothRecents(_ completion : @escaping()->()) {
         let newWriteData = Array30Day(context: managedObjectContext)
@@ -537,7 +549,8 @@ struct ContentView: View {
         print(arrayRHR.count)
         completion()
     }
-    
+    // MARK: - Check to see if there are 3-4 days worth of core data recoveries to use, otherwise give popup and calculate @ 50% without checking for errors. This will be a good place because we have done all the checks above first
+
     //Takes our variable array for HRV and finds the min and max
     func findMinMaxHRV(_ completion : @escaping()->()) {
         // Find min and max of HRV from core data array and write to variable
@@ -559,6 +572,7 @@ struct ContentView: View {
         
     }
     
+    // MARK: - Guard before calculating to make sure we dont get an error. Can we remove anything from this? Better alert?
     func checkDataforErrors (_ completion : @escaping()->()) {
         guard arrayRHR.count > 1 && arrayHRV.count > 1 && maxHRV != minHRV && maxRHR != minHRV else {
             print("Guard is running and it all stops")
