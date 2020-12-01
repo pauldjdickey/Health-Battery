@@ -62,6 +62,7 @@ var lastHRVPercentVar = 0.0
 var lastRHRPercentVar = 0.0
     // Core Data Check
 var hasRecoveryHappened = [Double]()
+var howManyRecoveries = [Double]()
 
 
 typealias FinishedGettingHealthData = () -> ()
@@ -181,7 +182,10 @@ struct ContentView: View {
         predicate: NSPredicate(format: "date >= %@", lastMidnight as NSDate)
     ) var lastRecovery: FetchedResults<Recovery>
     
-    
+    @FetchRequest(
+        entity: Recovery.entity(),
+        sortDescriptors: []
+    ) var recoveryCount: FetchedResults<Recovery>
     
     
     @State private var lastVariabilityValue = 0
@@ -196,8 +200,16 @@ struct ContentView: View {
     @State var sliderValue: Double = 0
         
     @State var showsAlert = false
-    @State var showsAlert1 = false
+    @State var showsRHRCheckAlert = false
     @State var showsAlertRecoveryCheck = false
+    @State var showsHRV1DayCheckAlert = false
+    
+    enum ActiveAlert {
+        case alertRecoveryCheck, showsHRV1DayCheckAlert, showsRHRCheckAlert, showsForcedHRVCheckAlert, checkStartingCoreDataAmount, checkDataForErrorsAlert
+    }
+    
+    @State private var showAlert = false
+    @State private var activeAlert: ActiveAlert = .alertRecoveryCheck
     
     var body: some View {
         NavigationView {
@@ -221,14 +233,37 @@ struct ContentView: View {
                                 .padding()
                         .background(RoundedRectangle(cornerRadius: 15).opacity(0.5).foregroundColor(.gray))
                 }
+                .alert(isPresented: $showAlert) {
+                    switch activeAlert {
+                    case .alertRecoveryCheck:
+                        return Alert(title: Text("Recovery has already been calculated for the day."), message: Text("Would you like to recalculate your recovery?"), primaryButton: .default(Text("Keep current calculation.")), secondaryButton: .destructive(Text("Recalculate")){
+                                        print("Recalculate Button Pressed")
+                                        finalFunctionWithoutRecoveryCheck()
+                        })
+                    case .showsHRV1DayCheckAlert:
+                        return Alert(title: Text("Your Most Recent HRV Reading is Not Up to Date"), message: Text("Please Go to the Breathing App on Your Apple Watch to Force your HRV, then Try Recalculating Your Recovery"), primaryButton: .default(Text("Ok")), secondaryButton: .destructive(Text("Calculate Recovery Anyways")){
+                                        print("Forced Calculate Button Pressed")
+                                        finalFunctionWithForcedHRVRecovery()
+                        })
+                    case .showsRHRCheckAlert:
+                        return Alert(title: Text("Not enough RHR data available."), message: Text("Please wear your watch all day and try to calculate recovery again tomorrow."))
+                    case .showsForcedHRVCheckAlert:
+                        return Alert(title: Text("Unfortunately, we can not process your recovery."), message: Text("Please force your HRV in the breathing app or come back again tomorrow after wearing your watch all day."))
+                    case .checkStartingCoreDataAmount:
+                        return Alert(title: Text("There are less than 4 days of recoveries."), message: Text("Please continue calculating your recovery every morning to create a baseline."), dismissButton: .default(Text("Okay")){
+                            print("Create Baseline Button Tapped")
+                            //finalRecoveryBaselineFunction()
+                        })
+                    case .checkDataForErrorsAlert:
+                        return Alert(title: Text("Unfortunately, there is not enough data from your watch."), message: Text("Please weare your watch all day and come back tomorrow to calculate your recovery."))
+                    }
+                }
                 Button(action: {
-                    todaysRecoveryRequest()
+                    testAlert()
                 }) {
                     // How the button looks like
-                    Text("Test Request Recovery from CD")
-                }.alert(isPresented: self.$showsAlert1) {
-                    Alert(title: Text("No HRV or RHR Data Available"), message: Text("Use the breathe app on your watch to force HRV"))
-                        }
+                    Text("Test Alert")
+                }
                 Button(action: {
                     //hasUserCalculatedRecovery()
                 }) {
@@ -241,16 +276,6 @@ struct ContentView: View {
                 .alert(isPresented: self.$showsAlert) {
                     Alert(title: Text("Not Enough Data to Calculate Recovery"), message: Text("Try again tomorrow morning to calculate your first recovery"))
                         }
-                .alert(isPresented: self.$showsAlertRecoveryCheck) {
-                    Alert(
-                        title: Text("Recovery has Already Been Calculated for The Day"),
-                        message: Text("Would you like to recalculate your recovery?"),
-                        primaryButton: .default(Text("Keep Current Calculation")),
-                        secondaryButton: .destructive(Text("Recalculate")){
-                            print("Recalculate Button Pressed")
-                            finalFunctionWithoutRecoveryCheck()
-                        }
-                        )}
                 Slider(value: $sliderValue, in: 0...100)
                 Text("How Recovered I Actually Feel: \(sliderValue, specifier: "%.0f")%")
                 }.padding()
@@ -339,29 +364,37 @@ struct ContentView: View {
     //The Final function that takes everything into account and calls other functions in a sync manor
     func finalFunction() {
         hasUserCalculatedRecovery {
+            //Goes to different function ^
             writeHRVRecentDatatoCD {
                 writeRHRRecentDatatoCD {
-                    checkIfRecentRHRHRVZero {
-                        saveBothRecents {
-                            getHRVArrayfromCD {
-                                getRHRArrayfromCD {
-                                    findMinMaxHRV {
-                                        findMinMaxRHR {
-                                            checkDataforErrors {
-                                                hrvRecoveryCalculation {
-                                                    rhrRecoveryCalculation {
-                                                        calculateFinalRecovery {
-                                                            finalRecoverySave()
-                                                            self.finalRecoveryPercentage = Int(finalRecoveryPercentage2)
-                                                            self.finalRHRPercentage = Int(rhrRecoveryPercentage)
-                                                            self.finalHRVPercentage = Int(hrvRecoveryPercentage)
-                                                            self.lastHRVValue = Int(recentHRV)
-                                                            self.lastRHRValue = Int(recentRHR)
-                                                            print("Final @state is: \(finalRecoveryPercentage2)")
-                                                            
-                                                            
-                                                            print("Current Date: \(Date())")
-                                                            print("Midnight: \(lastMidnight)")
+                    checkRHRLast2Days {
+                        //Goes to different function ^
+                        checkHRVLast1Days {
+                            //checkForcedHRVValue function
+                                //Goes to different function ^
+                            saveBothRecents {
+                                getHRVArrayfromCD {
+                                    getRHRArrayfromCD {
+                                        //checkStartingCoreDataAmount function
+                                            //Goes to different function ^
+                                        findMinMaxHRV {
+                                            findMinMaxRHR {
+                                                checkDataforErrors {
+                                                    hrvRecoveryCalculation {
+                                                        rhrRecoveryCalculation {
+                                                            calculateFinalRecovery {
+                                                                finalRecoverySave()
+                                                                self.finalRecoveryPercentage = Int(finalRecoveryPercentage2)
+                                                                self.finalRHRPercentage = Int(rhrRecoveryPercentage)
+                                                                self.finalHRVPercentage = Int(hrvRecoveryPercentage)
+                                                                self.lastHRVValue = Int(recentHRV)
+                                                                self.lastRHRValue = Int(recentRHR)
+                                                                print("Final @state is: \(finalRecoveryPercentage2)")
+                                                                
+                                                                
+                                                                print("Current Date: \(Date())")
+                                                                print("Midnight: \(lastMidnight)")
+                                                            }
                                                         }
                                                     }
                                                 }
@@ -376,6 +409,8 @@ struct ContentView: View {
             }
         }
     }
+    
+    // MARK: - Still need a few more final recovery function based on above checks
     
     func finalFunctionWithoutRecoveryCheck() {
         writeHRVRecentDatatoCD {
@@ -415,6 +450,47 @@ struct ContentView: View {
         }
     }
     
+    // MARK: - Function when forcing HRV Breathing App Calculation is Forced
+    
+    func finalFunctionWithForcedHRVRecovery() {
+        writeHRVYesterdayRecentDatatoCD {
+            writeRHRRecentDatatoCD {
+                checkRHRLast2Days {
+                    checkForcedHRVValue {
+                        //Checking forced value is only done in this function as the user is forcing
+                        saveBothRecents {
+                            getHRVArrayfromCD {
+                                getRHRArrayfromCD {
+                                    checkStartingCoreDataAmount {
+                                        findMinMaxHRV {
+                                            findMinMaxRHR {
+                                                checkDataforErrors {
+                                                    hrvRecoveryCalculation {
+                                                        rhrRecoveryCalculation {
+                                                            calculateFinalRecovery {
+                                                                finalRecoverySave()
+                                                                self.finalRecoveryPercentage = Int(finalRecoveryPercentage2)
+                                                                self.finalRHRPercentage = Int(rhrRecoveryPercentage)
+                                                                self.finalHRVPercentage = Int(hrvRecoveryPercentage)
+                                                                self.lastHRVValue = Int(recentHRV)
+                                                                self.lastRHRValue = Int(recentRHR)
+                                                                print("Final @state is: \(finalRecoveryPercentage2)")
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
     
         // MARK: - Take recent data from healthkit and put into an array in CoreData
         // Goal of this is to take the most recent HRV and RHR data and append it to our 30 day array in core data
@@ -422,8 +498,11 @@ struct ContentView: View {
         // Let's us conditional statements to check if the array has 30 points, if so then run the code that removes the oldest point and adds a new one, if not, itll run another code that takes the last x amount of days to populate it
         // Then we can create a conditional statement that runs code (not here) that calculates % and using the conditional statement to make sure things are run before it calculates so we only have to press one time.
     
-        // MARK: - User Calculated Recovery Guard
-    
+        // MARK: - GUARD - User Calculated Recovery
+    func testAlert() {
+        activeAlert = .showsHRV1DayCheckAlert
+        showAlert.toggle()
+    }
         func hasUserCalculatedRecovery(_ completion : @escaping()->()) {
             // Gets core data array
             // Conditional statement checking count of array -> If count == 0, then closure
@@ -433,7 +512,9 @@ struct ContentView: View {
             
             guard hasRecoveryHappened.count == 0 else {
                 print("User has calculated recovery, prompt to continue to recalculate or not? and either closure or break")
-                showsAlertRecoveryCheck.toggle()
+                //showsAlertRecoveryCheck.toggle()
+                activeAlert = .alertRecoveryCheck
+                showAlert.toggle()
                 return
             }
             print("User has not calculated recovery, enact closure to continue as usual")
@@ -443,9 +524,9 @@ struct ContentView: View {
         //Takes the most recent HRV recording from yesterday until today and appends it to CoreData
         func writeHRVRecentDatatoCD(_ completion : @escaping()->()) {
             //1 - Access most recent hrv value between midnight yesterday and right this second
-            hkm.variabilityMostRecent(from: yesterdayStartDate, to: Date()) {
+            hkm.variabilityMostRecent(from: lastMidnight, to: Date()) {
                 (results) in
-                
+                                
                 var lastHRV = 0.0
                 // results is an array of [HKQuantitySample]
                 // example conversion to BPM:
@@ -454,21 +535,33 @@ struct ContentView: View {
                 }
                 recentHRV = Double(lastHRV)
                 print("Last HRV: \(recentHRV)")
-                
-                //2 - Append most recent hrv value to 30 day core data array
-//                let newHRVWriteData = Array30Day(context: managedObjectContext)
-//                newHRVWriteData.hrv = recentHRV
-                
-                //This is also saving 2 contexts when i have it in both, and not together. I want them to be saved together after both run... May need to use conditional.
-                //saveContext()
-                //3 - Get data from core data and put into variable array
-                
-                //5 - Change HRVdone to true
                 arrayHRVDone = true
                 print("HRV Done = \(arrayHRVDone)")
                 completion()
             }
         }
+    
+    func writeHRVYesterdayRecentDatatoCD(_ completion : @escaping()->()) {
+        //1 - Access most recent hrv value between midnight yesterday and right this second
+        hkm.variabilityMostRecent(from: yesterdayStartDate, to: Date()) {
+            (results) in
+            
+            // MARK: - NEED TO MAKE THIS TO CHECK FROM MIDNIGHT TODAY
+            
+            var lastHRV = 0.0
+            // results is an array of [HKQuantitySample]
+            // example conversion to BPM:
+            for result in results {
+                lastHRV = result.quantity.doubleValue(for: .variabilityUnit)
+            }
+            recentHRV = Double(lastHRV)
+            print("Last HRV: \(recentHRV)")
+            arrayHRVDone = true
+            print("HRV Done = \(arrayHRVDone)")
+            completion()
+        }
+        
+    }
         
         //Takes most recent RHR recording from yesterday until today and appends it to CoreData
         func writeRHRRecentDatatoCD(_ completion : @escaping()->()) {
@@ -484,16 +577,6 @@ struct ContentView: View {
                 }
                 recentRHR = Double(lastRHR)
                 print("Last RHR: \(recentRHR)")
-                
-                //2 - Append most recent rhr value to 30 day core data array
-//                let newRHRWriteData = Array30Day(context: managedObjectContext)
-//                newRHRWriteData.rhr = recentRHR
-                
-                //saveContext()
-                
-                //3 - Get data from core data and put into variable array
-                
-                //5 - Change RHRdone to true
                 arrayRHRDone = true
                 print("RHR Done = \(arrayRHRDone)")
                 completion()
@@ -503,14 +586,38 @@ struct ContentView: View {
     
     
     
-    // MARK: - ADD FUNCTION - Guard to check if any RHR from last 2 days - Just stops and tells to wear watch more if there arent so we dont even have to continue and fail
+    // MARK: - ADD GUARD - Guard to check if any RHR from last 2 days - Just stops and tells to wear watch more if there arent so we dont even have to continue and fail
+    
+    func checkRHRLast2Days(_ completion : @escaping()->()) {
+        guard recentRHR != 0.0 else {
+            activeAlert = .showsRHRCheckAlert
+            showAlert.toggle()
+            return
+        }
+        completion()
+    }
 
-    // MARK: - Check if HRV was in past day guard, otherwise prompt to go back to breathe app. Need to change variable +=, and if user decides to run the recovery anyways, it will need to then change most recent HRV to be yesterday. If past recording since midnight was 0.0, then we know we need to look back farther. What if the user forces and it has no HRV recovery data?
+    // MARK: - GUARD - Check if HRV was in past day guard, otherwise prompt to go back to breathe app. Need to change variable +=, and if user decides to run the recovery anyways, it will need to then change most recent HRV to be yesterday. If past recording since midnight was 0.0, then we know we need to look back farther. What if the user forces and it has no HRV recovery data?
+    
+    func checkHRVLast1Days(_ completion : @escaping()->()) {
+        guard recentHRV != 0.0 else {
+            //Popup to go to breathe app that then runs a new final function redoing everything but with checking HRV 2 days ago.
+            activeAlert = .showsHRV1DayCheckAlert
+            showAlert.toggle()
+            //recentHRV since midnight is equal to 0.0, nothing was found this morning
+            //+= to variable
+            return
+        }
+        completion()
+        //recentHRV has data, continue with completion()
+    }
+    
+    // MARK: - THIS WILL BE REMOVED ONCE BOTH OF ABOVE ARE DONE
     func checkIfRecentRHRHRVZero(_ completion : @escaping()->()) {
         guard recentHRV != 0.0 && recentRHR != 0.0 else {
             print("Guard is running and it all stops")
             // Make a message popup and then be dismissed?
-            showsAlert1.toggle()
+            showsRHRCheckAlert.toggle()
             return //break?
         }
         
@@ -518,7 +625,20 @@ struct ContentView: View {
         completion()
     }
     
-    // MARK: - Check to make sure we have HRV data before saving most recent, should be more than 0. This will only be triggered if the user forces the HRV above and it doesnt work through the breathing app and they force it anyways and it cant find any HRV from yesterday either. Prompt them the same as the RHR function above, different text to wear the watch more or to try to force HRV again. "Unfortunately we can not process your recovery. Please either force your HRV in the breathing app or come back again tomorrow after wearing your watch all day"
+    // MARK: - GUARD - Check to make sure we have HRV data before saving most recent, should be more than 0. This will only be triggered if the user forces the HRV above and it doesnt work through the breathing app and they force it anyways and it cant find any HRV from yesterday either. Prompt them the same as the RHR function above, different text to wear the watch more or to try to force HRV again. "Unfortunately we can not process your recovery due to lack of HRV in the last 2 days. Please either force your HRV in the breathing app or come back again tomorrow after wearing your watch all day".
+    
+    func checkForcedHRVValue(_ completion : @escaping()->()) {
+        
+        guard recentHRV != 0.0 else {
+            //recentHRV when forced from yesterday is 0
+            //Make alert to tell them to force in breathing app or wear all day and come back
+            activeAlert = .showsForcedHRVCheckAlert
+            showAlert.toggle()
+            return
+        }
+        //Forced HRV is not 0, continue with main calculation function
+       completion()
+    }
     
     
     func saveBothRecents(_ completion : @escaping()->()) {
@@ -549,7 +669,27 @@ struct ContentView: View {
         print(arrayRHR.count)
         completion()
     }
-    // MARK: - Check to see if there are 3-4 days worth of core data recoveries to use, otherwise give popup and calculate @ 50% without checking for errors. This will be a good place because we have done all the checks above first
+    // MARK: - GUARD - Check to see if there are 3-4 days worth of core data recoveries to use, otherwise give popup and calculate @ 50% without checking for errors. This will be a good place because we have done all the checks above first
+    
+    func checkStartingCoreDataAmount(_ completion : @escaping()->()) {
+        //Use recovery count fetch request then guard map
+        //Checks the .count of recoveries
+        //If 4 or more, no guard
+        //If less than 4, guard then run final calculation function that just records the HRV and RHR values, and sets the final % and all other % to 50%
+        
+        howManyRecoveries = recoveryCount.map {$0.overallPercent}
+        
+        guard howManyRecoveries.count > 4 else {
+            // Count is less than 4
+            // Show popup with 1 option, and force a 50% recovery with new function
+            activeAlert = .checkStartingCoreDataAmount
+            showAlert.toggle()
+            return
+        }
+        //count is greater than 4
+        
+        completion()
+    }
 
     //Takes our variable array for HRV and finds the min and max
     func findMinMaxHRV(_ completion : @escaping()->()) {
@@ -572,12 +712,14 @@ struct ContentView: View {
         
     }
     
-    // MARK: - Guard before calculating to make sure we dont get an error. Can we remove anything from this? Better alert?
+    // MARK: - GUARD - before calculating to make sure we dont get an error. Can we remove anything from this? Better alert? Can we work with it just being more than 1 in the array count no matter what it is?
     func checkDataforErrors (_ completion : @escaping()->()) {
         guard arrayRHR.count > 1 && arrayHRV.count > 1 && maxHRV != minHRV && maxRHR != minHRV else {
             print("Guard is running and it all stops")
             // Make a message popup and then be dismissed?
-            showsAlert.toggle()
+            //Message will state to wear apple watch more and come back tomorrow
+            activeAlert = .checkDataForErrorsAlert
+            showAlert.toggle()
             return //break?
         }
         
@@ -628,9 +770,6 @@ struct ContentView: View {
             
             saveContext()
             print("Final Recovery Saved!")
-        }
-    
-        func retrieveLastRecordedRecovery() {
         }
         
     }
