@@ -236,46 +236,31 @@ struct ContentView: View {
                 .alert(isPresented: $showAlert) {
                     switch activeAlert {
                     case .alertRecoveryCheck:
-                        return Alert(title: Text("Recovery has already been calculated for the day."), message: Text("Would you like to recalculate your recovery?"), primaryButton: .default(Text("Keep current calculation.")), secondaryButton: .destructive(Text("Recalculate")){
+                        return Alert(title: Text("Recovery has already been calculated for the day."), message: Text("Would you like to recalculate your recovery?"), primaryButton: .default(Text("Keep current calculation")), secondaryButton: .destructive(Text("Recalculate")){
                                         print("Recalculate Button Pressed")
                                         finalFunctionWithoutRecoveryCheck()
                         })
                     case .showsHRV1DayCheckAlert:
-                        return Alert(title: Text("Your Most Recent HRV Reading is Not Up to Date"), message: Text("Please Go to the Breathing App on Your Apple Watch to Force your HRV, then Try Recalculating Your Recovery"), primaryButton: .default(Text("Ok")), secondaryButton: .destructive(Text("Calculate Recovery Anyways")){
+                        return Alert(title: Text("Your most recent HRV reading is not up to date."), message: Text("Please go to the breathing app on your Apple Watch to record your HRV, then come back to recalculate recovery."), primaryButton: .default(Text("Ok")), secondaryButton: .destructive(Text("Calculate Recovery Anyways")){
                                         print("Forced Calculate Button Pressed")
                                         finalFunctionWithForcedHRVRecovery()
                         })
                     case .showsRHRCheckAlert:
-                        return Alert(title: Text("Not enough RHR data available."), message: Text("Please wear your watch all day and try to calculate recovery again tomorrow."))
+                        return Alert(title: Text("Not enough heart rate data available."), message: Text("Please wear your watch all day and try to calculate recovery again tomorrow."))
                     case .showsForcedHRVCheckAlert:
-                        return Alert(title: Text("Unfortunately, we can not process your recovery."), message: Text("Please force your HRV in the breathing app or come back again tomorrow after wearing your watch all day."))
+                        return Alert(title: Text("Unfortunately, we can not process your recovery."), message: Text("Please force your HRV in the breathing app or come back again tomorrow after wearing your watch all day today."))
                     case .checkStartingCoreDataAmount:
-                        return Alert(title: Text("There are less than 4 days of recoveries."), message: Text("Please continue calculating your recovery every morning to create a baseline."), dismissButton: .default(Text("Okay")){
+                        return Alert(title: Text("You have recorded less than 4 days of recoveries."), message: Text("Please continue calculating your recovery every morning while we create your baseline."), dismissButton: .default(Text("Okay")){
                             print("Create Baseline Button Tapped")
                             finalRecoveryBaselineFunction()
                         })
                     case .checkDataForErrorsAlert:
-                        return Alert(title: Text("Unfortunately, there is not enough data from your watch."), message: Text("Please weare your watch all day and come back tomorrow to calculate your recovery."))
+                        return Alert(title: Text("Not enough heart rate data available."), message: Text("Please wear your watch all day and try to calculate recovery again tomorrow."))
                     }
-                }
-                Button(action: {
-                    testAlert()
-                }) {
-                    // How the button looks like
-                    Text("Test Alert")
-                }
-                Button(action: {
-                    //hasUserCalculatedRecovery()
-                }) {
-                    // How the button looks like
-                    Text("Test Check for Recovery Happened")
                 }.onAppear(perform: {
                     print("Recovery Appeared using OnAppear")
                     todaysRecoveryRequest()
                 })
-                .alert(isPresented: self.$showsAlert) {
-                    Alert(title: Text("Not Enough Data to Calculate Recovery"), message: Text("Try again tomorrow morning to calculate your first recovery"))
-                        }
                 Slider(value: $sliderValue, in: 0...100)
                 Text("How Recovered I Actually Feel: \(sliderValue, specifier: "%.0f")%")
                 }.padding()
