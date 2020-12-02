@@ -255,7 +255,7 @@ struct ContentView: View {
                             finalRecoveryBaselineFunction()
                         })
                     case .checkDataForErrorsAlert:
-                        return Alert(title: Text("Not enough heart rate data available."), message: Text("Please wear your watch all day and try to calculate recovery again tomorrow."))
+                        return Alert(title: Text("Unfortunately, there is not enough heart rate data available."), message: Text("Please wear your watch all day and try to calculate recovery again tomorrow."))
                     }
                 }.onAppear(perform: {
                     print("Recovery Appeared using OnAppear")
