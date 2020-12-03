@@ -32,9 +32,23 @@ var recentHRV = 0.0
 var recentRHR = 0.0
 var arrayHRVDone = false
 var arrayRHRDone = false
-    // Min/Max
+    // Array's with outliers removed
+var recentHRVNoOutlierArray = [Double]()
+var initialHRVIQR = 0.0
+var initialHRV1q = 0.0
+var initialHRV3q = 0.0
+var initialHRVLowOutlierCutoff = 0.0
+var initialHRVHighOutlierCutoff = 0.0
+
+    // Min/Max/1q/3q/avg HRV
 var maxHRV = 0.0
 var minHRV = 0.0
+var q1HRV = 0.0
+var q3HRV = 0.0
+var avgHRV = 0.0
+var sumHRV = 0.0
+var medianHRV = 0.0
+    // Min/Max RHR
 var maxRHR = 0.0
 var minRHR = 0.0
 var minHRVDone = false
@@ -349,19 +363,14 @@ struct ContentView: View {
     //The Final function that takes everything into account and calls other functions in a sync manor
     func finalFunction() {
         hasUserCalculatedRecovery {
-            //Goes to different function ^
             writeHRVRecentDatatoCD {
                 writeRHRRecentDatatoCD {
                     checkRHRLast2Days {
-                        //Goes to different function ^
                         checkHRVLast1Days {
-                            //checkForcedHRVValue function
-                                //Goes to different function ^
                             saveBothRecents {
                                 getHRVArrayfromCD {
                                     getRHRArrayfromCD {
                                         checkStartingCoreDataAmount {
-                                            //Goes to different function ^
                                             findMinMaxHRV {
                                                 findMinMaxRHR {
                                                     checkDataforErrors {
@@ -653,6 +662,18 @@ struct ContentView: View {
         arrayHRV = variableArray30Day.map {$0.hrv}
         print("Array HRV = \(arrayHRV)")
         print(arrayHRV.count)
+        
+        initialHRV1q = (Sigma.percentile(arrayHRV, percentile: 0.25) ?? 0.0)
+        initialHRV3q = (Sigma.percentile(arrayHRV, percentile: 0.75) ?? 0.0)
+        
+        initialHRVIQR = initialHRV3q - initialHRV1q
+        
+        initialHRVLowOutlierCutoff = initialHRV1q - (1.5 * initialHRVIQR)
+        
+        initialHRVHighOutlierCutoff = initialHRV3q + (1.5 * initialHRVIQR)
+        
+        recentHRVNoOutlierArray = arrayHRV.filter { $0 < initialHRVHighOutlierCutoff && $0 > initialHRVLowOutlierCutoff }
+        
         completion()
     }
     
@@ -690,9 +711,17 @@ struct ContentView: View {
     func findMinMaxHRV(_ completion : @escaping()->()) {
         // Find min and max of HRV from core data array and write to variable
         
-        maxHRV = arrayHRV.max() ?? 0
-        minHRV = arrayHRV.min() ?? 0
-        print("HRV min: \(minHRV) and max: \(maxHRV)")
+        
+        //Need to remove outliers first, then use that new array of items in these
+        maxHRV = recentHRVNoOutlierArray.max() ?? 0
+        minHRV = recentHRVNoOutlierArray.min() ?? 0
+        sumHRV = recentHRVNoOutlierArray.reduce(0, +)
+        avgHRV = sumHRV / Double(recentHRVNoOutlierArray.count)
+        q1HRV = Sigma.percentile(recentHRVNoOutlierArray, percentile: 0.25) ?? 0.0
+        q3HRV = Sigma.percentile(recentHRVNoOutlierArray, percentile: 0.75) ?? 0.0
+        medianHRV = Sigma.median(recentHRVNoOutlierArray) ?? 0.0
+        
+        print("HRV min: \(minHRV) and q1: \(q1HRV) and median: \(medianHRV) and q3: \(q3HRV) and max: \(maxHRV) and sum: \(sumHRV) ")
         completion()
     }
     
@@ -709,8 +738,8 @@ struct ContentView: View {
     
     // MARK: - GUARD - before calculating to make sure we dont get an error. Can we remove anything from this? Better alert? Can we work with it just being more than 1 in the array count no matter what it is?
     func checkDataforErrors (_ completion : @escaping()->()) {
-        guard arrayRHR.count > 1 && arrayHRV.count > 1 && maxHRV != minHRV && maxRHR != minHRV else {
-            print("Guard is running and it all stops")
+        guard arrayRHR.count > 1 && arrayHRV.count > 1 && maxHRV != minHRV && maxRHR != minRHR else {
+            print("Check Data for Errors Guard is running and it all stops")
             // Make a message popup and then be dismissed?
             //Message will state to wear apple watch more and come back tomorrow
             print(showAlert)
@@ -732,10 +761,36 @@ struct ContentView: View {
         
         //Calculates HRV recovery % based off min/max and last reading
         func hrvRecoveryCalculation(_ completion : @escaping()->()) {
-            hrvRecoveryPercentage = ((recentHRV - minHRV) / (maxHRV - minHRV))*100
-            print("Recovery HRV %: \(hrvRecoveryPercentage)")
+            //This is where we do that if then statement to calculate recent compared to all my other variables!
+            
+            if recentHRV < minHRV {
+                hrvRecoveryPercentage  = 25.0
+            } else if recentHRV > maxHRV {
+                hrvRecoveryPercentage = 99.0
+            } else if minHRV <= recentHRV && recentHRV <= q1HRV {
+                //(A) Calculation
+                hrvRecoveryPercentage = ((((recentHRV - minHRV) / (q1HRV - minHRV)) * 25.0) + 25.0)
+                
+            } else if q1HRV <= recentHRV && recentHRV <= medianHRV {
+                //(B) Calculation
+                hrvRecoveryPercentage = ((((recentHRV - q1HRV) / (medianHRV - q1HRV)) * 15.0) + 50.0)
+                
+            } else if medianHRV <= recentHRV && recentHRV <= q3HRV {
+                //(C) Calculation
+                hrvRecoveryPercentage = ((((recentHRV - medianHRV) / (q3HRV - medianHRV)) * 20.0) + 65.0)
+                
+            } else if q3HRV <= recentHRV && recentHRV <= maxHRV {
+                //(D) Calculation
+                hrvRecoveryPercentage = ((((recentHRV - q3HRV) / (maxHRV - q3HRV)) * 14.0) + 85.0)
+                
+            }
+            
+            
+//            hrvRecoveryPercentage = ((recentHRV - minHRV) / (maxHRV - minHRV))*100
+//            print("Recovery HRV %: \(hrvRecoveryPercentage)")
             completion()
         }
+    
         
         //Calculates RHR recovery % (-1) based off min/max and last reading
         func rhrRecoveryCalculation(_ completion : @escaping()->()) {
@@ -751,8 +806,12 @@ struct ContentView: View {
     
         //Final recovery that takes RHR and HRV %
         func calculateFinalRecovery(_ completion : @escaping()->()) {
-           finalRecoveryPercentage2 = (rhrRecoveryPercentage + hrvRecoveryPercentage) / 2
+            
+            finalRecoveryPercentage2 = hrvRecoveryPercentage
             print("Final Recovery Percentage: \(finalRecoveryPercentage2)")
+            
+//           finalRecoveryPercentage2 = (rhrRecoveryPercentage + hrvRecoveryPercentage) / 2
+//            print("Final Recovery Percentage: \(finalRecoveryPercentage2)")
             completion()
         }
     
