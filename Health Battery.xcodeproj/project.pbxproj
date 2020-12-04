@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 52;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -32,6 +32,7 @@
 		2D674A7C2539401200040B66 /* HealthKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D674A7B2539401200040B66 /* HealthKitManager.swift */; };
 		2D674A83253940B400040B66 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D674A82253940B400040B66 /* HealthKit.framework */; };
 		2D8DE8E625799B6900EF656C /* SigmaDistrib.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D8DE8E525799B6800EF656C /* SigmaDistrib.swift */; };
+		2D8DE90B2579B0AE00EF656C /* SwiftProgress in Frameworks */ = {isa = PBXBuildFile; productRef = 2D8DE90A2579B0AE00EF656C /* SwiftProgress */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -146,6 +147,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2D674A83253940B400040B66 /* HealthKit.framework in Frameworks */,
+				2D8DE90B2579B0AE00EF656C /* SwiftProgress in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -332,6 +334,9 @@
 			dependencies = (
 			);
 			name = "Health Battery";
+			packageProductDependencies = (
+				2D8DE90A2579B0AE00EF656C /* SwiftProgress */,
+			);
 			productName = "Health Battery";
 			productReference = 2D674A4225393FCF00040B66 /* Health Battery.app */;
 			productType = "com.apple.product-type.application";
@@ -409,6 +414,9 @@
 				Base,
 			);
 			mainGroup = 2D674A3925393FCF00040B66;
+			packageReferences = (
+				2D8DE9092579B0AE00EF656C /* XCRemoteSwiftPackageReference "SwiftProgress" */,
+			);
 			productRefGroup = 2D674A4325393FCF00040B66 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -954,6 +962,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		2D8DE9092579B0AE00EF656C /* XCRemoteSwiftPackageReference "SwiftProgress" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/EnesKaraosman/SwiftProgress.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.0.5;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		2D8DE90A2579B0AE00EF656C /* SwiftProgress */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2D8DE9092579B0AE00EF656C /* XCRemoteSwiftPackageReference "SwiftProgress" */;
+			productName = SwiftProgress;
+		};
+/* End XCSwiftPackageProductDependency section */
 
 /* Begin XCVersionGroup section */
 		2D674A4B25393FCF00040B66 /* Health_Battery.xcdatamodeld */ = {

@@ -7,6 +7,7 @@ import UIKit
 import SwiftUI
 import CoreData
 import Dispatch
+import SwiftProgress
 
 let hkm = HealthKitManager()
 
@@ -21,6 +22,9 @@ var min7DayRHR = 0.0
 var recoveryRHRPercentageValue = 0.0
 var recoveryHRVPercentageValue = 0.0
 var finalRecoveryPercentageValue = 0.0
+//Bar Data
+var barColor:Color = .yellow
+
 
 
     //Array
@@ -212,6 +216,8 @@ struct ContentView: View {
     @State private var finalHRVPercentage = 0
     @State private var arrayVariability7Day = [Double]()
     @State var sliderValue: Double = 0
+    
+    
         
     @State var showsAlert = false
     @State var showsRHRCheckAlert = false
@@ -232,11 +238,18 @@ struct ContentView: View {
                 Text("Last HRV Value: \(lastHRVValue) MS")
                 Text("HRV Recovery: \(finalHRVPercentage) %")
                 Text("RHR Recovery: \(finalRHRPercentage) %")
+                
                 // Put calculated score below
                 Text("\(finalRecoveryPercentage)%")
                     .fontWeight(.regular)
                     .font(.system(size: 70))
-                
+                LinearProgress(
+                        progress: CGFloat(finalRecoveryPercentage),
+                        foregroundColor: barColor,
+                        backgroundColor: Color.gray.opacity(0.2)
+                        )
+                        .frame(width: 200, height: 50)
+                        .padding()
                 Button(action: {
                     finalFunction()
                 }) {
@@ -274,6 +287,7 @@ struct ContentView: View {
                 }.onAppear(perform: {
                     print("Recovery Appeared using OnAppear")
                     todaysRecoveryRequest()
+                    barColorChange()
                 })
                 Slider(value: $sliderValue, in: 0...100)
                 Text("How Recovered I Actually Feel: \(sliderValue, specifier: "%.0f")%")
@@ -384,7 +398,7 @@ struct ContentView: View {
                                                                     self.lastHRVValue = Int(recentHRV)
                                                                     self.lastRHRValue = Int(recentRHR)
                                                                     print("Final @state is: \(finalRecoveryPercentage2)")
-                                                                    
+                                                                    barColorChange()
                                                                     
                                                                     print("Current Date: \(Date())")
                                                                     print("Midnight: \(lastMidnight)")
@@ -430,7 +444,7 @@ struct ContentView: View {
                                                                 self.lastHRVValue = Int(recentHRV)
                                                                 self.lastRHRValue = Int(recentRHR)
                                                                 print("Final @state is: \(finalRecoveryPercentage2)")
-                                                                
+                                                                barColorChange()
                                                                 
                                                                 print("Current Date: \(Date())")
                                                                 print("Midnight: \(lastMidnight)")
@@ -474,6 +488,7 @@ struct ContentView: View {
                                                                 self.finalHRVPercentage = Int(hrvRecoveryPercentage)
                                                                 self.lastHRVValue = Int(recentHRV)
                                                                 self.lastRHRValue = Int(recentRHR)
+                                                                barColorChange()
                                                                 print("Final @state is: \(finalRecoveryPercentage2)")
                                                             }
                                                         }
@@ -488,6 +503,18 @@ struct ContentView: View {
                     }
                 }
             }
+        }
+    }
+    
+    
+    func barColorChange() {
+        
+        if finalRecoveryPercentage <= 39 {
+            barColor = .red
+        } else if finalRecoveryPercentage > 39 && finalRecoveryPercentage < 74 {
+            barColor = .yellow
+        } else if finalRecoveryPercentage >= 74 {
+            barColor = .green
         }
     }
     
