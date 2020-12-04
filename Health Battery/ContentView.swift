@@ -9,6 +9,7 @@ import CoreData
 import Dispatch
 import SwiftProgress
 
+
 let hkm = HealthKitManager()
 
 var arrayVariability7Day2 = [Double]()
@@ -223,7 +224,7 @@ struct ContentView: View {
     @State var showsRHRCheckAlert = false
     @State var showsAlertRecoveryCheck = false
     @State var showsHRV1DayCheckAlert = false
-    
+        
     enum ActiveAlert {
         case alertRecoveryCheck, showsHRV1DayCheckAlert, showsRHRCheckAlert, showsForcedHRVCheckAlert, checkStartingCoreDataAmount, checkDataForErrorsAlert
     }
@@ -238,7 +239,6 @@ struct ContentView: View {
                 Text("Last HRV Value: \(lastHRVValue) MS")
                 Text("HRV Recovery: \(finalHRVPercentage) %")
                 Text("RHR Recovery: \(finalRHRPercentage) %")
-                
                 // Put calculated score below
                 Text("\(finalRecoveryPercentage)%")
                     .fontWeight(.regular)
@@ -391,17 +391,11 @@ struct ContentView: View {
                                                         hrvRecoveryCalculation {
                                                             rhrRecoveryCalculation {
                                                                 calculateFinalRecovery {
-                                                                    finalRecoverySave()
-                                                                    self.finalRecoveryPercentage = Int(finalRecoveryPercentage2)
-                                                                    self.finalRHRPercentage = Int(rhrRecoveryPercentage)
-                                                                    self.finalHRVPercentage = Int(hrvRecoveryPercentage)
-                                                                    self.lastHRVValue = Int(recentHRV)
-                                                                    self.lastRHRValue = Int(recentRHR)
-                                                                    print("Final @state is: \(finalRecoveryPercentage2)")
-                                                                    barColorChange()
-                                                                    
-                                                                    print("Current Date: \(Date())")
-                                                                    print("Midnight: \(lastMidnight)")
+                                                                    finalRecoverySave {
+                                                                        updateStateValues {
+                                                                            barColorChange()
+                                                                        }
+                                                                    }
                                                                 }
                                                             }
                                                         }
@@ -437,17 +431,11 @@ struct ContentView: View {
                                                     hrvRecoveryCalculation {
                                                         rhrRecoveryCalculation {
                                                             calculateFinalRecovery {
-                                                                finalRecoverySave()
-                                                                self.finalRecoveryPercentage = Int(finalRecoveryPercentage2)
-                                                                self.finalRHRPercentage = Int(rhrRecoveryPercentage)
-                                                                self.finalHRVPercentage = Int(hrvRecoveryPercentage)
-                                                                self.lastHRVValue = Int(recentHRV)
-                                                                self.lastRHRValue = Int(recentRHR)
-                                                                print("Final @state is: \(finalRecoveryPercentage2)")
-                                                                barColorChange()
-                                                                
-                                                                print("Current Date: \(Date())")
-                                                                print("Midnight: \(lastMidnight)")
+                                                                finalRecoverySave {
+                                                                    updateStateValues {
+                                                                        barColorChange()
+                                                                    }
+                                                                }
                                                             }
                                                         }
                                                     }
@@ -482,14 +470,11 @@ struct ContentView: View {
                                                     hrvRecoveryCalculation {
                                                         rhrRecoveryCalculation {
                                                             calculateFinalRecovery {
-                                                                finalRecoverySave()
-                                                                self.finalRecoveryPercentage = Int(finalRecoveryPercentage2)
-                                                                self.finalRHRPercentage = Int(rhrRecoveryPercentage)
-                                                                self.finalHRVPercentage = Int(hrvRecoveryPercentage)
-                                                                self.lastHRVValue = Int(recentHRV)
-                                                                self.lastRHRValue = Int(recentRHR)
-                                                                barColorChange()
-                                                                print("Final @state is: \(finalRecoveryPercentage2)")
+                                                                finalRecoverySave {
+                                                                    updateStateValues {
+                                                                        barColorChange()
+                                                                    }
+                                                                }
                                                             }
                                                         }
                                                     }
@@ -509,12 +494,18 @@ struct ContentView: View {
     
     func barColorChange() {
         
-        if finalRecoveryPercentage <= 39 {
-            barColor = .red
-        } else if finalRecoveryPercentage > 39 && finalRecoveryPercentage < 74 {
-            barColor = .yellow
-        } else if finalRecoveryPercentage >= 74 {
-            barColor = .green
+        howManyRecoveries = recoveryCount.map {$0.overallPercent}
+        
+        if howManyRecoveries.count >= 3 {
+            if finalRecoveryPercentage <= 39 {
+                barColor = .red
+            } else if finalRecoveryPercentage > 39 && finalRecoveryPercentage < 74 {
+                barColor = .yellow
+            } else if finalRecoveryPercentage >= 74 {
+                barColor = .green
+            }
+        } else {
+            barColor = .gray
         }
     }
     
@@ -530,6 +521,7 @@ struct ContentView: View {
                 self.lastHRVValue = Int(recentHRV)
                 self.lastRHRValue = Int(recentRHR)
                 print("Final @state is: \(finalRecoveryPercentage2)")
+                barColor = .gray
         }
     }
     
@@ -722,7 +714,7 @@ struct ContentView: View {
         
         howManyRecoveries = recoveryCount.map {$0.overallPercent}
         
-        guard howManyRecoveries.count >= 4 else {
+        guard howManyRecoveries.count >= 3 else {
             // Count is less than 4
             // Show popup with 1 option, and force a 50% recovery with new function
             activeAlert = .checkStartingCoreDataAmount
@@ -849,6 +841,29 @@ struct ContentView: View {
             completion()
         }
     
+        func finalRecoverySave(_ completion : @escaping()->()) {
+            let finalWriteData = Recovery(context: managedObjectContext)
+            finalWriteData.date = Date()
+            finalWriteData.hrvValue = recentHRV
+            finalWriteData.hrvPercent = hrvRecoveryPercentage
+            finalWriteData.rhrValue = recentRHR
+            finalWriteData.rhrPercent = rhrRecoveryPercentage
+            finalWriteData.overallPercent = finalRecoveryPercentage2
+            
+            saveContext()
+            print("Final Recovery Saved!")
+            completion()
+        }
+    
+        func updateStateValues(_ completion : @escaping()->()) {
+            self.finalRecoveryPercentage = Int(finalRecoveryPercentage2)
+            self.finalRHRPercentage = Int(rhrRecoveryPercentage)
+            self.finalHRVPercentage = Int(hrvRecoveryPercentage)
+            self.lastHRVValue = Int(recentHRV)
+            self.lastRHRValue = Int(recentRHR)
+            completion()
+        }
+        
         func finalRecoverySave() {
             let finalWriteData = Recovery(context: managedObjectContext)
             finalWriteData.date = Date()
