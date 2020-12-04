@@ -26,7 +26,10 @@ var finalRecoveryPercentageValue = 0.0
 //Bar Data
 var barColor:Color = .yellow
 
-
+//Check Variables
+var checkHRVAlert = 0
+var baselineDaysLeft = 0
+var baselineDays = 3
 
     //Array
 var arrayHRV = [Double]()
@@ -226,7 +229,7 @@ struct ContentView: View {
     @State var showsHRV1DayCheckAlert = false
         
     enum ActiveAlert {
-        case alertRecoveryCheck, showsHRV1DayCheckAlert, showsRHRCheckAlert, showsForcedHRVCheckAlert, checkStartingCoreDataAmount, checkDataForErrorsAlert
+        case alertRecoveryCheck, showsHRV1DayCheckAlert, showsHRV1DayCheckAlertTryAgain, showsRHRCheckAlert, showsForcedHRVCheckAlert, checkStartingCoreDataAmount, checkDataForErrorsAlert
     }
     
     @State private var showAlert = false
@@ -277,12 +280,17 @@ struct ContentView: View {
                                         print("Forced Calculate Button Pressed")
                                         finalFunctionWithForcedHRVRecovery()
                         })
+                    case .showsHRV1DayCheckAlertTryAgain:
+                        return Alert(title: Text("Oops! Looks like forcing your HRV didn't work."), message: Text("Please try going back to the breathing app on your Apple Watch to record your HRV then coming back to calculate recovery. This may take a couple times to work."), primaryButton: .default(Text("Ok")), secondaryButton: .destructive(Text("Force Calculate Recovery Anyways")){
+                                        print("Forced Calculate Button Pressed")
+                                        finalFunctionWithForcedHRVRecovery()
+                        })
                     case .showsRHRCheckAlert:
                         return Alert(title: Text("Not enough heart rate data available."), message: Text("Please wear your watch all day and try to calculate recovery again tomorrow."))
                     case .showsForcedHRVCheckAlert:
                         return Alert(title: Text("Unfortunately, we can not process your recovery."), message: Text("Please force your HRV in the breathing app or come back again tomorrow after wearing your watch all day today."))
                     case .checkStartingCoreDataAmount:
-                        return Alert(title: Text("You have recorded less than 4 days of recoveries."), message: Text("Please continue calculating your recovery every morning while we create your baseline."), dismissButton: .default(Text("Okay")){
+                        return Alert(title: Text("You need to record \(baselineDaysLeft) more days of morning recoveries to create your baseline."), message: Text("Please come back each morning to calculate your recovery while we create your baseline."), dismissButton: .default(Text("Okay")){
                             print("Create Baseline Button Tapped")
                             finalRecoveryBaselineFunction()
                         })
@@ -497,22 +505,7 @@ struct ContentView: View {
     }
     
     
-    func barColorChange() {
-        
-        howManyRecoveries = recoveryCount.map {$0.overallPercent}
-        
-        if howManyRecoveries.count >= 3 {
-            if finalRecoveryPercentage <= 39 {
-                barColor = .red
-            } else if finalRecoveryPercentage > 39 && finalRecoveryPercentage < 74 {
-                barColor = .yellow
-            } else if finalRecoveryPercentage >= 74 {
-                barColor = .green
-            }
-        } else {
-            barColor = .gray
-        }
-    }
+    
     
     // MARK: - Function that runs when less than 4 days of recoveries to create a baseline
     func finalRecoveryBaselineFunction() {
@@ -527,6 +520,24 @@ struct ContentView: View {
                 self.lastRHRValue = Int(recentRHR)
                 print("Final @state is: \(finalRecoveryPercentage2)")
                 barColor = .gray
+        }
+    }
+    
+    // MARK: - Change bar color function
+    func barColorChange() {
+        
+        howManyRecoveries = recoveryCount.map {$0.overallPercent}
+        
+        if howManyRecoveries.count >= 3 {
+            if finalRecoveryPercentage <= 39 {
+                barColor = .red
+            } else if finalRecoveryPercentage > 39 && finalRecoveryPercentage < 74 {
+                barColor = .yellow
+            } else if finalRecoveryPercentage >= 74 {
+                barColor = .green
+            }
+        } else {
+            barColor = .gray
         }
     }
     
@@ -586,9 +597,7 @@ struct ContentView: View {
         //1 - Access most recent hrv value between midnight yesterday and right this second
         hkm.variabilityMostRecent(from: yesterdayStartDate, to: Date()) {
             (results) in
-            
-            // MARK: - NEED TO MAKE THIS TO CHECK FROM MIDNIGHT TODAY
-            
+                        
             var lastHRV = 0.0
             // results is an array of [HKQuantitySample]
             // example conversion to BPM:
@@ -643,8 +652,24 @@ struct ContentView: View {
     func checkHRVLast1Days(_ completion : @escaping()->()) {
         guard recentHRV != 0.0 else {
             //Popup to go to breathe app that then runs a new final function redoing everything but with checking HRV 2 days ago.
-            activeAlert = .showsHRV1DayCheckAlert
-            showAlert.toggle()
+            
+            
+            //Need to have an if then statement of what alert to open
+            
+            //"Oops, looks like forcing your HRV didn't work. Please go back to the breathing app and try again
+            //Need to += to a variable, defaulted at 0 for the first time someone pressed it
+            
+            //Variable = 0, runs as usual below
+            //Variable = 1 or more, then run new case function
+            
+            if checkHRVAlert == 0 {
+                activeAlert = .showsHRV1DayCheckAlert
+                showAlert.toggle()
+            } else if checkHRVAlert >= 1 {
+                activeAlert = .showsHRV1DayCheckAlertTryAgain
+                showAlert.toggle()
+            }
+            checkHRVAlert += 1
             //recentHRV since midnight is equal to 0.0, nothing was found this morning
             //+= to variable
             return
@@ -674,6 +699,7 @@ struct ContentView: View {
         newWriteData.hrv = recentHRV
         newWriteData.rhr = recentRHR
         newWriteData.date = Date()
+        checkHRVAlert = 0
         
         //Its crashing for sam on saveContext, both when she pressed the app and when she left the app... Maybe its trying to save nothing?
         saveContext()
@@ -722,12 +748,15 @@ struct ContentView: View {
         guard howManyRecoveries.count >= 3 else {
             // Count is less than 4
             // Show popup with 1 option, and force a 50% recovery with new function
+            baselineDaysLeft = (baselineDays - howManyRecoveries.count)
+            print("Recoveries: \(howManyRecoveries)")
+            print("Array count for baseline calculation: \(howManyRecoveries.count)")
             activeAlert = .checkStartingCoreDataAmount
             showAlert.toggle()
             return
         }
         //count is greater than 4
-        
+        baselineDays = 3
         completion()
     }
 
