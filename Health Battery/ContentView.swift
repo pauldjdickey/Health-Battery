@@ -239,6 +239,11 @@ struct ContentView: View {
                 Text("Last HRV Value: \(lastHRVValue) MS")
                 Text("HRV Recovery: \(finalHRVPercentage) %")
                 Text("RHR Recovery: \(finalRHRPercentage) %")
+                    .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
+                            print("Moving back to the foreground!")
+                            todaysRecoveryRequest()
+                            barColorChange()
+                        }
                 // Put calculated score below
                 Text("\(finalRecoveryPercentage)%")
                     .fontWeight(.regular)
@@ -806,7 +811,7 @@ struct ContentView: View {
             
             
 //            hrvRecoveryPercentage = ((recentHRV - minHRV) / (maxHRV - minHRV))*100
-//            print("Recovery HRV %: \(hrvRecoveryPercentage)")
+            print("Recovery HRV %: \(hrvRecoveryPercentage)")
             completion()
         }
     
