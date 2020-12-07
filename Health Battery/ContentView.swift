@@ -246,7 +246,7 @@ struct ContentView: View {
                             print("Moving back to the foreground!")
                             todaysRecoveryRequest()
                             barColorChange()
-                        }
+                    }
                 // Put calculated score below
                 Text("\(finalRecoveryPercentage)%")
                     .fontWeight(.regular)
@@ -304,6 +304,7 @@ struct ContentView: View {
                 })
                 Slider(value: $sliderValue, in: 0...100)
                 Text("How Recovered I Actually Feel: \(sliderValue, specifier: "%.0f")%")
+                Text("App Version 0.1.11")
                 }.padding()
             }
         }
@@ -1015,12 +1016,42 @@ struct ContentView: View {
             }
         }
     }
-    //MARK: - StressView
-    struct StressView: View {
+    //MARK: - HomeView
+    struct HomeView: View {
+        //Core Data SwiftUI Object Management
+        @Environment(\.managedObjectContext) var managedObjectContext
+        
+        //State Variables
+        
+        //Alert Enum
+        
+        //MARK: - SWiftui
         var body: some View {
-            Text("Coming Soon")
+            NavigationView {
+                VStack {
+                    Text("HRV Number")
+                    Text("Last HRV Recorded Time")
+                }
+            }
         }
+        
+        // MARK: - CRUD Functions
+        
+        //Saves whatever we are working with
+        func saveContext() {
+            do {
+                try managedObjectContext.save()
+            } catch {
+                print("Error saving managed object context: \(error)")
+            }
+        }
+        
+        // MARK: - Functions
+        
     }
+
+
+
     //MARK: - JournalView
     struct JournalView: View {
         var body: some View {
@@ -1037,10 +1068,10 @@ struct ContentView: View {
                         Image(systemName: "battery.100")
                         Text("Recovery")
                     }
-                StressView()
+                HomeView()
                     .tabItem {
-                        Image(systemName: "bolt.fill")
-                        Text("Stress")
+                        Image(systemName: "house.fill")
+                        Text("Home")
                     }
                 JournalView()
                     .tabItem {
