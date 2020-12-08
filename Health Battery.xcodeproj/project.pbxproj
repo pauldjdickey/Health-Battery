@@ -33,6 +33,7 @@
 		2D674A83253940B400040B66 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D674A82253940B400040B66 /* HealthKit.framework */; };
 		2D8DE8E625799B6900EF656C /* SigmaDistrib.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D8DE8E525799B6800EF656C /* SigmaDistrib.swift */; };
 		2D8DE90B2579B0AE00EF656C /* SwiftProgress in Frameworks */ = {isa = PBXBuildFile; productRef = 2D8DE90A2579B0AE00EF656C /* SwiftProgress */; };
+		2DACACB225802FA2007AF98F /* PZCircularControl in Frameworks */ = {isa = PBXBuildFile; productRef = 2DACACB125802FA2007AF98F /* PZCircularControl */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -146,6 +147,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2DACACB225802FA2007AF98F /* PZCircularControl in Frameworks */,
 				2D674A83253940B400040B66 /* HealthKit.framework in Frameworks */,
 				2D8DE90B2579B0AE00EF656C /* SwiftProgress in Frameworks */,
 			);
@@ -336,6 +338,7 @@
 			name = "Health Battery";
 			packageProductDependencies = (
 				2D8DE90A2579B0AE00EF656C /* SwiftProgress */,
+				2DACACB125802FA2007AF98F /* PZCircularControl */,
 			);
 			productName = "Health Battery";
 			productReference = 2D674A4225393FCF00040B66 /* Health Battery.app */;
@@ -416,6 +419,7 @@
 			mainGroup = 2D674A3925393FCF00040B66;
 			packageReferences = (
 				2D8DE9092579B0AE00EF656C /* XCRemoteSwiftPackageReference "SwiftProgress" */,
+				2DACACB025802FA2007AF98F /* XCRemoteSwiftPackageReference "PZCircularControl" */,
 			);
 			productRefGroup = 2D674A4325393FCF00040B66 /* Products */;
 			projectDirPath = "";
@@ -972,6 +976,14 @@
 				minimumVersion = 0.0.5;
 			};
 		};
+		2DACACB025802FA2007AF98F /* XCRemoteSwiftPackageReference "PZCircularControl" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/philzet/PZCircularControl.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.1.1;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -979,6 +991,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 2D8DE9092579B0AE00EF656C /* XCRemoteSwiftPackageReference "SwiftProgress" */;
 			productName = SwiftProgress;
+		};
+		2DACACB125802FA2007AF98F /* PZCircularControl */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2DACACB025802FA2007AF98F /* XCRemoteSwiftPackageReference "PZCircularControl" */;
+			productName = PZCircularControl;
 		};
 /* End XCSwiftPackageProductDependency section */
 

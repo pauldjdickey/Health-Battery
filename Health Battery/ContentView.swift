@@ -8,6 +8,7 @@ import SwiftUI
 import CoreData
 import Dispatch
 import SwiftProgress
+import PZCircularControl
 
 
 let hkm = HealthKitManager()
@@ -96,13 +97,15 @@ typealias FinishedGettingHealthData = () -> ()
 //let date: Date = Date()
 //let cal: Calendar = Calendar(identifier: .gregorian)
 //let lastMidnight: Date = cal.date(bySettingHour: 0, minute: 0, second: 0, of: date)!
+var rightNow = Date()
 
-let calendar = Calendar.current
-let startDate = calendar.startOfDay(for: Date())
-let yesterdayStartDate = calendar.startOfDay(for: Date.yesterday)
-let weekAgoStartDate = calendar.startOfDay(for: Date.weekAgo)
-let monthAgoStartDate = calendar.startOfDay(for: Date.monthAgo)
-let lastMidnight = calendar.startOfDay(for: Date())
+var calendar = Calendar.current
+var startDate = calendar.startOfDay(for: rightNow)
+var yesterdayStartDate = calendar.startOfDay(for: Date.yesterday)
+var weekAgoStartDate = calendar.startOfDay(for: Date.weekAgo)
+var monthAgoStartDate = calendar.startOfDay(for: Date.monthAgo)
+var lastMidnight = calendar.startOfDay(for: rightNow)
+
 
 private enum HealthkitSetupError: Error {
     case notAvailableOnDevice
@@ -154,10 +157,10 @@ func authorizeHealthKit(completion: @escaping (Bool, Error?) -> Swift.Void) {
 }
 
 extension Date {
-    static var yesterday: Date { return Date().dayBefore }
-    static var tomorrow:  Date { return Date().dayAfter }
-    static var weekAgo: Date { return Date().weekAgo }
-    static var monthAgo: Date { return Date().monthAgo }
+    static var yesterday: Date { return rightNow.dayBefore }
+    static var tomorrow:  Date { return rightNow.dayAfter }
+    static var weekAgo: Date { return rightNow.weekAgo }
+    static var monthAgo: Date { return rightNow.monthAgo }
     var dayBefore: Date {
         return Calendar.current.date(byAdding: .day, value: -1, to: noon)!
     }
@@ -178,6 +181,16 @@ extension Date {
     }
     var isLastDayOfMonth: Bool {
         return dayAfter.month != month
+    }
+    func to(timeZone outputTimeZone: TimeZone, from inputTimeZone: TimeZone) -> Date {
+         let delta = TimeInterval(outputTimeZone.secondsFromGMT(for: self) - inputTimeZone.secondsFromGMT(for: self))
+         return addingTimeInterval(delta)
+    }
+    
+}
+extension DateFormatter {
+    func date(from string: String, timeZoneInString: TimeZone, outputTimeZone: TimeZone = .autoupdatingCurrent) -> Date? {
+        date(from: string)?.to(timeZone: outputTimeZone, from: timeZoneInString)
     }
 }
 
@@ -268,7 +281,12 @@ struct ContentView: View {
                                 .padding()
                         .background(RoundedRectangle(cornerRadius: 15).opacity(0.5).foregroundColor(.gray))
                 }
-                .alert(isPresented: $showAlert) {
+                Button(action: {
+                    healthKitTest()
+                }) {
+                    // How the button looks like
+                    Text("HealthKit Test")
+                }.alert(isPresented: $showAlert) {
                     switch activeAlert {
                     case .alertRecoveryCheck:
                         return Alert(title: Text("Recovery has already been calculated for the day."), message: Text("Would you like to recalculate your recovery?"), primaryButton: .default(Text("Keep current calculation")), secondaryButton: .destructive(Text("Recalculate")){
@@ -304,7 +322,7 @@ struct ContentView: View {
                 })
                 Slider(value: $sliderValue, in: 0...100)
                 Text("How Recovered I Actually Feel: \(sliderValue, specifier: "%.0f")%")
-                Text("App Version 0.1.11")
+                //Text("App Version 0.1.11")
                 }.padding()
             }
         }
@@ -334,12 +352,18 @@ struct ContentView: View {
         func todaysRecoveryRequest() {
             print("Recovery Request Function Called!")
             //This works! Now let's get the last item from core data from midnight until right now, apply those details to variables that then change the @state variables. There should be an if-then statement checking if there is data to make sure it doesnt pull no data. Maybe a guard?
+            rightNow = Date()
+            lastMidnight = calendar.startOfDay(for: rightNow)
             
+            
+            print("Right now: \(rightNow)")
+            print("lastMidnight: \(lastMidnight)")
             lastRecoveryArray = lastRecovery.map {$0.overallPercent}
             lastHRVValueArray = lastRecovery.map {$0.hrvValue}
             lastRHRValueArray = lastRecovery.map {$0.rhrValue}
             lastHRVPercentArray = lastRecovery.map {$0.hrvPercent}
             lastRHRPercentArray = lastRecovery.map {$0.rhrPercent}
+            print("lastMidnight After Request: \(lastMidnight)")
             //This is an array of all items from midnight to right now
             print("Full recovery Array: \(lastRecoveryArray)")
             
@@ -621,19 +645,49 @@ struct ContentView: View {
                 (results) in
                 
                 var lastRHR = 0.0
+                var testResult: [String:Any] = [:]
                 // results is an array of [HKQuantitySample]
                 // example conversion to BPM:
                 for result in results {
                     lastRHR = result.quantity.doubleValue(for: .heartRateUnit)
+                    //testResult = result.metadata!
                 }
                 recentRHR = Double(lastRHR)
                 print("Last RHR: \(recentRHR)")
+                print("Metadata: \(testResult)")
                 arrayRHRDone = true
                 print("RHR Done = \(arrayRHRDone)")
                 completion()
             }
             //3 - Check how big array is, add or remove as necessary
         }
+    
+    func healthKitTest() {
+        //1 - Access most recent rhr value between midnight yesterday and right this second
+        hkm.restingHeartRateMostRecent(from: yesterdayStartDate, to: Date()) {
+            (results) in
+            
+            var lastRHR = 0.0
+            var testResult: [String:Any] = [:]
+            var test: Date? = nil
+            // results is an array of [HKQuantitySample]
+            // example conversion to BPM:
+            for result in results {
+                lastRHR = result.quantity.doubleValue(for: .heartRateUnit)
+                //testResult = result.metadata!
+                //test = result.endDate
+                test = result.startDate
+                //test = result.
+            }
+            recentRHR = Double(lastRHR)
+            print("Last RHR: \(recentRHR)")
+            print("Metadata: \(test)")
+            arrayRHRDone = true
+            print("RHR Done = \(arrayRHRDone)")
+            print("Calendar.current: \(calendar)")
+        }
+        //3 - Check how big array is, add or remove as necessary
+    }
     
     
     
@@ -1017,20 +1071,88 @@ struct ContentView: View {
         }
     }
     //MARK: - HomeView
+    //MARK: - Variables
+    var recentHRVValue = 0.0
+    var recentHRVTime: Date? = nil
+//
+    var variability30DayArray = [Double]()
+//
+    var variability30DayArrayNoOutliers = [Double]()
+    var hrvOutlierIQR = 0.0
+    var hrvOutlier1Q = 0.0
+    var hrvOutlier3Q = 0.0
+    var hrvOutlierLowCutoff = 0.0
+    var hrvOutlierHighCutoff = 0.0
+//
+    var hrvMax = 0.0
+    var hrvMin = 0.0
+    var hrv1Q = 0.0
+    var hrv3Q = 0.0
+    var hrvMedian = 0.0
+//
+    var hrvReadinessPercentage = 0.0
+//
+    var readinessColor:Color = .blue
+
     struct HomeView: View {
         //Core Data SwiftUI Object Management
         @Environment(\.managedObjectContext) var managedObjectContext
         
         //State Variables
+        @State private var recentHRVValueState = 0
+        @State private var recentHRVTimeState: String = ""
+        @State private var finalReadinessPercentage = 0
+        @State private var readinessColorState:Color = .blue
+        
         
         //Alert Enum
+        
         
         //MARK: - SWiftui
         var body: some View {
             NavigationView {
                 VStack {
-                    Text("HRV Number")
-                    Text("Last HRV Recorded Time")
+                    HStack(alignment: .center) {
+                        Text("The Middle Circle is your Readiness Score")
+                        ZStack {
+                            CircularProgress(
+                                progress: 60,
+                                lineWidth: 20,
+                                foregroundColor: .purple,
+                                backgroundColor: Color.purple.opacity(0.20)
+                            ).rotationEffect(.degrees(-90)).frame(width: 150, height: 150, alignment: .center)
+                            Circle()
+                                .foregroundColor(readinessColorState)
+                                    .frame(width: 85, height: 85)
+                            Text("\(finalReadinessPercentage)")
+                                .font(Font.largeTitle.bold())
+                                .foregroundColor(.white)
+                                .shadow(radius: 8)
+                            
+                        }
+                        Text("The purple bar will be your Day Load")
+                    }
+                    Text("Last HRV Number: \(recentHRVValueState)")
+                    Text("Last HRV Recorded Time: \(recentHRVTimeState)")
+                        .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
+                                print("Moving back to the foreground!")
+                            fullReadinessCalculation()
+                        }
+                    Button(action: {
+                        fullReadinessCalculation()
+                    }) {
+                        Text("Test Button - Full Calculation - Developer Use")
+                    }.onAppear(perform: {
+                        print("Recovery Appeared using OnAppear")
+                        fullReadinessCalculation()
+                    })
+                    
+                    Text("Warnings will go here")
+                        .background(Color.gray)
+                    Text("Daily guidance will go here")
+                        .background(Color.gray)
+
+
                 }
             }
         }
@@ -1048,35 +1170,183 @@ struct ContentView: View {
         
         // MARK: - Functions
         
+        func getFormattedDate(date: Date, format: String) -> String {
+                let dateformat = DateFormatter()
+                dateformat.dateFormat = format
+                return dateformat.string(from: date)
+        }
+        
+        func fullReadinessCalculation() {
+            findMostRecentHRV {
+                find30DayHRVArray {
+                    hrvRemoveOutliers {
+                        hrvStatsCalculations {
+                            calculateReadinessPercent {
+                                changeReadinessTextandColors()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        func findMostRecentHRV(_ completion : @escaping()->()) {
+            hkm.variabilityMostRecent(from: weekAgoStartDate, to: Date()) { (results) in
+                var lastHRV = 0.0
+                var lastHRVTime: Date? = nil
+                
+                for result in results {
+                    lastHRV = result.quantity.doubleValue(for: .variabilityUnit)
+                    lastHRVTime = result.startDate
+                }
+                recentHRVValue = Double(lastHRV)
+                recentHRVTime = lastHRVTime
+                //
+                print(recentHRVValue)
+                print(lastHRVTime!)
+                //
+                let formattedDate = getFormattedDate(date: recentHRVTime!, format: "MMM d, hh:mm a")
+                print("Formatted Date: \(formattedDate)")
+                self.recentHRVTimeState = String("\(formattedDate)")
+                self.recentHRVValueState = Int(recentHRVValue)
+                completion()
+                
+                
+//                let utcTimeZone = TimeZone(abbreviation: "UTC")!
+//                let pdtTimeZone = TimeZone(abbreviation: "PDT")!
+//                let dateString = "2020-12-08T20:10:00.888Z"
+//                let dateFormatter = DateFormatter()
+//                dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss Z"
+//
+//                print(dateFormatter.date(from: dateString))
+//                print(dateFormatter.date(from: dateString, timeZoneInString: utcTimeZone))
+//                print(dateFormatter.date(from: dateString, timeZoneInString: utcTimeZone, outputTimeZone: pdtTimeZone))
+//
+//
+//                print(dateFormatter.date(from: String("\(lastHRVTime!)"), timeZoneInString: utcTimeZone, outputTimeZone: pdtTimeZone)!)
+//
+//               //RecentHRVTime needs to be a date
+//               recentHRVTime = dateFormatter.date(from: String("\(lastHRVTime!)"), timeZoneInString: utcTimeZone, outputTimeZone: pdtTimeZone)
+//                print("\(recentHRVTime!)")
+ 
+                
+            }
+        }
+        
+        func find30DayHRVArray(_ completion : @escaping()->()) {
+            hkm.variability(from: monthAgoStartDate, to: Date()) { (results) in
+                
+                var variabilityRetrieve = 0.0
+                var variabilityRetrieveArray = [Double]()
+                
+                for result in results {
+                    variabilityRetrieve = result.quantity.doubleValue(for: .variabilityUnit)
+                    variabilityRetrieveArray.append(variabilityRetrieve)
+                }
+                variability30DayArray = variabilityRetrieveArray
+                print(variability30DayArray)
+                completion()
+            }
+        }
+        func hrvRemoveOutliers(_ completion : @escaping()->()) {
+            hrvOutlier1Q = (Sigma.percentile(variability30DayArray, percentile: 0.25) ?? 0.0)
+            hrvOutlier3Q = (Sigma.percentile(variability30DayArray, percentile: 0.75) ?? 0.0)
+            
+            hrvOutlierIQR = hrvOutlier3Q - hrvOutlier1Q
+            
+            hrvOutlierLowCutoff = hrvOutlier1Q - (1.5 * hrvOutlierIQR)
+            hrvOutlierHighCutoff = hrvOutlier3Q + (1.5 * hrvOutlierIQR)
+            
+            variability30DayArrayNoOutliers = variability30DayArray.filter { $0 < hrvOutlierHighCutoff && $0 > hrvOutlierLowCutoff }
+            
+            completion()
+        }
+        
+        func hrvStatsCalculations(_ completion : @escaping()->()) {
+            hrvMax = variability30DayArrayNoOutliers.max() ?? 0.0
+            hrvMin = variability30DayArrayNoOutliers.min() ?? 0.0
+            hrv1Q = Sigma.percentile(variability30DayArrayNoOutliers, percentile: 0.25) ?? 0.0
+            hrv3Q = Sigma.percentile(variability30DayArrayNoOutliers, percentile: 0.75) ?? 0.0
+            hrvMedian = Sigma.median(variability30DayArrayNoOutliers) ?? 0.0
+            
+            print("Max: \(hrvMax) Min: \(hrvMin) 1Q: \(hrv1Q) 3Q: \(hrv3Q) Median: \(hrvMedian)")
+            completion()
+        }
+        
+        func calculateReadinessPercent(_ completion : @escaping()->()) {
+            if recentHRVValue < hrvMin {
+                hrvReadinessPercentage = 25.0
+            } else if recentHRVValue > hrvMax {
+                hrvReadinessPercentage = 99.0
+            } else if hrvMin <= recentHRVValue && recentHRVValue <= hrv1Q {
+                hrvReadinessPercentage = ((((recentHRVValue - hrvMin) / (hrv1Q - hrvMin)) * 25.0) + 25.0)
+            } else if hrv1Q <= recentHRVValue && recentHRVValue <= hrvMedian {
+                hrvReadinessPercentage = ((((recentHRVValue - hrv1Q) / (hrvMedian - hrv1Q)) * 15.0) + 50.0)
+            } else if hrvMedian <= recentHRVValue && recentHRVValue <= hrv3Q {
+                hrvReadinessPercentage = ((((recentHRVValue - hrvMedian) / (hrv3Q - hrvMedian)) * 20.0) + 65.0)
+            } else if hrv3Q <= recentHRVValue && recentHRVValue <= hrvMax {
+                hrvReadinessPercentage = ((((recentHRVValue - hrv3Q) / (hrvMax - hrv3Q)) * 14.0) + 85.0)
+            }
+            print("Readiness % is: \(hrvReadinessPercentage)")
+            self.finalReadinessPercentage = Int(hrvReadinessPercentage)
+            completion()
+        }
+        
+        func changeReadinessTextandColors() {
+            if hrvReadinessPercentage <= 39 {
+                readinessColor = .red
+            } else if hrvReadinessPercentage > 39 && hrvReadinessPercentage < 74 {
+                readinessColor = .orange
+            } else if hrvReadinessPercentage >= 74 {
+                readinessColor = .green
+            }
+            readinessColorState = readinessColor
+            print("Bar color is: \(readinessColor)")
+        }
+
+        
     }
 
 
 
-    //MARK: - JournalView
-    struct JournalView: View {
+    //MARK: - Readiness View
+    struct ReadinessView: View {
         var body: some View {
-            Text("Coming Soon")
+            NavigationView {
+            Text("More detailed information about your Readiness will be available here.")
+                .frame(alignment: .center)
+
+            }
         }
     }
+
+//MARK: - Body Load View
+struct BodyLoadView: View {
+    var body: some View {
+        NavigationView {
+            Text("More detailed information about your Body Load will be available here.")
+        }
+    }
+}
     
     //MARK: - AppView to Create Tabs
     struct AppView: View {
         var body: some View {
             TabView {
-                ContentView()
-                    .tabItem {
-                        Image(systemName: "battery.100")
-                        Text("Recovery")
-                    }
                 HomeView()
                     .tabItem {
                         Image(systemName: "house.fill")
                         Text("Home")
                     }
-                JournalView()
+                ReadinessView()
                     .tabItem {
-                        Image(systemName: "book.fill")
-                        Text("Journal")
+                        Image(systemName: "battery.100")
+                        Text("Readiness")
+                    }
+                BodyLoadView()
+                    .tabItem {
+                        Image(systemName: "bolt.fill")
+                        Text("Body Load")
                     }
                 SettingsView()
                     .tabItem {
