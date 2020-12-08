@@ -1146,6 +1146,7 @@ struct ContentView: View {
                         print("Recovery Appeared using OnAppear")
                         fullReadinessCalculation()
                     })
+                    Text("Build 0.1.11")
                     
                     Text("Warnings will go here")
                         .background(Color.gray)
