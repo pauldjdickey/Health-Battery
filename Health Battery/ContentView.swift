@@ -1103,6 +1103,7 @@ struct ContentView: View {
         @State private var recentHRVTimeState: String = ""
         @State private var finalReadinessPercentage = 0
         @State private var readinessColorState:Color = .blue
+        @State private var hrvMorningRecordedAlertHidden = true
         
         
         //Alert Enum
@@ -1150,10 +1151,12 @@ struct ContentView: View {
                         print("Recovery Appeared using OnAppear")
                         fullReadinessCalculation()
                     })
+                    
+                    if !hrvMorningRecordedAlertHidden {
                         ZStack {
                             Rectangle()
                                 .foregroundColor(Color.gray.opacity(0.20))
-                                .frame(width: 350, height: 100)
+                                .frame(width: 350, height: 120)
                                 .cornerRadius(10)
                             VStack {
                                 HStack {
@@ -1164,11 +1167,12 @@ struct ContentView: View {
                                     Text("Your Readiness is not up to date.")
                                         .font(.headline)
                                 }
-                                Text("(Work in progress, not an actual suggestion.)")
+                                Text("The most recent readiness score is from yesterday. Go to the breathe app on your Apple Watch to update your score.")
+                                    .frame(width: 340)
                                     .multilineTextAlignment(.center)
                             }
-                        }//.hidden() - This hides the whole stack! Sweet!
-                    
+                        }
+                    }
                     ZStack {
                         Rectangle()
                             .foregroundColor(Color.gray.opacity(0.20))
@@ -1183,7 +1187,7 @@ struct ContentView: View {
                                     .font(.headline)
                             }
                             Text("To reach your Recommended Day Load, go on your normal 20 mile bike ride! (Work in progress, not an actual suggestion)")
-                                .frame(width: 350)
+                                .frame(width: 340)
                                 .multilineTextAlignment(.center)
                         }
                     }
@@ -1244,6 +1248,11 @@ struct ContentView: View {
                 print("Formatted Date: \(formattedDate)")
                 self.recentHRVTimeState = String("\(formattedDate)")
                 self.recentHRVValueState = Int(recentHRVValue)
+                if recentHRVTime! < lastMidnight {
+                    hrvMorningRecordedAlertHidden = false
+                } else if recentHRVTime! >= lastMidnight {
+                    hrvMorningRecordedAlertHidden = true
+                }
                 completion()
                 
                 
