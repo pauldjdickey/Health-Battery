@@ -1113,7 +1113,9 @@ struct ContentView: View {
             NavigationView {
                 VStack {
                     HStack(alignment: .center) {
-                        Text("The Middle Circle is your Readiness Score")
+                        Text("Current Day Load:")
+                            .multilineTextAlignment(.center)
+
                         ZStack {
                             CircularProgress(
                                 progress: 60,
@@ -1130,7 +1132,9 @@ struct ContentView: View {
                                 .shadow(radius: 8)
                             
                         }
-                        Text("The purple bar will be your Day Load")
+                        Text("Current Day Load:")
+                            .multilineTextAlignment(.center)
+
                     }
                     Text("Last HRV Number: \(recentHRVValueState)")
                     Text("Last HRV Recorded Time: \(recentHRVTimeState)")
@@ -1146,14 +1150,44 @@ struct ContentView: View {
                         print("Recovery Appeared using OnAppear")
                         fullReadinessCalculation()
                     })
-                    Text("Build 0.1.11")
+                        ZStack {
+                            Rectangle()
+                                .foregroundColor(Color.gray.opacity(0.20))
+                                .frame(width: 350, height: 100)
+                                .cornerRadius(10)
+                            VStack {
+                                HStack {
+                                    Image(systemName: "exclamationmark.triangle")
+                                        .resizable()
+                                        .frame(width: 20, height: 20)
+                                        .foregroundColor(.orange)
+                                    Text("Your Readiness is not up to date.")
+                                        .font(.headline)
+                                }
+                                Text("(Work in progress, not an actual suggestion.)")
+                                    .multilineTextAlignment(.center)
+                            }
+                        }//.hidden() - This hides the whole stack! Sweet!
                     
-                    Text("Warnings will go here")
-                        .background(Color.gray)
-                    Text("Daily guidance will go here")
-                        .background(Color.gray)
-
-
+                    ZStack {
+                        Rectangle()
+                            .foregroundColor(Color.gray.opacity(0.20))
+                            .frame(width: 350, height: 120)
+                            .cornerRadius(10)
+                        VStack {
+                            HStack {
+                                Image(systemName: "info.circle")
+                                    .resizable()
+                                    .frame(width: 20, height: 20)
+                                Text("You can push it hard today!")
+                                    .font(.headline)
+                            }
+                            Text("To reach your Recommended Day Load, go on your normal 20 mile bike ride! (Work in progress, not an actual suggestion)")
+                                .frame(width: 350)
+                                .multilineTextAlignment(.center)
+                        }
+                    }
+                    Text("Build 0.1.11")
                 }
             }
         }
