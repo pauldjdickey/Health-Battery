@@ -1120,7 +1120,7 @@ struct ContentView: View {
                         ZStack {
                             CircularProgress(
                                 progress: 60,
-                                lineWidth: 20,
+                                lineWidth: 15,
                                 foregroundColor: .purple,
                                 backgroundColor: Color.purple.opacity(0.20)
                             ).rotationEffect(.degrees(-90)).frame(width: 150, height: 150, alignment: .center)
@@ -1191,7 +1191,7 @@ struct ContentView: View {
                                 .multilineTextAlignment(.center)
                         }
                     }
-                    Text("Build 0.1.11")
+                    Text("Build 0.1.12")
                 }
             }
         }
@@ -1319,17 +1319,17 @@ struct ContentView: View {
         
         func calculateReadinessPercent(_ completion : @escaping()->()) {
             if recentHRVValue < hrvMin {
-                hrvReadinessPercentage = 25.0
+                hrvReadinessPercentage = 0.0
             } else if recentHRVValue > hrvMax {
                 hrvReadinessPercentage = 99.0
             } else if hrvMin <= recentHRVValue && recentHRVValue <= hrv1Q {
-                hrvReadinessPercentage = ((((recentHRVValue - hrvMin) / (hrv1Q - hrvMin)) * 25.0) + 25.0)
+                hrvReadinessPercentage = ((((recentHRVValue - hrvMin) / (hrv1Q - hrvMin)) * 25.0) + 0.0)
             } else if hrv1Q <= recentHRVValue && recentHRVValue <= hrvMedian {
-                hrvReadinessPercentage = ((((recentHRVValue - hrv1Q) / (hrvMedian - hrv1Q)) * 15.0) + 50.0)
+                hrvReadinessPercentage = ((((recentHRVValue - hrv1Q) / (hrvMedian - hrv1Q)) * 25.0) + 25.0)
             } else if hrvMedian <= recentHRVValue && recentHRVValue <= hrv3Q {
-                hrvReadinessPercentage = ((((recentHRVValue - hrvMedian) / (hrv3Q - hrvMedian)) * 20.0) + 65.0)
+                hrvReadinessPercentage = ((((recentHRVValue - hrvMedian) / (hrv3Q - hrvMedian)) * 25.0) + 50.0)
             } else if hrv3Q <= recentHRVValue && recentHRVValue <= hrvMax {
-                hrvReadinessPercentage = ((((recentHRVValue - hrv3Q) / (hrvMax - hrv3Q)) * 14.0) + 85.0)
+                hrvReadinessPercentage = ((((recentHRVValue - hrv3Q) / (hrvMax - hrv3Q)) * 25.0) + 75.0)
             }
             print("Readiness % is: \(hrvReadinessPercentage)")
             self.finalReadinessPercentage = Int(hrvReadinessPercentage)
