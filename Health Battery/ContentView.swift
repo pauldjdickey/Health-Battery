@@ -9,6 +9,7 @@ import CoreData
 import Dispatch
 import SwiftProgress
 import PZCircularControl
+import SwiftUICharts
 
 
 let hkm = HealthKitManager()
@@ -1119,11 +1120,17 @@ struct ContentView: View {
 
                         ZStack {
                             CircularProgress(
-                                progress: 60,
+                                progress: 87,
+                                lineWidth: 15,
+                                foregroundColor: .green,
+                                backgroundColor: Color.green.opacity(0.20)
+                            ).rotationEffect(.degrees(-90)).frame(width: 150, height: 150, alignment: .center)
+                            CircularProgress(
+                                progress: 26,
                                 lineWidth: 15,
                                 foregroundColor: .purple,
                                 backgroundColor: Color.purple.opacity(0.20)
-                            ).rotationEffect(.degrees(-90)).frame(width: 150, height: 150, alignment: .center)
+                            ).rotationEffect(.degrees(-90)).frame(width: 200, height: 200, alignment: .center)
                             Circle()
                                 .foregroundColor(readinessColorState)
                                     .frame(width: 85, height: 85)
@@ -1144,9 +1151,9 @@ struct ContentView: View {
                             fullReadinessCalculation()
                         }
                     Button(action: {
-                        fullReadinessCalculation()
+                        saveFinalReadinessCalculation()
                     }) {
-                        Text("Test Button - Full Calculation - Developer Use")
+                        Text("Test Button - Save Final Readiness to Core Data - Developer Use")
                     }.onAppear(perform: {
                         print("Recovery Appeared using OnAppear")
                         fullReadinessCalculation()
@@ -1238,6 +1245,12 @@ struct ContentView: View {
                     lastHRV = result.quantity.doubleValue(for: .variabilityUnit)
                     lastHRVTime = result.startDate
                 }
+                
+                //Create guard here if there is no data
+                guard lastHRV > 0.0 else {
+                    print("No recent data to calculate, guard is enabled and everything stops")
+                    return
+                }
                 recentHRVValue = Double(lastHRV)
                 recentHRVTime = lastHRVTime
                 //
@@ -1318,9 +1331,9 @@ struct ContentView: View {
         }
         
         func calculateReadinessPercent(_ completion : @escaping()->()) {
-            if recentHRVValue < hrvMin {
+            if recentHRVValue <= hrvMin {
                 hrvReadinessPercentage = 0.0
-            } else if recentHRVValue > hrvMax {
+            } else if recentHRVValue >= hrvMax {
                 hrvReadinessPercentage = 99.0
             } else if hrvMin <= recentHRVValue && recentHRVValue <= hrv1Q {
                 hrvReadinessPercentage = ((((recentHRVValue - hrvMin) / (hrv1Q - hrvMin)) * 25.0) + 0.0)
@@ -1347,6 +1360,16 @@ struct ContentView: View {
             readinessColorState = readinessColor
             print("Bar color is: \(readinessColor)")
         }
+        func saveFinalReadinessCalculation() {
+            let newReadinessCalculationWrite = Readiness(context: managedObjectContext)
+            
+            newReadinessCalculationWrite.calculation = hrvReadinessPercentage
+            newReadinessCalculationWrite.hrv = recentHRVValue
+            newReadinessCalculationWrite.time = recentHRVTime
+            
+            saveContext()
+            
+        }
 
         
     }
@@ -1357,8 +1380,8 @@ struct ContentView: View {
     struct ReadinessView: View {
         var body: some View {
             NavigationView {
-            Text("More detailed information about your Readiness will be available here.")
-                .frame(alignment: .center)
+                BarChartView(data: ChartData(values: [("Wed",63), ("Thu",50), ("Fri",77), ("Sat",79), ("Sun",92)]), title: "Readiness Averages", form: ChartForm.medium) // legend is optional
+
 
             }
         }
@@ -1369,6 +1392,8 @@ struct BodyLoadView: View {
     var body: some View {
         NavigationView {
             Text("More detailed information about your Body Load will be available here.")
+                .multilineTextAlignment(.center)
+
         }
     }
 }

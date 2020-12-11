@@ -34,6 +34,7 @@
 		2D8DE8E625799B6900EF656C /* SigmaDistrib.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D8DE8E525799B6800EF656C /* SigmaDistrib.swift */; };
 		2D8DE90B2579B0AE00EF656C /* SwiftProgress in Frameworks */ = {isa = PBXBuildFile; productRef = 2D8DE90A2579B0AE00EF656C /* SwiftProgress */; };
 		2DACACB225802FA2007AF98F /* PZCircularControl in Frameworks */ = {isa = PBXBuildFile; productRef = 2DACACB125802FA2007AF98F /* PZCircularControl */; };
+		2DACACBE25828DD7007AF98F /* SwiftUICharts in Frameworks */ = {isa = PBXBuildFile; productRef = 2DACACBD25828DD7007AF98F /* SwiftUICharts */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -148,6 +149,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2DACACB225802FA2007AF98F /* PZCircularControl in Frameworks */,
+				2DACACBE25828DD7007AF98F /* SwiftUICharts in Frameworks */,
 				2D674A83253940B400040B66 /* HealthKit.framework in Frameworks */,
 				2D8DE90B2579B0AE00EF656C /* SwiftProgress in Frameworks */,
 			);
@@ -339,6 +341,7 @@
 			packageProductDependencies = (
 				2D8DE90A2579B0AE00EF656C /* SwiftProgress */,
 				2DACACB125802FA2007AF98F /* PZCircularControl */,
+				2DACACBD25828DD7007AF98F /* SwiftUICharts */,
 			);
 			productName = "Health Battery";
 			productReference = 2D674A4225393FCF00040B66 /* Health Battery.app */;
@@ -420,6 +423,7 @@
 			packageReferences = (
 				2D8DE9092579B0AE00EF656C /* XCRemoteSwiftPackageReference "SwiftProgress" */,
 				2DACACB025802FA2007AF98F /* XCRemoteSwiftPackageReference "PZCircularControl" */,
+				2DACACBC25828DD7007AF98F /* XCRemoteSwiftPackageReference "ChartView" */,
 			);
 			productRefGroup = 2D674A4325393FCF00040B66 /* Products */;
 			projectDirPath = "";
@@ -984,6 +988,14 @@
 				minimumVersion = 0.1.1;
 			};
 		};
+		2DACACBC25828DD7007AF98F /* XCRemoteSwiftPackageReference "ChartView" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/AppPear/ChartView";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.5.4;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -996,6 +1008,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 2DACACB025802FA2007AF98F /* XCRemoteSwiftPackageReference "PZCircularControl" */;
 			productName = PZCircularControl;
+		};
+		2DACACBD25828DD7007AF98F /* SwiftUICharts */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2DACACBC25828DD7007AF98F /* XCRemoteSwiftPackageReference "ChartView" */;
+			productName = SwiftUICharts;
 		};
 /* End XCSwiftPackageProductDependency section */
 
