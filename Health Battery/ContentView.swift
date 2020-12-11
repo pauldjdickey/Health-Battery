@@ -1075,6 +1075,9 @@ struct ContentView: View {
     //MARK: - Variables
     var recentHRVValue = 0.0
     var recentHRVTime: Date? = nil
+    var recentHRVCalculation = 0.0
+//
+    var newFinalHRVCalculation = 0.0
 //
     var variability30DayArray = [Double]()
 //
@@ -1088,10 +1091,22 @@ struct ContentView: View {
     var hrvMax = 0.0
     var hrvMin = 0.0
     var hrv1Q = 0.0
+    var hrv0_75Q = 0.0
+    var hrv1_5Q = 0.0
+    var hrv2_5Q = 0.0
+    var hrv3_25Q = 0.0
     var hrv3Q = 0.0
     var hrvMedian = 0.0
 //
     var hrvReadinessPercentage = 0.0
+//
+    var coreDataHRVCalculationArray = [Double]()
+    var coreDataHRVTimeArray = [Date]()
+    var coreDataHRVValueArray = [Double]()
+//
+    var coreDataHRVValue = 0.0
+    var coreDataHRVTime: Date? = nil
+    var coreDataHRVCalculation = 0.0
 //
     var readinessColor:Color = .blue
 
@@ -1103,8 +1118,10 @@ struct ContentView: View {
         @State private var recentHRVValueState = 0
         @State private var recentHRVTimeState: String = ""
         @State private var finalReadinessPercentage = 0
-        @State private var readinessColorState:Color = .blue
+        @State private var readinessColorState:Color = .gray
         @State private var hrvMorningRecordedAlertHidden = true
+        @State private var noLastHRVAlertHidden = true
+        @State private var readinessBarState = 0
         
         
         //Alert Enum
@@ -1120,10 +1137,10 @@ struct ContentView: View {
 
                         ZStack {
                             CircularProgress(
-                                progress: 87,
+                                progress: CGFloat(readinessBarState),
                                 lineWidth: 15,
-                                foregroundColor: .green,
-                                backgroundColor: Color.green.opacity(0.20)
+                                foregroundColor: readinessColorState,
+                                backgroundColor: readinessColorState.opacity(0.20)
                             ).rotationEffect(.degrees(-90)).frame(width: 150, height: 150, alignment: .center)
                             CircularProgress(
                                 progress: 26,
@@ -1148,15 +1165,15 @@ struct ContentView: View {
                     Text("Last HRV Recorded Time: \(recentHRVTimeState)")
                         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
                                 print("Moving back to the foreground!")
-                            fullReadinessCalculation()
+                            newReadinessCalculation()
                         }
                     Button(action: {
-                        saveFinalReadinessCalculation()
+                        newReadinessCalculation()
                     }) {
-                        Text("Test Button - Save Final Readiness to Core Data - Developer Use")
+                        Text("Test Button - Developer Use")
                     }.onAppear(perform: {
                         print("Recovery Appeared using OnAppear")
-                        fullReadinessCalculation()
+                        newReadinessCalculation()
                     })
                     
                     if !hrvMorningRecordedAlertHidden {
@@ -1175,6 +1192,27 @@ struct ContentView: View {
                                         .font(.headline)
                                 }
                                 Text("The most recent readiness score is from yesterday. Go to the breathe app on your Apple Watch to update your score.")
+                                    .frame(width: 340)
+                                    .multilineTextAlignment(.center)
+                            }
+                        }
+                    }
+                    if !noLastHRVAlertHidden {
+                        ZStack {
+                            Rectangle()
+                                .foregroundColor(Color.gray.opacity(0.20))
+                                .frame(width: 350, height: 120)
+                                .cornerRadius(10)
+                            VStack {
+                                HStack {
+                                    Image(systemName: "exclamationmark.triangle")
+                                        .resizable()
+                                        .frame(width: 20, height: 20)
+                                        .foregroundColor(.red)
+                                    Text("There is no HRV data.")
+                                        .font(.headline)
+                                }
+                                Text("Please wear your Watch all day and report back later to see your readiness calculation.")
                                     .frame(width: 340)
                                     .multilineTextAlignment(.center)
                             }
@@ -1216,12 +1254,6 @@ struct ContentView: View {
         
         // MARK: - Functions
         
-        func getFormattedDate(date: Date, format: String) -> String {
-                let dateformat = DateFormatter()
-                dateformat.dateFormat = format
-                return dateformat.string(from: date)
-        }
-        
         func fullReadinessCalculation() {
             findMostRecentHRV {
                 find30DayHRVArray {
@@ -1249,8 +1281,12 @@ struct ContentView: View {
                 //Create guard here if there is no data
                 guard lastHRV > 0.0 else {
                     print("No recent data to calculate, guard is enabled and everything stops")
+                    self.finalReadinessPercentage = 0
+                    self.noLastHRVAlertHidden = false
+                    self.readinessColorState = .gray
                     return
                 }
+                self.noLastHRVAlertHidden = true
                 recentHRVValue = Double(lastHRV)
                 recentHRVTime = lastHRVTime
                 //
@@ -1370,7 +1406,303 @@ struct ContentView: View {
             saveContext()
             
         }
+        
+        
+        //MARK: - New Core Data Manipulation
+        @FetchRequest(
+            entity: Readiness.entity(),
+            sortDescriptors: [NSSortDescriptor(keyPath: \Readiness.time, ascending: false)]
+        ) var coreDataItems: FetchedResults<Readiness>
+        
+        //MARK: - New Functions
+        func getFormattedDate(date: Date, format: String) -> String {
+                let dateformat = DateFormatter()
+                dateformat.dateFormat = format
+                return dateformat.string(from: date)
+        }
+        
+        func newReadinessCalculation() {
+            //Where all of our functions will be put in and then called
+            findNewHRVReading {
+                findOldCoreDataReading {
+                    compareNewAndOldData {
+                        getHRVArrayFromHealth {
+                            removeOutliers {
+                                calculateStats {
+                                    recentHRVRecoveryCalculation {
+                                        compareAndCalculateNewReadinessScore {
+                                            changeReadinessColorsandText {
+                                                saveNewCalculationToCD()
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        
+        
+        func findNewHRVReading(_ completion : @escaping()->()) {
+            hkm.variabilityMostRecent(from: weekAgoStartDate, to: Date()) { (results) in
+                var lastHRV = 0.0
+                var lastHRVTime: Date? = nil
+                
+                for result in results {
+                    lastHRV = result.quantity.doubleValue(for: .variabilityUnit)
+                    lastHRVTime = result.startDate
+                }
+                
+                guard lastHRV > 0.0 else {
+                    print("No recent data to calculate, guard is enabled, everything stops, and alert shows")
+                    self.finalReadinessPercentage = 0
+                    self.noLastHRVAlertHidden = false
+                    self.readinessColorState = .gray
+                    return
+                }
+                
+                self.noLastHRVAlertHidden = true
+                recentHRVValue = Double(lastHRV)
+                recentHRVTime = lastHRVTime
+                
+                if recentHRVTime! < lastMidnight {
+                    hrvMorningRecordedAlertHidden = false
+                } else if recentHRVTime! >= lastMidnight {
+                    hrvMorningRecordedAlertHidden = true
+                }
+                completion()
+            }
+        }
+        
+        func findOldCoreDataReading(_ completion : @escaping()->()) {
+            coreDataHRVCalculationArray = coreDataItems.map {$0.calculation}
+            coreDataHRVTimeArray = coreDataItems.map {$0.time!}
+            coreDataHRVValueArray = coreDataItems.map {$0.hrv}
+            
+            coreDataHRVValue = coreDataHRVValueArray.first ?? 0
+            coreDataHRVTime = coreDataHRVTimeArray.first ?? nil
+            coreDataHRVCalculation = coreDataHRVCalculationArray.first ?? 0
+            
+            print("Last core data value: \(coreDataHRVValue)")
+            print("Last core data time: \(coreDataHRVTime)")
+            print("Last core data calculation: \(coreDataHRVCalculation)")
+            
+            completion()
+        }
+        
+        func compareNewAndOldData(_ completion : @escaping()->()) {
+            //Compares new hrv reading and old to see if they are the same and continues or doesn't\
+            //This stops with guard and just sets our values to what was in our core data variables if the recent hrv and the core data items are the same, meaning that nothing new has happened
+            //It will continue with calculation if our hrv from health is newer than our core data items
+            
+            guard recentHRVTime! > coreDataHRVTime! else {
+                //They are the same time, just update @state and color variables with most recent and formatting
+                changeReadinessColorsandTextCoreData()
+                return
+            }
+            
+            //Continue with completion()
+            completion()
+            
+        }
+        
+        func getHRVArrayFromHealth(_ completion : @escaping()->()) {
+            hkm.variability(from: monthAgoStartDate, to: Date()) { (results) in
+                
+                var variabilityRetrieve = 0.0
+                var variabilityRetrieveArray = [Double]()
+                
+                for result in results {
+                    variabilityRetrieve = result.quantity.doubleValue(for: .variabilityUnit)
+                    variabilityRetrieveArray.append(variabilityRetrieve)
+                }
+                variability30DayArray = variabilityRetrieveArray
+                print(variability30DayArray)
+                completion()
+            }
+            
+        }
+        
+        func removeOutliers(_ completion : @escaping()->()) {
+            hrvOutlier1Q = (Sigma.percentile(variability30DayArray, percentile: 0.25) ?? 0.0)
+            hrvOutlier3Q = (Sigma.percentile(variability30DayArray, percentile: 0.75) ?? 0.0)
+            
+            hrvOutlierIQR = hrvOutlier3Q - hrvOutlier1Q
+            
+            hrvOutlierLowCutoff = hrvOutlier1Q - (1.5 * hrvOutlierIQR)
+            hrvOutlierHighCutoff = hrvOutlier3Q + (1.5 * hrvOutlierIQR)
+            
+            variability30DayArrayNoOutliers = variability30DayArray.filter { $0 < hrvOutlierHighCutoff && $0 > hrvOutlierLowCutoff }
+            
+            completion()
+        }
+        
+        func calculateStats(_ completion : @escaping()->()) {
+            hrvMax = variability30DayArrayNoOutliers.max() ?? 0.0
+            hrvMin = variability30DayArrayNoOutliers.min() ?? 0.0
+            hrv1Q = Sigma.percentile(variability30DayArrayNoOutliers, percentile: 0.25) ?? 0.0
+            hrv0_75Q = Sigma.percentile(variability30DayArrayNoOutliers, percentile: 0.1875) ?? 0.0
+            hrv1_5Q = Sigma.percentile(variability30DayArrayNoOutliers, percentile: 0.375) ?? 0.0
+            hrv2_5Q = Sigma.percentile(variability30DayArrayNoOutliers, percentile: 0.625) ?? 0.0
+            hrv3_25Q = Sigma.percentile(variability30DayArrayNoOutliers, percentile: 0.8125) ?? 0.0
+            hrv3Q = Sigma.percentile(variability30DayArrayNoOutliers, percentile: 0.75) ?? 0.0
+            hrvMedian = Sigma.median(variability30DayArrayNoOutliers) ?? 0.0
+            
+            print("Max: \(hrvMax) Min: \(hrvMin) 1Q: \(hrv1Q) 3Q: \(hrv3Q) Median: \(hrvMedian) 0.75Q: \(hrv0_75Q) 1.5Q: \(hrv1_5Q) 2.5Q: \(hrv2_5Q) 3.25Q: \(hrv3_25Q)")
+            
+            completion()
+        }
+        
+        func recentHRVRecoveryCalculation(_ completion : @escaping()->()) {
+            //We need to calculate our hrv recovery first before apply it into our algorithm...
+            
+            if recentHRVValue <= hrvMin {
+                recentHRVCalculation = 0.0
+            } else if recentHRVValue >= hrvMax {
+                recentHRVCalculation = 99.0
+            } else if hrvMin <= recentHRVValue && recentHRVValue <= hrv1Q {
+                recentHRVCalculation = ((((recentHRVValue - hrvMin) / (hrv1Q - hrvMin)) * 25.0) + 0.0)
+            } else if hrv1Q <= recentHRVValue && recentHRVValue <= hrvMedian {
+                recentHRVCalculation = ((((recentHRVValue - hrv1Q) / (hrvMedian - hrv1Q)) * 25.0) + 25.0)
+            } else if hrvMedian <= recentHRVValue && recentHRVValue <= hrv3Q {
+                recentHRVCalculation = ((((recentHRVValue - hrvMedian) / (hrv3Q - hrvMedian)) * 25.0) + 50.0)
+            } else if hrv3Q <= recentHRVValue && recentHRVValue <= hrvMax {
+                recentHRVCalculation = ((((recentHRVValue - hrv3Q) / (hrvMax - hrv3Q)) * 25.0) + 75.0)
+            }
+            completion()
+        }
+        
+        func compareAndCalculateNewReadinessScore(_ completion : @escaping()->()) {
+            //Compares our old and new data to come up with a new score\
+            //Append new calculation to new calculation variable
+            //Appends to "newFinalHRVCalculation"
+            
+            //Check where our old readiness is first, then apply new
+            
+            if coreDataHRVCalculation < 25 { //in red
+                if recentHRVCalculation < 25 {
+                    newFinalHRVCalculation = recentHRVCalculation
+                } else if recentHRVCalculation == 25 {
+                    newFinalHRVCalculation = 25
+                } else if recentHRVCalculation > 25 && recentHRVCalculation < 40 {
+                    newFinalHRVCalculation = 25
+                } else if recentHRVCalculation == 40 {
+                    newFinalHRVCalculation = 35
+                } else if recentHRVCalculation > 40 && recentHRVCalculation < 65 {
+                    newFinalHRVCalculation = 40
+                } else if recentHRVCalculation == 65 {
+                    newFinalHRVCalculation = 55
+                } else if recentHRVCalculation > 65 && recentHRVCalculation < 85 {
+                    newFinalHRVCalculation = 65
+                } else if recentHRVCalculation == 85 {
+                    newFinalHRVCalculation = 75
+                } else if recentHRVCalculation > 85 {
+                    newFinalHRVCalculation = 85
+                }
+                print("Algorithm Ran")
+            } else if coreDataHRVCalculation == 25 { //on gate
+                newFinalHRVCalculation = 25
+                
+            } else if coreDataHRVCalculation > 25 && coreDataHRVCalculation < 40 { //in yellow
+                newFinalHRVCalculation = 35
 
+            } else if coreDataHRVCalculation == 40 { //on gate
+                newFinalHRVCalculation = 40
+
+            } else if coreDataHRVCalculation > 40 && coreDataHRVCalculation < 65 { //in blue
+                newFinalHRVCalculation = 55
+
+            } else if coreDataHRVCalculation == 65 { //on gate
+                newFinalHRVCalculation = 65
+                
+            } else if coreDataHRVCalculation > 65 && coreDataHRVCalculation < 85 { //in green
+                newFinalHRVCalculation = 10
+                
+            } else if coreDataHRVCalculation == 85 { //on gate
+                newFinalHRVCalculation = 85
+                
+            } else if coreDataHRVCalculation > 85 { //in pink
+                newFinalHRVCalculation = 95
+                
+            }
+            
+            completion()
+        }
+        
+        func changeReadinessColorsandText(_ completion : @escaping()->()) {
+            //Changes the text based on our 3 new calculation variables
+            //Changes the colors based on our new calculation
+            
+            let formattedRecentHRVDate = getFormattedDate(date: recentHRVTime!, format: "MMM d, hh:mm a")
+
+            
+            //Changes Text
+            self.recentHRVValueState = Int(recentHRVValue)
+            self.recentHRVTimeState = String("\(formattedRecentHRVDate)")
+            self.finalReadinessPercentage = Int(newFinalHRVCalculation)
+            
+            //Changes Colors and Bar Data
+            if newFinalHRVCalculation <= 25 {
+                readinessColor = .red
+            } else if newFinalHRVCalculation > 25 && newFinalHRVCalculation <= 40 {
+                readinessColor = .orange
+            } else if newFinalHRVCalculation > 40 && newFinalHRVCalculation <= 65 {
+                readinessColor = .blue
+            } else if newFinalHRVCalculation > 65 && newFinalHRVCalculation <= 85 {
+                readinessColor = .green
+            } else if newFinalHRVCalculation > 85 {
+                readinessColor = .pink
+            }
+            
+            self.readinessBarState = Int(newFinalHRVCalculation)
+            self.readinessColorState = readinessColor
+            
+            completion()
+            
+        }
+        
+        func saveNewCalculationToCD() {
+            //Saves new calculation / data to core data with save context
+            let newReadinessCalculationWrite = Readiness(context: managedObjectContext)
+
+            newReadinessCalculationWrite.calculation = newFinalHRVCalculation
+            newReadinessCalculationWrite.hrv = recentHRVValue
+            newReadinessCalculationWrite.time = recentHRVTime
+            
+            saveContext()
+        }
+        
+        func changeReadinessColorsandTextCoreData() {
+            //Same as above function, but uses core data in our comparison
+            
+            let formattedCoreDataDate = getFormattedDate(date: coreDataHRVTime!, format: "MMM d, hh:mm a")
+            
+            //Changes Text
+            self.recentHRVValueState = Int(coreDataHRVValue)
+            self.recentHRVTimeState = String("\(formattedCoreDataDate)")
+            self.finalReadinessPercentage = Int(coreDataHRVCalculation)
+            
+            //Changes Colors and Bar
+            if coreDataHRVCalculation <= 25 {
+                readinessColor = .red
+            } else if coreDataHRVCalculation > 25 && coreDataHRVCalculation <= 40 {
+                readinessColor = .orange
+            } else if coreDataHRVCalculation > 40 && coreDataHRVCalculation <= 65 {
+                readinessColor = .blue
+            } else if coreDataHRVCalculation > 65 && coreDataHRVCalculation <= 85 {
+                readinessColor = .green
+            } else if coreDataHRVCalculation > 85 {
+                readinessColor = .pink
+            }
+            
+            self.readinessBarState = Int(coreDataHRVCalculation)
+            self.readinessColorState = readinessColor
+        }
+        
+        
         
     }
 
