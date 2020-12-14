@@ -31,6 +31,7 @@
 		2D674A6B25393FD300040B66 /* Health_BatteryUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D674A6A25393FD300040B66 /* Health_BatteryUITests.swift */; };
 		2D674A7C2539401200040B66 /* HealthKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D674A7B2539401200040B66 /* HealthKitManager.swift */; };
 		2D674A83253940B400040B66 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D674A82253940B400040B66 /* HealthKit.framework */; };
+		2D8B178D2588020900851483 /* OldCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D8B178C2588020900851483 /* OldCode.swift */; };
 		2D8DE8E625799B6900EF656C /* SigmaDistrib.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D8DE8E525799B6800EF656C /* SigmaDistrib.swift */; };
 		2D8DE90B2579B0AE00EF656C /* SwiftProgress in Frameworks */ = {isa = PBXBuildFile; productRef = 2D8DE90A2579B0AE00EF656C /* SwiftProgress */; };
 		2DACACB225802FA2007AF98F /* PZCircularControl in Frameworks */ = {isa = PBXBuildFile; productRef = 2DACACB125802FA2007AF98F /* PZCircularControl */; };
@@ -132,6 +133,7 @@
 		2D674A7B2539401200040B66 /* HealthKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitManager.swift; sourceTree = "<group>"; };
 		2D674A80253940B400040B66 /* Health Battery.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Health Battery.entitlements"; sourceTree = "<group>"; };
 		2D674A82253940B400040B66 /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = System/Library/Frameworks/HealthKit.framework; sourceTree = SDKROOT; };
+		2D8B178C2588020900851483 /* OldCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OldCode.swift; sourceTree = "<group>"; };
 		2D8DE8E525799B6800EF656C /* SigmaDistrib.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SigmaDistrib.swift; path = "/Users/pauldickey/Documents/Health Battery/Health Battery/Health Battery/SigmaDistrib.swift"; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
 
@@ -240,6 +242,7 @@
 				2D674A4525393FCF00040B66 /* AppDelegate.swift */,
 				2D674A4725393FCF00040B66 /* SceneDelegate.swift */,
 				2D674A4925393FCF00040B66 /* ContentView.swift */,
+				2D8B178C2588020900851483 /* OldCode.swift */,
 				2D8DE8E525799B6800EF656C /* SigmaDistrib.swift */,
 				2D674A7B2539401200040B66 /* HealthKitManager.swift */,
 				2D674A4E25393FD200040B66 /* Assets.xcassets */,
@@ -501,6 +504,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2D8B178D2588020900851483 /* OldCode.swift in Sources */,
 				2D674A4625393FCF00040B66 /* AppDelegate.swift in Sources */,
 				2D674A4825393FCF00040B66 /* SceneDelegate.swift in Sources */,
 				2D674A4A25393FCF00040B66 /* ContentView.swift in Sources */,
@@ -787,7 +791,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "Health Battery/Health Battery.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 12;
+				CURRENT_PROJECT_VERSION = 13;
 				DEVELOPMENT_ASSET_PATHS = "\"Health Battery/Preview Content\"";
 				DEVELOPMENT_TEAM = S6TAY9VTDK;
 				ENABLE_PREVIEWS = YES;
@@ -811,7 +815,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "Health Battery/Health Battery.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 12;
+				CURRENT_PROJECT_VERSION = 13;
 				DEVELOPMENT_ASSET_PATHS = "\"Health Battery/Preview Content\"";
 				DEVELOPMENT_TEAM = S6TAY9VTDK;
 				ENABLE_PREVIEWS = YES;
