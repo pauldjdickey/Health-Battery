@@ -1030,11 +1030,11 @@ struct ContentView: View {
                         Text("Delete Array Records")
                     }
                     Button(action: {
-                        deleteAllRecordsRecovery()
+                        deleteAllRecordsReadiness()
                         
                     }) {
                         // How the button looks like
-                        Text("Delete Recovery Records")
+                        Text("Delete Readiness Records")
                     }
                 }
             }
@@ -1046,6 +1046,21 @@ struct ContentView: View {
             let context = delegate.persistentContainer.viewContext
 
             let deleteFetch = NSFetchRequest<NSFetchRequestResult>(entityName: "Array30Day")
+            let deleteRequest = NSBatchDeleteRequest(fetchRequest: deleteFetch)
+
+            do {
+                try context.execute(deleteRequest)
+                try context.save()
+            } catch {
+                print ("There was an error")
+            }
+        }
+        
+        func deleteAllRecordsReadiness() {
+            let delegate = UIApplication.shared.delegate as! AppDelegate
+            let context = delegate.persistentContainer.viewContext
+
+            let deleteFetch = NSFetchRequest<NSFetchRequestResult>(entityName: "Readiness")
             let deleteRequest = NSBatchDeleteRequest(fetchRequest: deleteFetch)
 
             do {
@@ -1121,6 +1136,7 @@ struct ContentView: View {
         @State private var readinessColorState:Color = .gray
         @State private var hrvMorningRecordedAlertHidden = true
         @State private var noLastHRVAlertHidden = true
+        @State private var creatingBaselineAlertHidden = true
         @State private var readinessBarState = 0
         
         
@@ -1192,6 +1208,27 @@ struct ContentView: View {
                                         .font(.headline)
                                 }
                                 Text("The most recent readiness score is from yesterday. Go to the breathe app on your Apple Watch to update your score.")
+                                    .frame(width: 340)
+                                    .multilineTextAlignment(.center)
+                            }
+                        }
+                    }
+                    if !creatingBaselineAlertHidden {
+                        ZStack {
+                            Rectangle()
+                                .foregroundColor(Color.gray.opacity(0.20))
+                                .frame(width: 350, height: 120)
+                                .cornerRadius(10)
+                            VStack {
+                                HStack {
+                                    Image(systemName: "exclamationmark.triangle")
+                                        .resizable()
+                                        .frame(width: 20, height: 20)
+                                        .foregroundColor(.blue)
+                                    Text("Calculation Baseline.")
+                                        .font(.headline)
+                                }
+                                Text("We are currently calculating your baseline. Please wear your watch and come back regularly to see your energy levels.")
                                     .frame(width: 340)
                                     .multilineTextAlignment(.center)
                             }
@@ -1427,16 +1464,18 @@ struct ContentView: View {
                 findOldCoreDataReading {
                     compareNewAndOldData {
                         getHRVArrayFromHealth {
-                            removeOutliers {
-                                calculateStats {
-                                    recentHRVRecoveryCalculation {
-                                        compareAndCalculateNewReadinessScore {
-                                            changeReadinessColorsandText {
-                                                saveNewCalculationToCD()
+                            checkAmountofHRVArrayValues {
+                                    removeOutliers {
+                                        calculateStats {
+                                            recentHRVRecoveryCalculation {
+                                                compareAndCalculateNewReadinessScore {
+                                                    changeReadinessColorsandText {
+                                                        saveNewCalculationToCD()
+                                                    }
+                                                }
                                             }
                                         }
                                     }
-                                }
                             }
                         }
                     }
@@ -1456,6 +1495,7 @@ struct ContentView: View {
                     lastHRVTime = result.startDate
                 }
                 
+                //Revise this?
                 guard lastHRV > 0.0 else {
                     print("No recent data to calculate, guard is enabled, everything stops, and alert shows")
                     self.finalReadinessPercentage = 0
@@ -1486,12 +1526,29 @@ struct ContentView: View {
             coreDataHRVTime = coreDataHRVTimeArray.first ?? nil
             coreDataHRVCalculation = coreDataHRVCalculationArray.first ?? 0
             
+            guard coreDataHRVValue > 0 else {
+
+                
+                newFinalHRVCalculation = Double.random(in: 60...65)
+                
+                saveNewCalculationToCD()
+                
+                changeReadinessColorsandTextnoCompletion()
+
+                
+                print("There were 0 core data items, so we created a baseline to save")
+                self.creatingBaselineAlertHidden = false
+                return
+            }
+                        
             print("Last core data value: \(coreDataHRVValue)")
             print("Last core data time: \(coreDataHRVTime)")
             print("Last core data calculation: \(coreDataHRVCalculation)")
             
             completion()
         }
+        
+        
         
         func compareNewAndOldData(_ completion : @escaping()->()) {
             //Compares new hrv reading and old to see if they are the same and continues or doesn't\
@@ -1503,8 +1560,6 @@ struct ContentView: View {
                 changeReadinessColorsandTextCoreData()
                 return
             }
-            
-            //Continue with completion()
             completion()
             
         }
@@ -1525,6 +1580,41 @@ struct ContentView: View {
             }
             
         }
+
+        func checkAmountofHRVArrayValues(_ completion : @escaping()->()) {
+            //When we get our array we will see how many values we have
+            //If there are not 4 data points, guard, calculate and save to core data, and have blue ! warning
+                     
+            guard variability30DayArray.count > 3 else {
+                //If variability has less than 4 values, run this
+                
+                //Set our newFinalHRVCalculation to random Double(int 60...65)
+                
+                newFinalHRVCalculation = Double.random(in: 60...65)
+                
+                //Save to core data using saveNewCalculationToCD
+                saveNewCalculationToCD()
+                
+                //Run change readiness colors and text w/o completion
+                changeReadinessColorsandTextnoCompletion()
+                
+                //Make blue notification saying we are creating baseline
+                print("Less than 4 data points worth of hrv from health")
+                self.creatingBaselineAlertHidden = false
+
+                return
+            }
+            
+            self.creatingBaselineAlertHidden = true
+            
+            
+            
+            //If we have more than 4 items, continue as normal
+            
+            completion()
+            
+        }
+        
         
         func removeOutliers(_ completion : @escaping()->()) {
             hrvOutlier1Q = (Sigma.percentile(variability30DayArray, percentile: 0.25) ?? 0.0)
@@ -1572,6 +1662,7 @@ struct ContentView: View {
             } else if hrv3Q <= recentHRVValue && recentHRVValue <= hrvMax {
                 recentHRVCalculation = ((((recentHRVValue - hrv3Q) / (hrvMax - hrv3Q)) * 25.0) + 75.0)
             }
+            print("Recent HRV Calculation Func run")
             completion()
         }
         
@@ -1583,52 +1674,195 @@ struct ContentView: View {
             //Check where our old readiness is first, then apply new
             
             if coreDataHRVCalculation < 25 { //in red
-                if recentHRVCalculation < 25 {
-                    newFinalHRVCalculation = recentHRVCalculation
-                } else if recentHRVCalculation == 25 {
-                    newFinalHRVCalculation = 25
-                } else if recentHRVCalculation > 25 && recentHRVCalculation < 40 {
-                    newFinalHRVCalculation = 25
-                } else if recentHRVCalculation == 40 {
-                    newFinalHRVCalculation = 35
-                } else if recentHRVCalculation > 40 && recentHRVCalculation < 65 {
-                    newFinalHRVCalculation = 40
-                } else if recentHRVCalculation == 65 {
-                    newFinalHRVCalculation = 55
-                } else if recentHRVCalculation > 65 && recentHRVCalculation < 85 {
-                    newFinalHRVCalculation = 65
-                } else if recentHRVCalculation == 85 {
-                    newFinalHRVCalculation = 75
-                } else if recentHRVCalculation > 85 {
-                    newFinalHRVCalculation = 85
-                }
-                print("Algorithm Ran")
-            } else if coreDataHRVCalculation == 25 { //on gate
-                newFinalHRVCalculation = 25
-                
-            } else if coreDataHRVCalculation > 25 && coreDataHRVCalculation < 40 { //in yellow
-                newFinalHRVCalculation = 35
+                            if recentHRVCalculation < 25 {
+                                newFinalHRVCalculation = recentHRVCalculation
+                            } else if recentHRVCalculation == 25 {
+                                newFinalHRVCalculation = 25
+                            } else if recentHRVCalculation > 25 && recentHRVCalculation < 40 {
+                                newFinalHRVCalculation = recentHRVCalculation
+                            } else if recentHRVCalculation == 40 {
+                                newFinalHRVCalculation = 35
+                            } else if recentHRVCalculation > 40 && recentHRVCalculation < 65 {
+                                newFinalHRVCalculation = 40
+                            } else if recentHRVCalculation == 65 {
+                                newFinalHRVCalculation = 55
+                            } else if recentHRVCalculation > 65 && recentHRVCalculation < 85 {
+                                newFinalHRVCalculation = 60
+                            } else if recentHRVCalculation == 85 {
+                                newFinalHRVCalculation = 68
+                            } else if recentHRVCalculation > 85 {
+                                newFinalHRVCalculation = 70
+                            }
+                        } else if coreDataHRVCalculation == 25 { //on gate
+                            if recentHRVCalculation < 25 {
+                                newFinalHRVCalculation = recentHRVCalculation
+                            } else if recentHRVCalculation == 25 {
+                                newFinalHRVCalculation = 25
+                            } else if recentHRVCalculation > 25 && recentHRVCalculation < 40 {
+                                newFinalHRVCalculation = recentHRVCalculation
+                            } else if recentHRVCalculation == 40 {
+                                newFinalHRVCalculation = 40
+                            } else if recentHRVCalculation > 40 && recentHRVCalculation < 65 {
+                                newFinalHRVCalculation = 43
+                            } else if recentHRVCalculation == 65 {
+                                newFinalHRVCalculation = 55
+                            } else if recentHRVCalculation > 65 && recentHRVCalculation < 85 {
+                                newFinalHRVCalculation = 60
+                            } else if recentHRVCalculation == 85 {
+                                newFinalHRVCalculation = 69
+                            } else if recentHRVCalculation > 85 {
+                                newFinalHRVCalculation = 71
+                            }
+                            
+                        } else if coreDataHRVCalculation > 25 && coreDataHRVCalculation < 40 { //in yellow
+                            if recentHRVCalculation < 25 {
+                                newFinalHRVCalculation = 20
+                            } else if recentHRVCalculation == 25 {
+                                newFinalHRVCalculation = 25
+                            } else if recentHRVCalculation > 25 && recentHRVCalculation < 40 {
+                                newFinalHRVCalculation = recentHRVCalculation
+                            } else if recentHRVCalculation == 40 {
+                                newFinalHRVCalculation = 40
+                            } else if recentHRVCalculation > 40 && recentHRVCalculation < 65 {
+                                newFinalHRVCalculation = recentHRVCalculation
+                            } else if recentHRVCalculation == 65 {
+                                newFinalHRVCalculation = 58
+                            } else if recentHRVCalculation > 65 && recentHRVCalculation < 85 {
+                                newFinalHRVCalculation = 65
+                            } else if recentHRVCalculation == 85 {
+                                newFinalHRVCalculation = 72
+                            } else if recentHRVCalculation > 85 {
+                                newFinalHRVCalculation = 75
+                            }
 
-            } else if coreDataHRVCalculation == 40 { //on gate
-                newFinalHRVCalculation = 40
+                        } else if coreDataHRVCalculation == 40 { //on gate
+                            if recentHRVCalculation < 25 {
+                                newFinalHRVCalculation = 25
+                            } else if recentHRVCalculation == 25 {
+                                newFinalHRVCalculation = 30
+                            } else if recentHRVCalculation > 25 && recentHRVCalculation < 40 {
+                                newFinalHRVCalculation = recentHRVCalculation
+                            } else if recentHRVCalculation == 40 {
+                                newFinalHRVCalculation = 40
+                            } else if recentHRVCalculation > 40 && recentHRVCalculation < 65 {
+                                newFinalHRVCalculation = recentHRVCalculation
+                            } else if recentHRVCalculation == 65 {
+                                newFinalHRVCalculation = 58
+                            } else if recentHRVCalculation > 65 && recentHRVCalculation < 85 {
+                                newFinalHRVCalculation = 65
+                            } else if recentHRVCalculation == 85 {
+                                newFinalHRVCalculation = 75
+                            } else if recentHRVCalculation > 85 {
+                                newFinalHRVCalculation = 80
+                            }
 
-            } else if coreDataHRVCalculation > 40 && coreDataHRVCalculation < 65 { //in blue
-                newFinalHRVCalculation = 55
+                        } else if coreDataHRVCalculation > 40 && coreDataHRVCalculation < 65 { //in blue
+                            if recentHRVCalculation < 25 {
+                                newFinalHRVCalculation = 35
+                            } else if recentHRVCalculation == 25 {
+                                newFinalHRVCalculation = 35
+                            } else if recentHRVCalculation > 25 && recentHRVCalculation < 40 {
+                                newFinalHRVCalculation = 38
+                            } else if recentHRVCalculation == 40 {
+                                newFinalHRVCalculation = 40
+                            } else if recentHRVCalculation > 40 && recentHRVCalculation < 65 {
+                                newFinalHRVCalculation = recentHRVCalculation
+                            } else if recentHRVCalculation == 65 {
+                                newFinalHRVCalculation = 65
+                            } else if recentHRVCalculation > 65 && recentHRVCalculation < 85 {
+                                newFinalHRVCalculation = recentHRVCalculation
+                            } else if recentHRVCalculation == 85 {
+                                newFinalHRVCalculation = 80
+                            } else if recentHRVCalculation > 85 {
+                                newFinalHRVCalculation = 85
+                            }
 
-            } else if coreDataHRVCalculation == 65 { //on gate
-                newFinalHRVCalculation = 65
-                
-            } else if coreDataHRVCalculation > 65 && coreDataHRVCalculation < 85 { //in green
-                newFinalHRVCalculation = 10
-                
-            } else if coreDataHRVCalculation == 85 { //on gate
-                newFinalHRVCalculation = 85
-                
-            } else if coreDataHRVCalculation > 85 { //in pink
-                newFinalHRVCalculation = 95
-                
-            }
-            
+                        } else if coreDataHRVCalculation == 65 { //on gate
+                            if recentHRVCalculation < 25 {
+                                newFinalHRVCalculation = 38
+                            } else if recentHRVCalculation == 25 {
+                                newFinalHRVCalculation = 40
+                            } else if recentHRVCalculation > 25 && recentHRVCalculation < 40 {
+                                newFinalHRVCalculation = 45
+                            } else if recentHRVCalculation == 40 {
+                                newFinalHRVCalculation = 49
+                            } else if recentHRVCalculation > 40 && recentHRVCalculation < 65 {
+                                newFinalHRVCalculation = recentHRVCalculation
+                            } else if recentHRVCalculation == 65 {
+                                newFinalHRVCalculation = 65
+                            } else if recentHRVCalculation > 65 && recentHRVCalculation < 85 {
+                                newFinalHRVCalculation = recentHRVCalculation
+                            } else if recentHRVCalculation == 85 {
+                                newFinalHRVCalculation = 85
+                            } else if recentHRVCalculation > 85 {
+                                newFinalHRVCalculation = 90
+                            }
+                            
+                        } else if coreDataHRVCalculation > 65 && coreDataHRVCalculation < 85 { //in green
+                            if recentHRVCalculation < 25 {
+                                newFinalHRVCalculation = 40
+                            } else if recentHRVCalculation == 25 {
+                                newFinalHRVCalculation = 50
+                            } else if recentHRVCalculation > 25 && recentHRVCalculation < 40 {
+                                newFinalHRVCalculation = 53
+                            } else if recentHRVCalculation == 40 {
+                                newFinalHRVCalculation = 55
+                            } else if recentHRVCalculation > 40 && recentHRVCalculation < 65 {
+                                newFinalHRVCalculation = recentHRVCalculation
+                            } else if recentHRVCalculation == 65 {
+                                newFinalHRVCalculation = 65
+                            } else if recentHRVCalculation > 65 && recentHRVCalculation < 85 {
+                                newFinalHRVCalculation = recentHRVCalculation
+                            } else if recentHRVCalculation == 85 {
+                                newFinalHRVCalculation = 85
+                            } else if recentHRVCalculation > 85 {
+                                newFinalHRVCalculation = recentHRVCalculation
+                            }
+                            
+                        } else if coreDataHRVCalculation == 85 { //on gate
+                            if recentHRVCalculation < 25 {
+                                newFinalHRVCalculation = 42
+                            } else if recentHRVCalculation == 25 {
+                                newFinalHRVCalculation = 53
+                            } else if recentHRVCalculation > 25 && recentHRVCalculation < 40 {
+                                newFinalHRVCalculation = 55
+                            } else if recentHRVCalculation == 40 {
+                                newFinalHRVCalculation = 58
+                            } else if recentHRVCalculation > 40 && recentHRVCalculation < 65 {
+                                newFinalHRVCalculation = 60
+                            } else if recentHRVCalculation == 65 {
+                                newFinalHRVCalculation = 65
+                            } else if recentHRVCalculation > 65 && recentHRVCalculation < 85 {
+                                newFinalHRVCalculation = recentHRVCalculation
+                            } else if recentHRVCalculation == 85 {
+                                newFinalHRVCalculation = 85
+                            } else if recentHRVCalculation > 85 {
+                                newFinalHRVCalculation = recentHRVCalculation
+                            }
+                            
+                        } else if coreDataHRVCalculation > 85 { //in pink
+                            if recentHRVCalculation < 25 {
+                                newFinalHRVCalculation = 42
+                            } else if recentHRVCalculation == 25 {
+                                newFinalHRVCalculation = 53
+                            } else if recentHRVCalculation > 25 && recentHRVCalculation < 40 {
+                                newFinalHRVCalculation = 55
+                            } else if recentHRVCalculation == 40 {
+                                newFinalHRVCalculation = 58
+                            } else if recentHRVCalculation > 40 && recentHRVCalculation < 65 {
+                                newFinalHRVCalculation = 60
+                            } else if recentHRVCalculation == 65 {
+                                newFinalHRVCalculation = 65
+                            } else if recentHRVCalculation > 65 && recentHRVCalculation < 85 {
+                                newFinalHRVCalculation = recentHRVCalculation
+                            } else if recentHRVCalculation == 85 {
+                                newFinalHRVCalculation = 85
+                            } else if recentHRVCalculation > 85 {
+                                newFinalHRVCalculation = recentHRVCalculation
+                            }
+                        }
+            print("New HRV Calculation Func run")
+
             completion()
         }
         
@@ -1675,6 +1909,17 @@ struct ContentView: View {
             saveContext()
         }
         
+        func saveNewCalculationToCDGuard() {
+            //Saves new calculation / data to core data with save context
+            let newReadinessCalculationWrite = Readiness(context: managedObjectContext)
+
+            newReadinessCalculationWrite.calculation = recentHRVCalculation
+            newReadinessCalculationWrite.hrv = recentHRVValue
+            newReadinessCalculationWrite.time = recentHRVTime
+            
+            saveContext()
+        }
+        
         func changeReadinessColorsandTextCoreData() {
             //Same as above function, but uses core data in our comparison
             
@@ -1702,6 +1947,66 @@ struct ContentView: View {
             self.readinessColorState = readinessColor
         }
         
+        func changeReadinessColorsandTextnoCompletion() {
+            //Changes the text based on our 3 new calculation variables
+            //Changes the colors based on our new calculation
+            
+            let formattedRecentHRVDate = getFormattedDate(date: recentHRVTime!, format: "MMM d, hh:mm a")
+
+            
+            //Changes Text
+            self.recentHRVValueState = Int(recentHRVValue)
+            self.recentHRVTimeState = String("\(formattedRecentHRVDate)")
+            self.finalReadinessPercentage = Int(newFinalHRVCalculation)
+            
+            //Changes Colors and Bar Data
+            if newFinalHRVCalculation <= 25 {
+                readinessColor = .red
+            } else if newFinalHRVCalculation > 25 && newFinalHRVCalculation <= 40 {
+                readinessColor = .orange
+            } else if newFinalHRVCalculation > 40 && newFinalHRVCalculation <= 65 {
+                readinessColor = .blue
+            } else if newFinalHRVCalculation > 65 && newFinalHRVCalculation <= 85 {
+                readinessColor = .green
+            } else if newFinalHRVCalculation > 85 {
+                readinessColor = .pink
+            }
+            
+            self.readinessBarState = Int(newFinalHRVCalculation)
+            self.readinessColorState = readinessColor
+            
+        }
+        
+        func changeReadinessColorsandTextnoCompletionGuard() {
+            //Changes the text based on our 3 new calculation variables
+            //Changes the colors based on our new calculation
+            
+            let formattedRecentHRVDate = getFormattedDate(date: recentHRVTime!, format: "MMM d, hh:mm a")
+
+            
+            //Changes Text
+            self.recentHRVValueState = Int(recentHRVValue)
+            self.recentHRVTimeState = String("\(formattedRecentHRVDate)")
+            self.finalReadinessPercentage = Int(recentHRVCalculation)
+            
+            //Changes Colors and Bar Data
+            if recentHRVCalculation <= 25 {
+                readinessColor = .red
+            } else if recentHRVCalculation > 25 && recentHRVCalculation <= 40 {
+                readinessColor = .orange
+            } else if recentHRVCalculation > 40 && recentHRVCalculation <= 65 {
+                readinessColor = .blue
+            } else if recentHRVCalculation > 65 && recentHRVCalculation <= 85 {
+                readinessColor = .green
+            } else if recentHRVCalculation > 85 {
+                readinessColor = .pink
+            }
+            
+            self.readinessBarState = Int(recentHRVCalculation)
+            self.readinessColorState = readinessColor
+            
+        }
+        
         
         
     }
@@ -1712,9 +2017,8 @@ struct ContentView: View {
     struct ReadinessView: View {
         var body: some View {
             NavigationView {
-                BarChartView(data: ChartData(values: [("Wed",63), ("Thu",50), ("Fri",77), ("Sat",79), ("Sun",92)]), title: "Readiness Averages", form: ChartForm.medium) // legend is optional
-
-
+                Text("More detailed information about your Body Energy will be available here.")
+                    .multilineTextAlignment(.center)
             }
         }
     }
