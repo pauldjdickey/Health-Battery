@@ -1161,8 +1161,8 @@ struct ContentView: View {
                             CircularProgress(
                                 progress: 26,
                                 lineWidth: 15,
-                                foregroundColor: .purple,
-                                backgroundColor: Color.purple.opacity(0.20)
+                                foregroundColor: .gray,
+                                backgroundColor: Color.gray.opacity(0.20)
                             ).rotationEffect(.degrees(-90)).frame(width: 200, height: 200, alignment: .center)
                             Circle()
                                 .foregroundColor(readinessColorState)
@@ -1204,10 +1204,10 @@ struct ContentView: View {
                                         .resizable()
                                         .frame(width: 20, height: 20)
                                         .foregroundColor(.orange)
-                                    Text("Your Readiness is not up to date.")
+                                    Text("Your Body Energy Calculation is not up to date.")
                                         .font(.headline)
                                 }
-                                Text("The most recent readiness score is from yesterday. Go to the breathe app on your Apple Watch to update your score.")
+                                Text("The most recent Body Energy score is from yesterday. Go to the breathe app on your Apple Watch to update your score.")
                                     .frame(width: 340)
                                     .multilineTextAlignment(.center)
                             }
@@ -1246,7 +1246,7 @@ struct ContentView: View {
                                         .resizable()
                                         .frame(width: 20, height: 20)
                                         .foregroundColor(.red)
-                                    Text("There is no HRV data.")
+                                    Text("There is no HRV Health data.")
                                         .font(.headline)
                                 }
                                 Text("Please wear your Watch all day and report back later to see your readiness calculation.")
@@ -1888,7 +1888,7 @@ struct ContentView: View {
             } else if newFinalHRVCalculation > 65 && newFinalHRVCalculation <= 85 {
                 readinessColor = .green
             } else if newFinalHRVCalculation > 85 {
-                readinessColor = .pink
+                readinessColor = .purple
             }
             
             self.readinessBarState = Int(newFinalHRVCalculation)
@@ -1940,8 +1940,10 @@ struct ContentView: View {
             } else if coreDataHRVCalculation > 65 && coreDataHRVCalculation <= 85 {
                 readinessColor = .green
             } else if coreDataHRVCalculation > 85 {
-                readinessColor = .pink
+                readinessColor = .purple
             }
+            
+            print("Readiness color is \(readinessColor)")
             
             self.readinessBarState = Int(coreDataHRVCalculation)
             self.readinessColorState = readinessColor
@@ -1969,7 +1971,7 @@ struct ContentView: View {
             } else if newFinalHRVCalculation > 65 && newFinalHRVCalculation <= 85 {
                 readinessColor = .green
             } else if newFinalHRVCalculation > 85 {
-                readinessColor = .pink
+                readinessColor = .purple
             }
             
             self.readinessBarState = Int(newFinalHRVCalculation)
@@ -1999,7 +2001,7 @@ struct ContentView: View {
             } else if recentHRVCalculation > 65 && recentHRVCalculation <= 85 {
                 readinessColor = .green
             } else if recentHRVCalculation > 85 {
-                readinessColor = .pink
+                readinessColor = .purple
             }
             
             self.readinessBarState = Int(recentHRVCalculation)
@@ -2016,11 +2018,9 @@ struct ContentView: View {
     //MARK: - Readiness View
     struct ReadinessView: View {
         var body: some View {
-            NavigationView {
-                Text("More detailed information about your Body Energy will be available here.")
-                    .multilineTextAlignment(.center)
+            Text("More detailed information about your Body Energy will be available here.")
+                .multilineTextAlignment(.center)
             }
-        }
     }
 
 //MARK: - Body Load View
@@ -2046,7 +2046,7 @@ struct BodyLoadView: View {
                 ReadinessView()
                     .tabItem {
                         Image(systemName: "battery.100")
-                        Text("Readiness")
+                        Text("Body Energy")
                     }
                 BodyLoadView()
                     .tabItem {
