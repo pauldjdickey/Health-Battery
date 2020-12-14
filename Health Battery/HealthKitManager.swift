@@ -15,6 +15,7 @@ extension HKObjectType {
     static let restingHeartRateType = HKQuantityType.quantityType(forIdentifier: .restingHeartRate)!
     static let stepsType = HKQuantityType.quantityType(forIdentifier: .stepCount)!
     static let workoutType = HKObjectType.workoutType()
+    static let activeEnergyType = HKQuantityType.quantityType(forIdentifier: .activeEnergyBurned)!
 }
 
 /* useful for converting from HealthKit's weird output formats */
@@ -26,6 +27,45 @@ extension HKUnit {
 class HealthKitManager {
     
     fileprivate let health = HKHealthStore()
+    
+    
+    //This gets our most recent active energy but i dont think adds it together...
+    public func activeEnergy(from: Date, to: Date, handler: @escaping ([HKQuantitySample]) -> ()) {
+        let predicate = HKQuery.predicateForSamples(withStart: from, end: to, options: [.strictStartDate, .strictEndDate])
+        let activeEnergyQuery = HKSampleQuery(sampleType: .activeEnergyType, predicate: predicate, limit: HKObjectQueryNoLimit, sortDescriptors: nil) { (query, results, error) in
+            guard let results = results as? [HKQuantitySample] else { NSLog("HealthKitManager: activeEnergy: nil AE samples.. auth'd?"); return}
+            handler(results)
+        }
+        health.execute(activeEnergyQuery)
+    }
+    
+    //I think this will get our total active energy for the day.
+    public func activeEnergyAdded(handler: @escaping (HKStatisticsCollection) -> ()) {
+        let calendar = NSCalendar.current
+        var interval = DateComponents()
+        interval.day = 1
+        
+        var anchorComponents = calendar.dateComponents([.day, .month, .year], from: Date())
+        anchorComponents.hour = 0
+        let anchorDate = calendar.date(from: anchorComponents)
+        
+        // Define 1-day intervals starting from 0:00
+        let activeEnergyQuery = HKStatisticsCollectionQuery(quantityType: .activeEnergyType, quantitySamplePredicate: nil, options: .cumulativeSum, anchorDate: anchorDate!, intervalComponents: interval)
+        
+        //Set the results handler
+        activeEnergyQuery.initialResultsHandler = { query, results, error in
+            if let results = results {
+                handler(results)
+            } else {
+                print(error!.localizedDescription)
+            }
+        }
+        health.execute(activeEnergyQuery)
+    }
+    
+    
+    
+    
     
     /**
      Fetches ALL saved heart rate readings bound by the input date range.
