@@ -22,6 +22,7 @@ extension HKObjectType {
 extension HKUnit {
     static let heartRateUnit = HKUnit(from: "count/min")
     static let variabilityUnit = HKUnit.secondUnit(with: .milli)
+    static let activeEnergyUnit = HKUnit.secondUnit(with: .milli)
 }
 
 class HealthKitManager {

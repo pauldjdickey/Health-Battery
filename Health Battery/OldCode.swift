@@ -943,3 +943,136 @@
 ////    saveContext()
 ////
 ////}
+
+//           NavigationView {
+//                VStack {
+//                    HStack(alignment: .center) {
+//                        Text("Energy:")
+//                            .multilineTextAlignment(.center)
+//
+//                        ZStack {
+//                            CircularProgress(
+//                                progress: CGFloat(readinessBarState),
+//                                lineWidth: 15,
+//                                foregroundColor: readinessColorState,
+//                                backgroundColor: readinessColorState.opacity(0.20)
+//                            ).rotationEffect(.degrees(-90)).frame(width: 150, height: 150, alignment: .center)
+//                            CircularProgress(
+//                                progress: 26,
+//                                lineWidth: 15,
+//                                foregroundColor: .gray,
+//                                backgroundColor: Color.gray.opacity(0.20)
+//                            ).rotationEffect(.degrees(-90)).frame(width: 200, height: 200, alignment: .center)
+//                            Circle()
+//                                .foregroundColor(readinessColorState)
+//                                    .frame(width: 85, height: 85)
+//                            Text("\(finalReadinessPercentage)")
+//                                .font(Font.largeTitle.bold())
+//                                .foregroundColor(.white)
+//                                .shadow(radius: 8)
+//
+//                        }
+//                        Text("Day Load:")
+//                            .multilineTextAlignment(.center)
+//
+//                    }
+//                    Text("Last HRV Number: \(recentHRVValueState)")
+//                    Text("Last HRV Recorded Time: \(recentHRVTimeState)")
+//                        .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
+//                                print("Moving back to the foreground!")
+//                            newReadinessCalculation()
+//                        }
+//                    Button(action: {
+//                        newReadinessCalculation()
+//                    }) {
+//                        Text("Test Button - Developer Use")
+//                    }.onAppear(perform: {
+//                        print("Recovery Appeared using OnAppear")
+//                        newReadinessCalculation()
+//                    })
+//
+//                    if !hrvMorningRecordedAlertHidden {
+//                        ZStack {
+//                            Rectangle()
+//                                .foregroundColor(Color.gray.opacity(0.20))
+//                                .frame(width: 350, height: 120)
+//                                .cornerRadius(10)
+//                            VStack {
+//                                HStack {
+//                                    Image(systemName: "exclamationmark.triangle")
+//                                        .resizable()
+//                                        .frame(width: 20, height: 20)
+//                                        .foregroundColor(.orange)
+//                                    Text("Your Calculation is not up to date.")
+//                                        .font(.headline)
+//
+//                                }
+//                                Text("The most recent Energy score is from yesterday. Go to the breathe app on your Apple Watch to update your score.")
+//                                    .frame(width: 340)
+//                                    .multilineTextAlignment(.center)
+//                            }
+//                        }
+//                    }
+//                    if !creatingBaselineAlertHidden {
+//                        ZStack {
+//                            Rectangle()
+//                                .foregroundColor(Color.gray.opacity(0.20))
+//                                .frame(width: 350, height: 120)
+//                                .cornerRadius(10)
+//                            VStack {
+//                                HStack {
+//                                    Image(systemName: "exclamationmark.triangle")
+//                                        .resizable()
+//                                        .frame(width: 20, height: 20)
+//                                        .foregroundColor(.blue)
+//                                    Text("Calculating Baseline")
+//                                        .font(.headline)
+//                                }
+//                                Text("We are currently calculating your baseline. Please wear your watch and come back regularly to see your energy levels.")
+//                                    .frame(width: 340)
+//                                    .multilineTextAlignment(.center)
+//                            }
+//                        }
+//                    }
+//                    if !noLastHRVAlertHidden {
+//                        ZStack {
+//                            Rectangle()
+//                                .foregroundColor(Color.gray.opacity(0.20))
+//                                .frame(width: 350, height: 120)
+//                                .cornerRadius(10)
+//                            VStack {
+//                                HStack {
+//                                    Image(systemName: "exclamationmark.triangle")
+//                                        .resizable()
+//                                        .frame(width: 20, height: 20)
+//                                        .foregroundColor(.red)
+//                                    Text("There is no HRV Health data.")
+//                                        .font(.headline)
+//                                }
+//                                Text("Please wear your Watch all day and report back later to see your readiness calculation.")
+//                                    .frame(width: 340)
+//                                    .multilineTextAlignment(.center)
+//                            }
+//                        }
+//                    }
+//                    ZStack {
+//                        Rectangle()
+//                            .foregroundColor(Color.gray.opacity(0.20))
+//                            .frame(width: 350, height: 120)
+//                            .cornerRadius(10)
+//                        VStack {
+//                            HStack {
+//                                Image(systemName: "info.circle")
+//                                    .resizable()
+//                                    .frame(width: 20, height: 20)
+//                                Text("You can push it hard today!")
+//                                    .font(.headline)
+//                            }
+//                            Text("To reach your Recommended Day Load, go on your normal 20 mile bike ride! (Work in progress, not an actual suggestion)")
+//                                .frame(width: 340)
+//                                .multilineTextAlignment(.center)
+//                        }
+//                    }
+//                    Text("Build 0.1.13")
+//                }
+//            }
