@@ -388,12 +388,12 @@ extension DateFormatter {
                                 .multilineTextAlignment(.center)
                                 .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
                                                                 print("Moving back to the foreground!")
-                                                            testActiveEnergy()
+                                                            initialActiveEnergyArray()
                                                             newReadinessCalculation()
                                                         }
                                 .onAppear(perform: {
                                                         print("Recovery Appeared using OnAppear")
-                                                        testActiveEnergy()
+                                                        initialActiveEnergyArray()
                                                         newReadinessCalculation()
                                                     })
                             Text("Energy")
@@ -452,7 +452,7 @@ extension DateFormatter {
                         Button(action: {
                             testActiveEnergy()
                         }, label: {
-                            Text("Test Active Energy")
+                            Text("Test Active Energy - Old Way - SLOW")
                         })
                         
                         Text("Last HRV Number: \(recentHRVValueState)")
@@ -588,17 +588,22 @@ extension DateFormatter {
         
         //MARK: - New Load Functions
         
-        func testSteps() {
-            
-            var activeEnergy = 0.0
+        func initialActiveEnergyArray() {
             hkm.activeEnergy(from: lastMidnight, to: Date()) { (results) in
-                var aE = 0.0
+                
+                var activeEnergyRetrieve = 0.0
+                var activeEnergyRetrieveArray = [Double]()
                 
                 for result in results {
-                    aE = result.quantity.doubleValue(for: .kilocalorie())
+                    activeEnergyRetrieve = result.quantity.doubleValue(for: .kilocalorie())
+                    activeEnergyRetrieveArray.append(activeEnergyRetrieve)
                 }
-                activeEnergy = aE
-                print(activeEnergy)
+                print(activeEnergyRetrieveArray)
+                let activeEnergyArrayAdded = activeEnergyRetrieveArray.reduce(0, +)
+                print(activeEnergyArrayAdded)
+                
+                loadCalculation = 7.7008 * log(activeEnergyArrayAdded) - 41.193
+                self.activeCalsState = loadCalculation
             }
         }
         
