@@ -365,6 +365,10 @@ extension DateFormatter {
         @State private var readinessBarState = 0
         @State private var activeCalsState = 0.0
         @State private var showLoadingIndicator = false
+        @State private var scale: CGFloat = 0
+        @State private var rotation: Double = 0
+
+
         
         
         //Alert Enum
@@ -403,12 +407,19 @@ extension DateFormatter {
                             ActivityIndicatorView(isVisible: $showLoadingIndicator, type: .growingCircle)
                                 .foregroundColor(Color(UIColor.systemTeal))
                                 .frame(width: geometry.size.width * 0.10, height: geometry.size.width * 0.10)
-                            CircularProgress(
-                                progress: CGFloat((activeCalsState/21)*100),
-                                lineWidth: 25,
-                                foregroundColor: Color(UIColor.systemTeal),
-                                backgroundColor: Color(UIColor.systemTeal).opacity(0.20)
-                            ).rotationEffect(.degrees(-90)).frame(width: geometry.size.width * 0.50, height: geometry.size.height / 3, alignment: .center)
+                                CircularProgress(
+                                    progress: CGFloat((activeCalsState/21)*100),
+                                    lineWidth: 25,
+                                    foregroundColor: Color(UIColor.systemTeal),
+                                    backgroundColor: Color(UIColor.systemTeal).opacity(0.20)
+                                ).rotationEffect(.degrees(-90)).frame(width: geometry.size.width * 0.50, height: geometry.size.height / 3, alignment: .center)
+//                                .rotationEffect(.degrees(rotation))
+//                                .onAppear {
+//                                    self.rotation = 0
+//                                    withAnimation(Animation.timingCurve(0.5, 0.15, 0.25, 1, duration: 4)) {
+//                                        self.rotation = 360
+//                                    }
+//                                }
                             CircularProgress(
                                 progress: CGFloat(readinessBarState),
                                 lineWidth: 25,
