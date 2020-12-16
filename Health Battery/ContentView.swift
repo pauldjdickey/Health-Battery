@@ -10,6 +10,7 @@ import Dispatch
 import SwiftProgress
 import PZCircularControl
 import SwiftUICharts
+import ActivityIndicatorView
 
 
 let hkm = HealthKitManager()
@@ -363,6 +364,7 @@ extension DateFormatter {
         @State private var creatingBaselineAlertHidden = true
         @State private var readinessBarState = 0
         @State private var activeCalsState = 0.0
+        @State private var showLoadingIndicator = false
         
         
         //Alert Enum
@@ -382,13 +384,13 @@ extension DateFormatter {
                                 .multilineTextAlignment(.center)
                                 .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
                                                                 print("Moving back to the foreground!")
-                                                            newReadinessCalculation()
                                                             testActiveEnergy()
+                                                            newReadinessCalculation()
                                                         }
                                 .onAppear(perform: {
                                                         print("Recovery Appeared using OnAppear")
-                                                        newReadinessCalculation()
                                                         testActiveEnergy()
+                                                        newReadinessCalculation()
                                                     })
                             Text("Energy")
                                 .fontWeight(.heavy)
@@ -398,6 +400,9 @@ extension DateFormatter {
                                 }
                         Spacer()
                         ZStack {
+                            ActivityIndicatorView(isVisible: $showLoadingIndicator, type: .growingCircle)
+                                .foregroundColor(Color(UIColor.systemTeal))
+                                .frame(width: geometry.size.width * 0.10, height: geometry.size.width * 0.10)
                             CircularProgress(
                                 progress: CGFloat((activeCalsState/21)*100),
                                 lineWidth: 25,
@@ -573,38 +578,35 @@ extension DateFormatter {
         //MARK: - New Load Functions
         
         func testSteps() {
-            print("Test steps run")
-            let calendar = Calendar.current
-            let startDate = calendar.startOfDay(for: Date())
             
-            var stepsVar = 0.0
-            
-            hkm.dailySteps { (results) in
-              results.enumerateStatistics(from: startDate, to: Date()) {
-                (statistics, stop) in
-                // get total sum of steps
-                guard let sum = statistics.sumQuantity() else { return }
-                let steps = sum.doubleValue(for: .count())
+            var activeEnergy = 0.0
+            hkm.activeEnergy(from: lastMidnight, to: Date()) { (results) in
+                var aE = 0.0
                 
-                stepsVar = steps
-                
-            }
-                print(stepsVar)
+                for result in results {
+                    aE = result.quantity.doubleValue(for: .kilocalorie())
+                }
+                activeEnergy = aE
+                print(activeEnergy)
             }
         }
         
         func testActiveEnergy() {
             print("Test steps run")
-            
+            showLoadingIndicator = true
             var activeEnergy = 0.0
+            print("Test 1")
             
             hkm.activeEnergyAdded { (results) in
+                print("Test 2")
                 results.enumerateStatistics(from: lastMidnight, to: Date()) {
+                    
                     (statistics, stop) in
-                    
+                    print("Test 3")
                     guard let sum = statistics.sumQuantity() else { return }
-                    
+                    print("Test 4")
                     activeEnergy = sum.doubleValue(for: .kilocalorie())
+                    print("Test 5")
                 }
                 print(activeEnergy)
                 
@@ -612,6 +614,8 @@ extension DateFormatter {
                 
                 print(loadCalculation)
                 self.activeCalsState = loadCalculation
+                showLoadingIndicator = false
+                
             }
         }
         //MARK: - New Energy Functions

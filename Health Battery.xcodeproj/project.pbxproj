@@ -20,6 +20,7 @@
 		2D1EAA36255E29A70073427F /* ComplicationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D1EAA35255E29A70073427F /* ComplicationController.swift */; };
 		2D1EAA38255E29A80073427F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2D1EAA37255E29A80073427F /* Assets.xcassets */; };
 		2D1EAA3B255E29A80073427F /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2D1EAA3A255E29A80073427F /* Preview Assets.xcassets */; };
+		2D668635258985940002DC69 /* ActivityIndicatorView in Frameworks */ = {isa = PBXBuildFile; productRef = 2D668634258985940002DC69 /* ActivityIndicatorView */; };
 		2D674A4625393FCF00040B66 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D674A4525393FCF00040B66 /* AppDelegate.swift */; };
 		2D674A4825393FCF00040B66 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D674A4725393FCF00040B66 /* SceneDelegate.swift */; };
 		2D674A4A25393FCF00040B66 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D674A4925393FCF00040B66 /* ContentView.swift */; };
@@ -150,6 +151,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2D668635258985940002DC69 /* ActivityIndicatorView in Frameworks */,
 				2DACACB225802FA2007AF98F /* PZCircularControl in Frameworks */,
 				2DACACBE25828DD7007AF98F /* SwiftUICharts in Frameworks */,
 				2D674A83253940B400040B66 /* HealthKit.framework in Frameworks */,
@@ -345,6 +347,7 @@
 				2D8DE90A2579B0AE00EF656C /* SwiftProgress */,
 				2DACACB125802FA2007AF98F /* PZCircularControl */,
 				2DACACBD25828DD7007AF98F /* SwiftUICharts */,
+				2D668634258985940002DC69 /* ActivityIndicatorView */,
 			);
 			productName = "Health Battery";
 			productReference = 2D674A4225393FCF00040B66 /* Health Battery.app */;
@@ -427,6 +430,7 @@
 				2D8DE9092579B0AE00EF656C /* XCRemoteSwiftPackageReference "SwiftProgress" */,
 				2DACACB025802FA2007AF98F /* XCRemoteSwiftPackageReference "PZCircularControl" */,
 				2DACACBC25828DD7007AF98F /* XCRemoteSwiftPackageReference "ChartView" */,
+				2D668633258985940002DC69 /* XCRemoteSwiftPackageReference "ActivityIndicatorView" */,
 			);
 			productRefGroup = 2D674A4325393FCF00040B66 /* Products */;
 			projectDirPath = "";
@@ -976,6 +980,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		2D668633258985940002DC69 /* XCRemoteSwiftPackageReference "ActivityIndicatorView" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/exyte/ActivityIndicatorView.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.0.6;
+			};
+		};
 		2D8DE9092579B0AE00EF656C /* XCRemoteSwiftPackageReference "SwiftProgress" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/EnesKaraosman/SwiftProgress.git";
@@ -1003,6 +1015,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		2D668634258985940002DC69 /* ActivityIndicatorView */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2D668633258985940002DC69 /* XCRemoteSwiftPackageReference "ActivityIndicatorView" */;
+			productName = ActivityIndicatorView;
+		};
 		2D8DE90A2579B0AE00EF656C /* SwiftProgress */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 2D8DE9092579B0AE00EF656C /* XCRemoteSwiftPackageReference "SwiftProgress" */;

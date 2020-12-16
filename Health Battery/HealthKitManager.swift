@@ -22,7 +22,6 @@ extension HKObjectType {
 extension HKUnit {
     static let heartRateUnit = HKUnit(from: "count/min")
     static let variabilityUnit = HKUnit.secondUnit(with: .milli)
-    static let activeEnergyUnit = HKUnit.secondUnit(with: .milli)
 }
 
 class HealthKitManager {
@@ -42,26 +41,35 @@ class HealthKitManager {
     
     //I think this will get our total active energy for the day.
     public func activeEnergyAdded(handler: @escaping (HKStatisticsCollection) -> ()) {
+        print("HKM 1")
         let calendar = NSCalendar.current
         var interval = DateComponents()
         interval.day = 1
+        print("HKM 2")
         
         var anchorComponents = calendar.dateComponents([.day, .month, .year], from: Date())
+        print("HKM 3")
         anchorComponents.hour = 0
         let anchorDate = calendar.date(from: anchorComponents)
+        print("HKM 4")
         
         // Define 1-day intervals starting from 0:00
         let activeEnergyQuery = HKStatisticsCollectionQuery(quantityType: .activeEnergyType, quantitySamplePredicate: nil, options: .cumulativeSum, anchorDate: anchorDate!, intervalComponents: interval)
+        print("HKM 5")
         
         //Set the results handler
         activeEnergyQuery.initialResultsHandler = { query, results, error in
-            if let results = results {
-                handler(results)
+            if let result = results {
+                print("HKM 6")
+                handler(result)
+                print("HKM 7")
             } else {
                 print(error!.localizedDescription)
             }
         }
+        print("HKM 8")
         health.execute(activeEnergyQuery)
+        print("HKM 9")
     }
     
     
