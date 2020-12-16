@@ -12,6 +12,7 @@ import PZCircularControl
 import SwiftUICharts
 import ActivityIndicatorView
 
+let delegate = UIApplication.shared.delegate as! AppDelegate
 
 let hkm = HealthKitManager()
 
@@ -102,12 +103,16 @@ typealias FinishedGettingHealthData = () -> ()
 //let lastMidnight: Date = cal.date(bySettingHour: 0, minute: 0, second: 0, of: date)!
 var rightNow = Date()
 
+let date = Date()
+let dateFormatter = DateFormatter()
+
 var calendar = Calendar.current
 var startDate = calendar.startOfDay(for: rightNow)
 var yesterdayStartDate = calendar.startOfDay(for: Date.yesterday)
 var weekAgoStartDate = calendar.startOfDay(for: Date.weekAgo)
 var monthAgoStartDate = calendar.startOfDay(for: Date.monthAgo)
 var lastMidnight = calendar.startOfDay(for: rightNow)
+var lastMidnightFormatted = dateFormatter.string(from: lastMidnight)
 
 
 private enum HealthkitSetupError: Error {
@@ -388,12 +393,14 @@ extension DateFormatter {
                                 .multilineTextAlignment(.center)
                                 .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
                                                                 print("Moving back to the foreground!")
-                                                            initialActiveEnergyArray()
+                                    print("Right now is: \(Date())")
+                                    print("Last Midnight is: \(lastMidnight)")
+                                                            finalLoadFunction()
                                                             newReadinessCalculation()
                                                         }
                                 .onAppear(perform: {
                                                         print("Recovery Appeared using OnAppear")
-                                                        initialActiveEnergyArray()
+                                                        finalLoadFunction()
                                                         newReadinessCalculation()
                                                     })
                             Text("Energy")
@@ -450,9 +457,9 @@ extension DateFormatter {
                     
                     VStack {
                         Button(action: {
-                            testActiveEnergy()
+                            testNewDateFunction()
                         }, label: {
-                            Text("Test Active Energy - Old Way - SLOW")
+                            Text("Test Button")
                         })
                         
                         Text("Last HRV Number: \(recentHRVValueState)")
@@ -588,9 +595,43 @@ extension DateFormatter {
         
         //MARK: - New Load Functions
         
-        func initialActiveEnergyArray() {
+        
+        func testNewDateFunction() {
+            
+//            let date = Date()
+//            let dateFormatter = DateFormatter()
+//            dateFormatter.dateFormat = "yyyy-MM-dd HH:mm"
+//            let str = dateFormatter.string(from: date)
+            
+            dateFormatter.dateFormat = "yyyy-MM-dd HH:mm"
+            
+            let str = dateFormatter.string(from: lastMidnight)
+
+            print(str)
+            print(lastMidnightFormatted)
+            
+            //This works because we use our date formatter in the function
+            
+            
+            
+        }
+        
+        
+        func finalLoadFunction() {
+            rightNow = Date()
+            initialActiveEnergyArray {
+                DispatchQueue.main.async {
+                    saveNewLoadCalculationToCD()
+                }
+            }
+        }
+        
+        func initialActiveEnergyArray(_ completion : @escaping()->()) {
+            dateFormatter.dateFormat = "yyyy-MM-dd HH:mm"
             hkm.activeEnergy(from: lastMidnight, to: Date()) { (results) in
-                
+                print("Last midnight from initial active energy array: \(lastMidnight)")
+                print("Last midnight formatted from initial active energy array: \(lastMidnightFormatted)")
+                print("Right now: \(rightNow)")
                 var activeEnergyRetrieve = 0.0
                 var activeEnergyRetrieveArray = [Double]()
                 
@@ -604,39 +645,51 @@ extension DateFormatter {
                 
                 loadCalculation = 7.7008 * log(activeEnergyArrayAdded) - 41.193
                 self.activeCalsState = loadCalculation
+                completion()
             }
+            
+            
+            
         }
         
-        func testActiveEnergy() {
-            print("Test steps run")
-            showLoadingIndicator = true
-            var activeEnergy = 0.0
-            print("Test 1")
+        func saveNewLoadCalculationToCD() {
             
-            hkm.activeEnergyAdded { (results) in
-                print("Test 2")
-                results.enumerateStatistics(from: lastMidnight, to: Date()) {
-                    
-                    (statistics, stop) in
-                    print("Test 3")
-                    guard let sum = statistics.sumQuantity() else { return }
-                    print("Test 4")
-                    activeEnergy = sum.doubleValue(for: .kilocalorie())
-                    print("Test 5")
+            //Need to delete any items in today before writing to CD
+            let context = delegate.persistentContainer.viewContext
+            let predicate = NSPredicate(format: "date >= %@", lastMidnight as NSDate)
+            let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Load")
+            
+            fetchRequest.predicate = predicate
+            
+            do {
+                let result = try context.fetch(fetchRequest)
+                print(result.count)
+                if result.count > 0 {
+                    for object in result {
+                        context.delete(object as! NSManagedObject)
+                    }
                 }
-                print(activeEnergy)
-                
-                loadCalculation = 7.7008 * log(activeEnergy) - 41.193
-                
-                print(loadCalculation)
-                self.activeCalsState = loadCalculation
-                showLoadingIndicator = false
+            } catch {
                 
             }
+            
+            
+            
+            print("Start saving load to CD")
+            let newLoadCalculationWrite = Load(context: managedObjectContext)
+            
+            newLoadCalculationWrite.calculation = loadCalculation
+            newLoadCalculationWrite.date = Date()
+            
+            saveContext()
+            print("End saving load to CD")
         }
+        
+        
         //MARK: - New Energy Functions
         func newReadinessCalculation() {
             //Where all of our functions will be put in and then called
+            rightNow = Date()
             findNewHRVReading {
                 findOldCoreDataReading {
                     compareNewAndOldData {
@@ -663,6 +716,8 @@ extension DateFormatter {
         
         
         func findNewHRVReading(_ completion : @escaping()->()) {
+            print("Right now HRV: \(rightNow)")
+
             hkm.variabilityMostRecent(from: weekAgoStartDate, to: Date()) { (results) in
                 var lastHRV = 0.0
                 var lastHRVTime: Date? = nil
@@ -742,6 +797,7 @@ extension DateFormatter {
         }
         
         func getHRVArrayFromHealth(_ completion : @escaping()->()) {
+            print("Right now Array: \(rightNow)")
             hkm.variability(from: monthAgoStartDate, to: Date()) { (results) in
                 
                 var variabilityRetrieve = 0.0
