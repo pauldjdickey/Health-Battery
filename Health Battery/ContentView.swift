@@ -262,6 +262,8 @@ extension DateFormatter {
                         // How the button looks like
                         Text("Delete Readiness Records")
                     }
+                    Text("Version 0.1.13")
+                        .multilineTextAlignment(.center)
                 }
             }
             
@@ -372,6 +374,7 @@ extension DateFormatter {
         @State private var showLoadingIndicator = false
         @State private var scale: CGFloat = 0
         @State private var rotation: Double = 0
+        @State private var updatedTextColor:Color = .primary
 
 
         
@@ -383,112 +386,131 @@ extension DateFormatter {
         var body: some View {
             GeometryReader{ geometry in
                 VStack {
-                    HStack {
-                        Spacer()
-                        VStack {
-                            Text("\(finalReadinessPercentage)")
-                                .font(.title).bold()
-                                .foregroundColor(readinessColorState)
-                                .frame(width: geometry.size.width * 0.25 - 10)
-                                .multilineTextAlignment(.center)
-                                .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
-                                                                print("Moving back to the foreground!")
-                                    print("Right now is: \(Date())")
-                                    print("Last Midnight is: \(lastMidnight)")
-                                                            finalLoadFunction()
-                                                            newReadinessCalculation()
-                                                        }
-                                .onAppear(perform: {
-                                                        print("Recovery Appeared using OnAppear")
-                                                        finalLoadFunction()
-                                                        newReadinessCalculation()
-                                                    })
-                            Text("Energy")
-                                .fontWeight(.heavy)
-                                .foregroundColor(readinessColorState)
-                                .frame(width: geometry.size.width * 0.25 - 10)
-                                .multilineTextAlignment(.center)
-                                }
-                        Spacer()
-                        ZStack {
-                            ActivityIndicatorView(isVisible: $showLoadingIndicator, type: .growingCircle)
-                                .foregroundColor(Color(UIColor.systemTeal))
-                                .frame(width: geometry.size.width * 0.10, height: geometry.size.width * 0.10)
-                                CircularProgress(
-                                    progress: CGFloat((activeCalsState/21)*100),
-                                    lineWidth: 25,
-                                    foregroundColor: Color(UIColor.systemTeal),
-                                    backgroundColor: Color(UIColor.systemTeal).opacity(0.20)
-                                ).rotationEffect(.degrees(-90)).frame(width: geometry.size.width * 0.50, height: geometry.size.height / 3, alignment: .center)
-//                                .rotationEffect(.degrees(rotation))
-//                                .onAppear {
-//                                    self.rotation = 0
-//                                    withAnimation(Animation.timingCurve(0.5, 0.15, 0.25, 1, duration: 4)) {
-//                                        self.rotation = 360
-//                                    }
-//                                }
-                            CircularProgress(
-                                progress: CGFloat(readinessBarState),
-                                lineWidth: 25,
-                                foregroundColor: readinessColorState,
-                                backgroundColor: readinessColorState.opacity(0.20)
-                            ).rotationEffect(.degrees(-90)).frame(width: geometry.size.width * 0.325, height: geometry.size.height * 0.325, alignment: .center)
-                        }
-                        Spacer()
-                        VStack {
-                            Text("\(activeCalsState, specifier: "%.1f")")
-                                .font(.title).bold()
-                                .foregroundColor(Color(UIColor.systemTeal))
-                                .frame(width: geometry.size.width * 0.25 - 10)
-                                .multilineTextAlignment(.center)
-                                
-                            Text("Load")
-                                .fontWeight(.heavy)
-                                .foregroundColor(Color(UIColor.systemTeal))
-                                .frame(width: geometry.size.width * 0.25 - 10)
-                                .multilineTextAlignment(.center)
-                                
-                        }
-                        Spacer()
+                    VStack {
+                        HStack {
+                           Spacer()
+                           VStack {
+                               VStack {
+                                   Text("\(finalReadinessPercentage)")
+                                       .font(.title).bold()
+                                       .foregroundColor(readinessColorState)
+                                       .frame(width: geometry.size.width * 0.33 - 30, alignment: .trailing)
+                                       .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
+                                                                       print("Moving back to the foreground!")
+                                           print("Right now is: \(Date())")
+                                           print("Last Midnight is: \(lastMidnight)")
+                                                                   finalLoadFunction()
+                                                                   newReadinessCalculation()
+                                                               }
+                                       .onAppear(perform: {
+                                                               print("Recovery Appeared using OnAppear")
+                                                               finalLoadFunction()
+                                                               newReadinessCalculation()
+                                                           })
+                                   Text("Energy")
+                                       .fontWeight(.heavy)
+                                       .foregroundColor(readinessColorState)
+                                       .frame(width: geometry.size.width * 0.33 - 30, alignment: .trailing)
+                                       //.multilineTextAlignment(.leading)
+                               }.frame(height: 60)
+                               Text("Updated")
+                                .font(.caption)
+                                .foregroundColor(updatedTextColor)
+                                .frame(width: geometry.size.width * 0.33 - 30, alignment: .trailing)
+                               Text("\(recentHRVTimeState)")
+                                .font(.caption)
+                                .foregroundColor(updatedTextColor)
+                                .frame(width: geometry.size.width * 0.33 - 30, alignment: .trailing)
+                                   }
+                           Spacer()
+                           ZStack {
+                               ActivityIndicatorView(isVisible: $showLoadingIndicator, type: .growingCircle)
+                                   .foregroundColor(Color(UIColor.systemTeal))
+                                   .frame(width: geometry.size.width * 0.10, height: geometry.size.width * 0.10)
+                                   CircularProgress(
+                                       progress: CGFloat((activeCalsState/21)*100),
+                                       lineWidth: 20,
+                                       foregroundColor: Color(UIColor.systemTeal),
+                                       backgroundColor: Color(UIColor.systemTeal).opacity(0.20)
+                                   ).rotationEffect(.degrees(-90)).frame(width: geometry.size.width * 0.38, height: geometry.size.height * 0.20, alignment: .center)
+   //                                .rotationEffect(.degrees(rotation))
+   //                                .onAppear {
+   //                                    self.rotation = 0
+   //                                    withAnimation(Animation.timingCurve(0.5, 0.15, 0.25, 1, duration: 4)) {
+   //                                        self.rotation = 360
+   //                                    }
+   //                                }
+                               CircularProgress(
+                                   progress: CGFloat(readinessBarState),
+                                   lineWidth: 20,
+                                   foregroundColor: readinessColorState,
+                                   backgroundColor: readinessColorState.opacity(0.20)
+                               ).rotationEffect(.degrees(-90)).frame(width: geometry.size.width * 0.25, height: geometry.size.height * 0.20, alignment: .center)
+                           }
+                           Spacer()
+                            VStack {
+                                VStack {
+                                    Text("\(activeCalsState, specifier: "%.1f")")
+                                        .font(.title).bold()
+                                        .foregroundColor(Color(UIColor.systemTeal))
+                                        .frame(width: geometry.size.width * 0.33 - 30, alignment: .leading)
+                                        .multilineTextAlignment(.center)
+                                        
+                                    Text("Load")
+                                        .fontWeight(.heavy)
+                                        .foregroundColor(Color(UIColor.systemTeal))
+                                        .frame(width: geometry.size.width * 0.33 - 30, alignment: .leading)
+                                        .multilineTextAlignment(.center)
+                                        
+                                }.frame(height: 60)
+                                Text("Day Cals")
+                                    .font(.caption)
+                                    .frame(width: geometry.size.width * 0.33 - 30, alignment: .leading)
+                                Text("xxxx")
+                                    .font(.caption)
+                                    .frame(width: geometry.size.width * 0.33 - 30, alignment: .leading)
+                            }
+                           
+                           Spacer()
+                       }
+                        Text("Let's push it hard!")
+                            .font(.title).bold()
+                            .frame(width: geometry.size.width * 0.90)
+                            .multilineTextAlignment(.center)
+                        Text("With an Energy Level of XX, Load your body XX.X more points to reach your recommended Day Load of XX.X")
+                            .font(.footnote)
+                            .frame(width: geometry.size.width * 0.90, height: 70)
+                            .multilineTextAlignment(.center)
+                        
                     }.frame(width: geometry.size.width, height: geometry.size.height / 2, alignment: .center)
-                    
                     Spacer()
                     
                     
                     VStack {
-                        Button(action: {
-                            testNewDateFunction()
-                        }, label: {
-                            Text("Test Button")
-                        })
-                        
-                        Text("Last HRV Number: \(recentHRVValueState)")
-                        Text("Last HRV Recorded Time: \(recentHRVTimeState)")
                         HStack {
                             Spacer()
-                            
-                            if !hrvMorningRecordedAlertHidden {
-                                ZStack {
-                                    Rectangle()
-                                        .foregroundColor(Color.gray.opacity(0.20))
-                                        .frame(width: geometry.size.width * 0.90, height: geometry.size.height * 0.20)
-                                        .cornerRadius(10)
-                                    VStack {
-                                        HStack {
-                                            Image(systemName: "exclamationmark.triangle")
-                                                .resizable()
-                                                .frame(width: 25, height: 25)
-                                                .foregroundColor(.orange)
-                                            Text("Your Calculation is not up to date.")
-                                                .font(.headline)
-
-                                        }
-                                        Text("The most recent Energy score is from yesterday. Go to the breathe app on your Apple Watch to update your score.")
-                                            .frame(width: geometry.size.width * 0.85)
-                                            .multilineTextAlignment(.center)
-                                    }
-                                }
-                            }
+//                            if !hrvMorningRecordedAlertHidden {
+//                                ZStack {
+//                                    Rectangle()
+//                                        .foregroundColor(Color.gray.opacity(0.20))
+//                                        .frame(width: geometry.size.width * 0.90, height: geometry.size.height * 0.20)
+//                                        .cornerRadius(10)
+//                                    VStack {
+//                                        HStack {
+//                                            Image(systemName: "exclamationmark.triangle")
+//                                                .resizable()
+//                                                .frame(width: 25, height: 25)
+//                                                .foregroundColor(.orange)
+//                                            Text("Your Calculation is not up to date.")
+//                                                .font(.headline)
+//
+//                                        }
+//                                        Text("The most recent Energy score is from yesterday. Go to the breathe app on your Apple Watch to update your score.")
+//                                            .frame(width: geometry.size.width * 0.85)
+//                                            .multilineTextAlignment(.center)
+//                                    }
+//                                }
+//                            }
                             
                             if !creatingBaselineAlertHidden {
                                 ZStack {
@@ -536,32 +558,7 @@ extension DateFormatter {
                             //
                             Spacer()
                         }
-                        HStack {
-                            Spacer()
-                            ZStack {
-                                Rectangle()
-                                    .foregroundColor(Color.gray.opacity(0.20))
-                                    .frame(width: geometry.size.width * 0.90, height: geometry.size.height * 0.20)
-                                    .cornerRadius(10)
-                                VStack {
-                                    HStack {
-                                        Image(systemName: "info.circle")
-                                            .resizable()
-                                            .frame(width: 25, height: 25)
-                    
-                                        Text("You can push it hard today!")
-                                            .font(.headline)
-                                    }
-                                    Text("To reach your Recommended Day Load, go on your normal 20 mile bike ride!")
-                                        .frame(width: geometry.size.width * 0.85)
-                                        .multilineTextAlignment(.center)
-                                    Text("Version 0.1.13")
-                                        .frame(width: geometry.size.width * 0.85)
-                                        .multilineTextAlignment(.center)
-                                }
-                            }
-                            Spacer()
-                        }
+                        
                     }
                     
                     .frame(width: geometry.size.width, height: geometry.size.height / 2, alignment: .center)
@@ -741,9 +738,11 @@ extension DateFormatter {
                 recentHRVTime = lastHRVTime
                 
                 if recentHRVTime! < lastMidnight {
-                    hrvMorningRecordedAlertHidden = false
+                    //hrvMorningRecordedAlertHidden = false
+                    self.updatedTextColor = .red
                 } else if recentHRVTime! >= lastMidnight {
-                    hrvMorningRecordedAlertHidden = true
+                    //hrvMorningRecordedAlertHidden = true
+                    self.updatedTextColor = .primary
                 }
                 completion()
             }
@@ -1103,7 +1102,7 @@ extension DateFormatter {
             //Changes the text based on our 3 new calculation variables
             //Changes the colors based on our new calculation
             
-            let formattedRecentHRVDate = getFormattedDate(date: recentHRVTime!, format: "MMM d, hh:mm a")
+            let formattedRecentHRVDate = getFormattedDate(date: recentHRVTime!, format: "MMM d h:mma")
 
             
             //Changes Text
@@ -1156,7 +1155,7 @@ extension DateFormatter {
         func changeReadinessColorsandTextCoreData() {
             //Same as above function, but uses core data in our comparison
             
-            let formattedCoreDataDate = getFormattedDate(date: coreDataHRVTime!, format: "MMM d, hh:mm a")
+            let formattedCoreDataDate = getFormattedDate(date: coreDataHRVTime!, format: "MMM d h:mma")
             
             //Changes Text
             self.recentHRVValueState = Int(coreDataHRVValue)
@@ -1186,7 +1185,7 @@ extension DateFormatter {
             //Changes the text based on our 3 new calculation variables
             //Changes the colors based on our new calculation
             
-            let formattedRecentHRVDate = getFormattedDate(date: recentHRVTime!, format: "MMM d, hh:mm a")
+            let formattedRecentHRVDate = getFormattedDate(date: recentHRVTime!, format: "MMM d h:mma")
 
             
             //Changes Text
@@ -1216,7 +1215,7 @@ extension DateFormatter {
             //Changes the text based on our 3 new calculation variables
             //Changes the colors based on our new calculation
             
-            let formattedRecentHRVDate = getFormattedDate(date: recentHRVTime!, format: "MMM d, hh:mm a")
+            let formattedRecentHRVDate = getFormattedDate(date: recentHRVTime!, format: "MMM d h:mma")
 
             
             //Changes Text
@@ -1452,10 +1451,10 @@ struct LoadView: View {
     struct ContentView_Previews: PreviewProvider {
         static var previews: some View {
             Group {
-                LoadView()
+                HomeView()
                     .preferredColorScheme(.dark)
                     .previewDevice("iPhone 12 Pro Max")
-                LoadView()
+                HomeView()
                     .preferredColorScheme(.light)
                     .previewDevice("iPhone 8")
             }
