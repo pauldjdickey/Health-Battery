@@ -374,7 +374,15 @@ extension DateFormatter {
         @State private var showLoadingIndicator = false
         @State private var scale: CGFloat = 0
         @State private var rotation: Double = 0
+        //
         @State private var updatedTextColor:Color = .primary
+        //
+        @State private var alertTextHidden = true
+        @State private var recommendationTextHidden = false
+        @State private var alertText = ""
+        @State private var recommendationTitle = ""
+        @State private var recommendationText = ""
+        @State private var recommendationTextColor:Color = .primary
 
 
         
@@ -463,7 +471,7 @@ extension DateFormatter {
                                         .multilineTextAlignment(.center)
                                         
                                 }.frame(height: 60)
-                                Text("Day Cals")
+                                Text("Day Calories")
                                     .font(.caption)
                                     .frame(width: geometry.size.width * 0.33 - 30, alignment: .leading)
                                 Text("xxxx")
@@ -473,14 +481,24 @@ extension DateFormatter {
                            
                            Spacer()
                        }
-                        Text("Let's push it hard!")
+                        Text("\(recommendationTitle)")
                             .font(.title).bold()
+                            .foregroundColor(recommendationTextColor)
                             .frame(width: geometry.size.width * 0.90)
                             .multilineTextAlignment(.center)
-                        Text("With an Energy Level of XX, Load your body XX.X more points to reach your recommended Day Load of XX.X")
-                            .font(.footnote)
-                            .frame(width: geometry.size.width * 0.90, height: 70)
-                            .multilineTextAlignment(.center)
+//                        Text("With an Energy Level of XX, Load your body XX.X more points to reach your recommended Day Load of XX.X")
+                        if !alertTextHidden {
+                            Text("\(alertText)")
+                                .font(.footnote)
+                                .frame(width: geometry.size.width * 0.90, height: 70)
+                                .multilineTextAlignment(.center)
+                        }
+                        if !recommendationTextHidden {
+                            Text("With an Energy Level of \(finalReadinessPercentage), Load your body XX.X more points to reach your recommended Day Load of XX.X")
+                                .font(.footnote)
+                                .frame(width: geometry.size.width * 0.90, height: 70)
+                                .multilineTextAlignment(.center)
+                        }
                         
                     }.frame(width: geometry.size.width, height: geometry.size.height / 2, alignment: .center)
                     Spacer()
@@ -512,49 +530,49 @@ extension DateFormatter {
 //                                }
 //                            }
                             
-                            if !creatingBaselineAlertHidden {
-                                ZStack {
-                                    Rectangle()
-                                        .foregroundColor(Color.gray.opacity(0.20))
-                                        .frame(width: geometry.size.width * 0.90, height: geometry.size.height * 0.20)
-                                        .cornerRadius(10)
-                                    VStack {
-                                        HStack {
-                                            Image(systemName: "exclamationmark.triangle")
-                                                .resizable()
-                                                .frame(width: 25, height: 25)
-                                                .foregroundColor(.blue)
-                                            Text("Calculating Baseline")
-                                                .font(.headline)
-                                        }
-                                        Text("We are currently calculating your baseline. Please wear your watch and come back regularly to see your energy levels.")
-                                            .frame(width: geometry.size.width * 0.87)
-                                            .multilineTextAlignment(.center)
-                                    }
-                                }
-                            }
+//                            if !creatingBaselineAlertHidden {
+//                                ZStack {
+//                                    Rectangle()
+//                                        .foregroundColor(Color.gray.opacity(0.20))
+//                                        .frame(width: geometry.size.width * 0.90, height: geometry.size.height * 0.20)
+//                                        .cornerRadius(10)
+//                                    VStack {
+//                                        HStack {
+//                                            Image(systemName: "exclamationmark.triangle")
+//                                                .resizable()
+//                                                .frame(width: 25, height: 25)
+//                                                .foregroundColor(.blue)
+//                                            Text("Calculating Baseline")
+//                                                .font(.headline)
+//                                        }
+//                                        Text("We are currently calculating your baseline. Please wear your watch and come back regularly to see your energy levels.")
+//                                            .frame(width: geometry.size.width * 0.87)
+//                                            .multilineTextAlignment(.center)
+//                                    }
+//                                }
+//                            }
                             
-                            if !noLastHRVAlertHidden {
-                                ZStack {
-                                    Rectangle()
-                                        .foregroundColor(Color.gray.opacity(0.20))
-                                        .frame(width: geometry.size.width * 0.90, height: geometry.size.height * 0.20)
-                                        .cornerRadius(10)
-                                    VStack {
-                                        HStack {
-                                            Image(systemName: "exclamationmark.triangle")
-                                                .resizable()
-                                                .frame(width: 25, height: 25)
-                                                .foregroundColor(.red)
-                                            Text("There is no HRV Health data.")
-                                                .font(.headline)
-                                        }
-                                        Text("Please wear your Watch all day and report back later to see your readiness calculation.")
-                                            .frame(width: geometry.size.width * 0.85)
-                                            .multilineTextAlignment(.center)
-                                    }
-                                }
-                            }
+//                            if !noLastHRVAlertHidden {
+//                                ZStack {
+//                                    Rectangle()
+//                                        .foregroundColor(Color.gray.opacity(0.20))
+//                                        .frame(width: geometry.size.width * 0.90, height: geometry.size.height * 0.20)
+//                                        .cornerRadius(10)
+//                                    VStack {
+//                                        HStack {
+//                                            Image(systemName: "exclamationmark.triangle")
+//                                                .resizable()
+//                                                .frame(width: 25, height: 25)
+//                                                .foregroundColor(.red)
+//                                            Text("There is no HRV Health data.")
+//                                                .font(.headline)
+//                                        }
+//                                        Text("Please wear your Watch all day and report back later to see your readiness calculation.")
+//                                            .frame(width: geometry.size.width * 0.85)
+//                                            .multilineTextAlignment(.center)
+//                                    }
+//                                }
+//                            }
                             //
                             Spacer()
                         }
@@ -729,10 +747,17 @@ extension DateFormatter {
                     print("No recent data to calculate, guard is enabled, everything stops, and alert shows")
                     self.finalReadinessPercentage = 0
                     self.noLastHRVAlertHidden = false
+                    self.recommendationTextHidden = true
+                    self.alertTextHidden = false
+                    self.recommendationTitle = "There is no Watch data"
+                    self.alertText = "Please wear your watch all day and report back later to see your readiness calculation."
+                    self.recommendationTextColor = .orange
                     self.readinessColorState = .gray
                     return
                 }
                 
+                self.noLastHRVAlertHidden = true
+                self.recommendationTextHidden = false
                 self.noLastHRVAlertHidden = true
                 recentHRVValue = Double(lastHRV)
                 recentHRVTime = lastHRVTime
@@ -769,6 +794,9 @@ extension DateFormatter {
                 
                 print("There were 0 core data items, so we created a baseline to save")
                 self.creatingBaselineAlertHidden = false
+                self.recommendationTitle = "Calculating your baseline"
+                self.alertText = "Please wear your watch and come back regularly to see your energy levels and load."
+                self.recommendationTextColor = .blue
                 return
             }
                         
@@ -833,10 +861,16 @@ extension DateFormatter {
                 //Make blue notification saying we are creating baseline
                 print("Less than 4 data points worth of hrv from health")
                 self.creatingBaselineAlertHidden = false
+                self.recommendationTextHidden = true
+                self.alertTextHidden = false
+                self.recommendationTitle = "Calculating your baseline"
+                self.alertText = "Please wear your watch and come back regularly to see your energy levels and load"
+                self.recommendationTextColor = .blue
 
                 return
             }
-            
+            self.creatingBaselineAlertHidden = true
+            self.recommendationTextHidden = false
             self.creatingBaselineAlertHidden = true
             
             
@@ -1104,6 +1138,8 @@ extension DateFormatter {
             
             let formattedRecentHRVDate = getFormattedDate(date: recentHRVTime!, format: "MMM d h:mma")
 
+            //Changes recommendation
+            self.recommendationTextColor = .primary
             
             //Changes Text
             self.recentHRVValueState = Int(recentHRVValue)
@@ -1113,14 +1149,19 @@ extension DateFormatter {
             //Changes Colors and Bar Data
             if newFinalHRVCalculation <= 25 {
                 readinessColor = .red
+                self.recommendationTitle = "Minimal Energy"
             } else if newFinalHRVCalculation > 25 && newFinalHRVCalculation <= 40 {
                 readinessColor = .orange
+                self.recommendationTitle = "Low Energy"
             } else if newFinalHRVCalculation > 40 && newFinalHRVCalculation <= 65 {
                 readinessColor = .blue
+                self.recommendationTitle = "Normal Energy"
             } else if newFinalHRVCalculation > 65 && newFinalHRVCalculation <= 85 {
                 readinessColor = .green
+                self.recommendationTitle = "Elevated Energy"
             } else if newFinalHRVCalculation > 85 {
                 readinessColor = .purple
+                self.recommendationTitle = "Max Performance"
             }
             
             self.readinessBarState = Int(newFinalHRVCalculation)
@@ -1155,6 +1196,19 @@ extension DateFormatter {
         func changeReadinessColorsandTextCoreData() {
             //Same as above function, but uses core data in our comparison
             
+            //if coredata count is less than 3 then do baseline text
+            if coreDataHRVCalculationArray.count < 3 {
+                self.recommendationTextHidden = true
+                self.alertTextHidden = false
+                self.recommendationTitle = "Calculating your baseline"
+                self.alertText = "Please wear your watch and come back regularly to see your energy levels and load"
+                self.recommendationTextColor = .blue
+            } else {
+                self.recommendationTextHidden = false
+                self.alertTextHidden = true
+                self.recommendationTextColor = .primary
+            }
+            
             let formattedCoreDataDate = getFormattedDate(date: coreDataHRVTime!, format: "MMM d h:mma")
             
             //Changes Text
@@ -1165,14 +1219,19 @@ extension DateFormatter {
             //Changes Colors and Bar
             if coreDataHRVCalculation <= 25 {
                 readinessColor = .red
+                self.recommendationTitle = "Minimal Energy"
             } else if coreDataHRVCalculation > 25 && coreDataHRVCalculation <= 40 {
                 readinessColor = .orange
+                self.recommendationTitle = "Low Energy"
             } else if coreDataHRVCalculation > 40 && coreDataHRVCalculation <= 65 {
                 readinessColor = .blue
+                self.recommendationTitle = "Normal Energy"
             } else if coreDataHRVCalculation > 65 && coreDataHRVCalculation <= 85 {
                 readinessColor = .green
+                self.recommendationTitle = "Elevated Energy"
             } else if coreDataHRVCalculation > 85 {
                 readinessColor = .purple
+                self.recommendationTitle = "Max Performance"
             }
             
             print("Readiness color is \(readinessColor)")
@@ -1186,7 +1245,9 @@ extension DateFormatter {
             //Changes the colors based on our new calculation
             
             let formattedRecentHRVDate = getFormattedDate(date: recentHRVTime!, format: "MMM d h:mma")
-
+            
+            //Changes recommendation
+            self.recommendationTextColor = .primary
             
             //Changes Text
             self.recentHRVValueState = Int(recentHRVValue)
@@ -1196,14 +1257,19 @@ extension DateFormatter {
             //Changes Colors and Bar Data
             if newFinalHRVCalculation <= 25 {
                 readinessColor = .red
+                self.recommendationTitle = "Minimal Energy"
             } else if newFinalHRVCalculation > 25 && newFinalHRVCalculation <= 40 {
                 readinessColor = .orange
+                self.recommendationTitle = "Low Energy"
             } else if newFinalHRVCalculation > 40 && newFinalHRVCalculation <= 65 {
                 readinessColor = .blue
+                self.recommendationTitle = "Normal Energy"
             } else if newFinalHRVCalculation > 65 && newFinalHRVCalculation <= 85 {
                 readinessColor = .green
+                self.recommendationTitle = "Elevated Energy"
             } else if newFinalHRVCalculation > 85 {
                 readinessColor = .purple
+                self.recommendationTitle = "Max Performance"
             }
             
             self.readinessBarState = Int(newFinalHRVCalculation)
@@ -1216,7 +1282,9 @@ extension DateFormatter {
             //Changes the colors based on our new calculation
             
             let formattedRecentHRVDate = getFormattedDate(date: recentHRVTime!, format: "MMM d h:mma")
-
+            
+            //Changes recommendation
+            self.recommendationTextColor = .primary
             
             //Changes Text
             self.recentHRVValueState = Int(recentHRVValue)
@@ -1226,14 +1294,19 @@ extension DateFormatter {
             //Changes Colors and Bar Data
             if recentHRVCalculation <= 25 {
                 readinessColor = .red
+                self.recommendationTitle = "Minimal Energy"
             } else if recentHRVCalculation > 25 && recentHRVCalculation <= 40 {
                 readinessColor = .orange
+                self.recommendationTitle = "Low Energy"
             } else if recentHRVCalculation > 40 && recentHRVCalculation <= 65 {
                 readinessColor = .blue
+                self.recommendationTitle = "Normal Energy"
             } else if recentHRVCalculation > 65 && recentHRVCalculation <= 85 {
                 readinessColor = .green
+                self.recommendationTitle = "Elevated Energy"
             } else if recentHRVCalculation > 85 {
                 readinessColor = .purple
+                self.recommendationTitle = "Max Performance"
             }
             
             self.readinessBarState = Int(recentHRVCalculation)
