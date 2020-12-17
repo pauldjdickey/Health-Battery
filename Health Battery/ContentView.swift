@@ -437,7 +437,7 @@ extension DateFormatter {
                                    .frame(width: geometry.size.width * 0.10, height: geometry.size.width * 0.10)
                                    CircularProgress(
                                        progress: CGFloat((activeCalsState/21)*100),
-                                       lineWidth: 20,
+                                       lineWidth: 15,
                                        foregroundColor: Color(UIColor.systemTeal),
                                        backgroundColor: Color(UIColor.systemTeal).opacity(0.20)
                                    ).rotationEffect(.degrees(-90)).frame(width: geometry.size.width * 0.38, height: geometry.size.height * 0.20, alignment: .center)
@@ -450,7 +450,7 @@ extension DateFormatter {
    //                                }
                                CircularProgress(
                                    progress: CGFloat(readinessBarState),
-                                   lineWidth: 20,
+                                   lineWidth: 15,
                                    foregroundColor: readinessColorState,
                                    backgroundColor: readinessColorState.opacity(0.20)
                                ).rotationEffect(.degrees(-90)).frame(width: geometry.size.width * 0.25, height: geometry.size.height * 0.20, alignment: .center)
