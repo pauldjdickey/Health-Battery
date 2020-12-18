@@ -37,6 +37,7 @@
 		2D8DE90B2579B0AE00EF656C /* SwiftProgress in Frameworks */ = {isa = PBXBuildFile; productRef = 2D8DE90A2579B0AE00EF656C /* SwiftProgress */; };
 		2DACACB225802FA2007AF98F /* PZCircularControl in Frameworks */ = {isa = PBXBuildFile; productRef = 2DACACB125802FA2007AF98F /* PZCircularControl */; };
 		2DACACBE25828DD7007AF98F /* SwiftUICharts in Frameworks */ = {isa = PBXBuildFile; productRef = 2DACACBD25828DD7007AF98F /* SwiftUICharts */; };
+		2DFA2252258D58C0004A9153 /* BarChart in Frameworks */ = {isa = PBXBuildFile; productRef = 2DFA2251258D58C0004A9153 /* BarChart */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -152,6 +153,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2D668635258985940002DC69 /* ActivityIndicatorView in Frameworks */,
+				2DFA2252258D58C0004A9153 /* BarChart in Frameworks */,
 				2DACACB225802FA2007AF98F /* PZCircularControl in Frameworks */,
 				2DACACBE25828DD7007AF98F /* SwiftUICharts in Frameworks */,
 				2D674A83253940B400040B66 /* HealthKit.framework in Frameworks */,
@@ -348,6 +350,7 @@
 				2DACACB125802FA2007AF98F /* PZCircularControl */,
 				2DACACBD25828DD7007AF98F /* SwiftUICharts */,
 				2D668634258985940002DC69 /* ActivityIndicatorView */,
+				2DFA2251258D58C0004A9153 /* BarChart */,
 			);
 			productName = "Health Battery";
 			productReference = 2D674A4225393FCF00040B66 /* Health Battery.app */;
@@ -431,6 +434,7 @@
 				2DACACB025802FA2007AF98F /* XCRemoteSwiftPackageReference "PZCircularControl" */,
 				2DACACBC25828DD7007AF98F /* XCRemoteSwiftPackageReference "ChartView" */,
 				2D668633258985940002DC69 /* XCRemoteSwiftPackageReference "ActivityIndicatorView" */,
+				2DFA2250258D58C0004A9153 /* XCRemoteSwiftPackageReference "BarChart" */,
 			);
 			productRefGroup = 2D674A4325393FCF00040B66 /* Products */;
 			projectDirPath = "";
@@ -1012,6 +1016,14 @@
 				minimumVersion = 1.5.4;
 			};
 		};
+		2DFA2250258D58C0004A9153 /* XCRemoteSwiftPackageReference "BarChart" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/dawigr/BarChart.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.3.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -1034,6 +1046,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 2DACACBC25828DD7007AF98F /* XCRemoteSwiftPackageReference "ChartView" */;
 			productName = SwiftUICharts;
+		};
+		2DFA2251258D58C0004A9153 /* BarChart */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2DFA2250258D58C0004A9153 /* XCRemoteSwiftPackageReference "BarChart" */;
+			productName = BarChart;
 		};
 /* End XCSwiftPackageProductDependency section */
 

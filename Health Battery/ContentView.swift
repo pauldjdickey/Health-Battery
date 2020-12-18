@@ -89,7 +89,12 @@ var lastRHRPercentVar = 0.0
     // Core Data Check
 var hasRecoveryHappened = [Double]()
 var howManyRecoveries = [Double]()
-
+    //Energy View
+var coreDataDictionary = [[Date]:[Double]]()
+var coreDataTimeArray = [Date]()
+var coreDataCalculationArray = [Double]()
+var coreDataTodayTimeArray = [Date]()
+var coreDataTodayCalculationArray = [Double]()
 
 
 typealias FinishedGettingHealthData = () -> ()
@@ -633,7 +638,6 @@ extension DateFormatter {
         
         
         func finalLoadFunction() {
-            rightNow = Date()
             initialActiveEnergyArray {
                 DispatchQueue.main.async {
                     saveNewLoadCalculationToCD()
@@ -643,6 +647,7 @@ extension DateFormatter {
         
         func initialActiveEnergyArray(_ completion : @escaping()->()) {
             dateFormatter.dateFormat = "yyyy-MM-dd HH:mm"
+            rightNow = Date()
             hkm.activeEnergy(from: lastMidnight, to: Date()) { (results) in
                 print("Last midnight from initial active energy array: \(lastMidnight)")
                 print("Last midnight formatted from initial active energy array: \(lastMidnightFormatted)")
@@ -744,9 +749,9 @@ extension DateFormatter {
                 
                 //Revise this?
                 guard lastHRV > 0.0 else {
+                    //This is when there is literally nothing, no HRV data at all.
                     print("No recent data to calculate, guard is enabled, everything stops, and alert shows")
                     self.finalReadinessPercentage = 0
-                    self.noLastHRVAlertHidden = false
                     self.recommendationTextHidden = true
                     self.alertTextHidden = false
                     self.recommendationTitle = "There is no Watch data"
@@ -757,8 +762,9 @@ extension DateFormatter {
                 }
                 
                 self.noLastHRVAlertHidden = true
+                self.alertTextHidden = true
                 self.recommendationTextHidden = false
-                self.noLastHRVAlertHidden = true
+                //self.noLastHRVAlertHidden = true
                 recentHRVValue = Double(lastHRV)
                 recentHRVTime = lastHRVTime
                 
@@ -782,23 +788,26 @@ extension DateFormatter {
             coreDataHRVTime = coreDataHRVTimeArray.first ?? nil
             coreDataHRVCalculation = coreDataHRVCalculationArray.first ?? 0
             
-            guard coreDataHRVValue > 0 else {
+            guard coreDataHRVCalculationArray.count > 0 else {
 
-                
+
                 newFinalHRVCalculation = Double.random(in: 60...65)
-                
+
                 saveNewCalculationToCD()
-                
+
                 changeReadinessColorsandTextnoCompletion()
 
-                
+
                 print("There were 0 core data items, so we created a baseline to save")
-                self.creatingBaselineAlertHidden = false
+                self.recommendationTextHidden = true
+                self.alertTextHidden = false
                 self.recommendationTitle = "Calculating your baseline"
                 self.alertText = "Please wear your watch and come back regularly to see your energy levels and load."
                 self.recommendationTextColor = .blue
                 return
             }
+            self.alertTextHidden = true
+            self.recommendationTextHidden = false
                         
             print("Last core data value: \(coreDataHRVValue)")
             print("Last core data time: \(coreDataHRVTime)")
@@ -869,12 +878,9 @@ extension DateFormatter {
 
                 return
             }
-            self.creatingBaselineAlertHidden = true
+            self.alertTextHidden = true
             self.recommendationTextHidden = false
             self.creatingBaselineAlertHidden = true
-            
-            
-            
             //If we have more than 4 items, continue as normal
             
             completion()
@@ -938,195 +944,69 @@ extension DateFormatter {
             //Appends to "newFinalHRVCalculation"
             
             //Check where our old readiness is first, then apply new
-            
-            if coreDataHRVCalculation < 25 { //in red
-                            if recentHRVCalculation < 25 {
-                                newFinalHRVCalculation = recentHRVCalculation
-                            } else if recentHRVCalculation == 25 {
-                                newFinalHRVCalculation = 25
-                            } else if recentHRVCalculation > 25 && recentHRVCalculation < 40 {
-                                newFinalHRVCalculation = recentHRVCalculation
-                            } else if recentHRVCalculation == 40 {
-                                newFinalHRVCalculation = 35
-                            } else if recentHRVCalculation > 40 && recentHRVCalculation < 65 {
-                                newFinalHRVCalculation = 40
-                            } else if recentHRVCalculation == 65 {
-                                newFinalHRVCalculation = 55
-                            } else if recentHRVCalculation > 65 && recentHRVCalculation < 85 {
-                                newFinalHRVCalculation = 60
-                            } else if recentHRVCalculation == 85 {
-                                newFinalHRVCalculation = 68
-                            } else if recentHRVCalculation > 85 {
-                                newFinalHRVCalculation = 70
-                            }
-                        } else if coreDataHRVCalculation == 25 { //on gate
-                            if recentHRVCalculation < 25 {
-                                newFinalHRVCalculation = recentHRVCalculation
-                            } else if recentHRVCalculation == 25 {
-                                newFinalHRVCalculation = 25
-                            } else if recentHRVCalculation > 25 && recentHRVCalculation < 40 {
-                                newFinalHRVCalculation = recentHRVCalculation
-                            } else if recentHRVCalculation == 40 {
-                                newFinalHRVCalculation = 40
-                            } else if recentHRVCalculation > 40 && recentHRVCalculation < 65 {
-                                newFinalHRVCalculation = 43
-                            } else if recentHRVCalculation == 65 {
-                                newFinalHRVCalculation = 55
-                            } else if recentHRVCalculation > 65 && recentHRVCalculation < 85 {
-                                newFinalHRVCalculation = 60
-                            } else if recentHRVCalculation == 85 {
-                                newFinalHRVCalculation = 69
-                            } else if recentHRVCalculation > 85 {
-                                newFinalHRVCalculation = 71
-                            }
-                            
-                        } else if coreDataHRVCalculation > 25 && coreDataHRVCalculation < 40 { //in yellow
-                            if recentHRVCalculation < 25 {
-                                newFinalHRVCalculation = 20
-                            } else if recentHRVCalculation == 25 {
-                                newFinalHRVCalculation = 25
-                            } else if recentHRVCalculation > 25 && recentHRVCalculation < 40 {
-                                newFinalHRVCalculation = recentHRVCalculation
-                            } else if recentHRVCalculation == 40 {
-                                newFinalHRVCalculation = 40
-                            } else if recentHRVCalculation > 40 && recentHRVCalculation < 65 {
-                                newFinalHRVCalculation = recentHRVCalculation
-                            } else if recentHRVCalculation == 65 {
-                                newFinalHRVCalculation = 58
-                            } else if recentHRVCalculation > 65 && recentHRVCalculation < 85 {
-                                newFinalHRVCalculation = 65
-                            } else if recentHRVCalculation == 85 {
-                                newFinalHRVCalculation = 72
-                            } else if recentHRVCalculation > 85 {
-                                newFinalHRVCalculation = 75
-                            }
-
-                        } else if coreDataHRVCalculation == 40 { //on gate
-                            if recentHRVCalculation < 25 {
-                                newFinalHRVCalculation = 25
-                            } else if recentHRVCalculation == 25 {
-                                newFinalHRVCalculation = 30
-                            } else if recentHRVCalculation > 25 && recentHRVCalculation < 40 {
-                                newFinalHRVCalculation = recentHRVCalculation
-                            } else if recentHRVCalculation == 40 {
-                                newFinalHRVCalculation = 40
-                            } else if recentHRVCalculation > 40 && recentHRVCalculation < 65 {
-                                newFinalHRVCalculation = recentHRVCalculation
-                            } else if recentHRVCalculation == 65 {
-                                newFinalHRVCalculation = 58
-                            } else if recentHRVCalculation > 65 && recentHRVCalculation < 85 {
-                                newFinalHRVCalculation = 65
-                            } else if recentHRVCalculation == 85 {
-                                newFinalHRVCalculation = 75
-                            } else if recentHRVCalculation > 85 {
-                                newFinalHRVCalculation = 80
-                            }
-
-                        } else if coreDataHRVCalculation > 40 && coreDataHRVCalculation < 65 { //in blue
-                            if recentHRVCalculation < 25 {
-                                newFinalHRVCalculation = 35
-                            } else if recentHRVCalculation == 25 {
-                                newFinalHRVCalculation = 35
-                            } else if recentHRVCalculation > 25 && recentHRVCalculation < 40 {
-                                newFinalHRVCalculation = 38
-                            } else if recentHRVCalculation == 40 {
-                                newFinalHRVCalculation = 40
-                            } else if recentHRVCalculation > 40 && recentHRVCalculation < 65 {
-                                newFinalHRVCalculation = recentHRVCalculation
-                            } else if recentHRVCalculation == 65 {
-                                newFinalHRVCalculation = 65
-                            } else if recentHRVCalculation > 65 && recentHRVCalculation < 85 {
-                                newFinalHRVCalculation = recentHRVCalculation
-                            } else if recentHRVCalculation == 85 {
-                                newFinalHRVCalculation = 80
-                            } else if recentHRVCalculation > 85 {
-                                newFinalHRVCalculation = 85
-                            }
-
-                        } else if coreDataHRVCalculation == 65 { //on gate
-                            if recentHRVCalculation < 25 {
-                                newFinalHRVCalculation = 38
-                            } else if recentHRVCalculation == 25 {
-                                newFinalHRVCalculation = 40
-                            } else if recentHRVCalculation > 25 && recentHRVCalculation < 40 {
-                                newFinalHRVCalculation = 45
-                            } else if recentHRVCalculation == 40 {
-                                newFinalHRVCalculation = 49
-                            } else if recentHRVCalculation > 40 && recentHRVCalculation < 65 {
-                                newFinalHRVCalculation = recentHRVCalculation
-                            } else if recentHRVCalculation == 65 {
-                                newFinalHRVCalculation = 65
-                            } else if recentHRVCalculation > 65 && recentHRVCalculation < 85 {
-                                newFinalHRVCalculation = recentHRVCalculation
-                            } else if recentHRVCalculation == 85 {
-                                newFinalHRVCalculation = 85
-                            } else if recentHRVCalculation > 85 {
-                                newFinalHRVCalculation = 90
-                            }
-                            
-                        } else if coreDataHRVCalculation > 65 && coreDataHRVCalculation < 85 { //in green
-                            if recentHRVCalculation < 25 {
-                                newFinalHRVCalculation = 40
-                            } else if recentHRVCalculation == 25 {
-                                newFinalHRVCalculation = 50
-                            } else if recentHRVCalculation > 25 && recentHRVCalculation < 40 {
-                                newFinalHRVCalculation = 53
-                            } else if recentHRVCalculation == 40 {
-                                newFinalHRVCalculation = 55
-                            } else if recentHRVCalculation > 40 && recentHRVCalculation < 65 {
-                                newFinalHRVCalculation = recentHRVCalculation
-                            } else if recentHRVCalculation == 65 {
-                                newFinalHRVCalculation = 65
-                            } else if recentHRVCalculation > 65 && recentHRVCalculation < 85 {
-                                newFinalHRVCalculation = recentHRVCalculation
-                            } else if recentHRVCalculation == 85 {
-                                newFinalHRVCalculation = 85
-                            } else if recentHRVCalculation > 85 {
-                                newFinalHRVCalculation = recentHRVCalculation
-                            }
-                            
-                        } else if coreDataHRVCalculation == 85 { //on gate
-                            if recentHRVCalculation < 25 {
-                                newFinalHRVCalculation = 42
-                            } else if recentHRVCalculation == 25 {
-                                newFinalHRVCalculation = 53
-                            } else if recentHRVCalculation > 25 && recentHRVCalculation < 40 {
-                                newFinalHRVCalculation = 55
-                            } else if recentHRVCalculation == 40 {
-                                newFinalHRVCalculation = 58
-                            } else if recentHRVCalculation > 40 && recentHRVCalculation < 65 {
-                                newFinalHRVCalculation = 60
-                            } else if recentHRVCalculation == 65 {
-                                newFinalHRVCalculation = 65
-                            } else if recentHRVCalculation > 65 && recentHRVCalculation < 85 {
-                                newFinalHRVCalculation = recentHRVCalculation
-                            } else if recentHRVCalculation == 85 {
-                                newFinalHRVCalculation = 85
-                            } else if recentHRVCalculation > 85 {
-                                newFinalHRVCalculation = recentHRVCalculation
-                            }
-                            
+                            //Test
+                            if coreDataHRVCalculation <= 25 { //in red
+                                if recentHRVCalculation <= 25 {
+                                    newFinalHRVCalculation = recentHRVCalculation
+                                } else if recentHRVCalculation > 25 && recentHRVCalculation <= 40 {
+                                    newFinalHRVCalculation = recentHRVCalculation
+                                } else if recentHRVCalculation > 40 && recentHRVCalculation <= 65 {
+                                    newFinalHRVCalculation = recentHRVCalculation
+                                } else if recentHRVCalculation > 65 && recentHRVCalculation <= 85 {
+                                    newFinalHRVCalculation = 65
+                                } else if recentHRVCalculation > 85 {
+                                    newFinalHRVCalculation = 75
+                                }
+                            } else if coreDataHRVCalculation > 25 && coreDataHRVCalculation <= 40 { //in yellow
+                                if recentHRVCalculation <= 25 {
+                                    newFinalHRVCalculation = 20
+                                } else if recentHRVCalculation > 25 && recentHRVCalculation <= 40 {
+                                    newFinalHRVCalculation = recentHRVCalculation
+                                } else if recentHRVCalculation > 40 && recentHRVCalculation <= 65 {
+                                    newFinalHRVCalculation = recentHRVCalculation
+                                } else if recentHRVCalculation > 65 && recentHRVCalculation <= 85 {
+                                    newFinalHRVCalculation = 70
+                                } else if recentHRVCalculation > 85 {
+                                    newFinalHRVCalculation = 85
+                                }
+                            } else if coreDataHRVCalculation > 40 && coreDataHRVCalculation <= 65 { //in blue
+                                if recentHRVCalculation <= 25 {
+                                    newFinalHRVCalculation = 25
+                                } else if recentHRVCalculation > 25 && recentHRVCalculation <= 40 {
+                                    newFinalHRVCalculation = recentHRVCalculation
+                                } else if recentHRVCalculation > 40 && recentHRVCalculation <= 65 {
+                                    newFinalHRVCalculation = recentHRVCalculation
+                                } else if recentHRVCalculation > 65 && recentHRVCalculation <= 85 {
+                                    newFinalHRVCalculation = recentHRVCalculation
+                                } else if recentHRVCalculation > 85 {
+                                    newFinalHRVCalculation = 90
+                                }
+                            }  else if coreDataHRVCalculation > 65 && coreDataHRVCalculation <= 85 { //in green
+                                if recentHRVCalculation <= 25 {
+                                    newFinalHRVCalculation = 25
+                                } else if recentHRVCalculation > 25 && recentHRVCalculation <= 40 {
+                                    newFinalHRVCalculation = 35
+                                } else if recentHRVCalculation > 40 && recentHRVCalculation <= 65 {
+                                    newFinalHRVCalculation = recentHRVCalculation
+                                } else if recentHRVCalculation > 65 && recentHRVCalculation <= 85 {
+                                    newFinalHRVCalculation = recentHRVCalculation
+                                } else if recentHRVCalculation > 85 {
+                                    newFinalHRVCalculation = 90
+                                }
                         } else if coreDataHRVCalculation > 85 { //in pink
-                            if recentHRVCalculation < 25 {
-                                newFinalHRVCalculation = 42
-                            } else if recentHRVCalculation == 25 {
-                                newFinalHRVCalculation = 53
-                            } else if recentHRVCalculation > 25 && recentHRVCalculation < 40 {
-                                newFinalHRVCalculation = 55
-                            } else if recentHRVCalculation == 40 {
-                                newFinalHRVCalculation = 58
-                            } else if recentHRVCalculation > 40 && recentHRVCalculation < 65 {
-                                newFinalHRVCalculation = 60
-                            } else if recentHRVCalculation == 65 {
-                                newFinalHRVCalculation = 65
-                            } else if recentHRVCalculation > 65 && recentHRVCalculation < 85 {
+                            if recentHRVCalculation <= 25 {
+                                newFinalHRVCalculation = 35
+                            } else if recentHRVCalculation > 25 && recentHRVCalculation <= 40 {
+                                newFinalHRVCalculation = 40
+                            } else if recentHRVCalculation > 40 && recentHRVCalculation <= 65 {
                                 newFinalHRVCalculation = recentHRVCalculation
-                            } else if recentHRVCalculation == 85 {
-                                newFinalHRVCalculation = 85
+                            } else if recentHRVCalculation > 65 && recentHRVCalculation <= 85 {
+                                newFinalHRVCalculation = recentHRVCalculation
                             } else if recentHRVCalculation > 85 {
                                 newFinalHRVCalculation = recentHRVCalculation
                             }
                         }
+                            //Test
             print("New HRV Calculation Func run")
 
             completion()
@@ -1322,11 +1202,35 @@ extension DateFormatter {
 
     //MARK: - Readiness View
     struct EnergyView: View {
+        
+        @Environment(\.managedObjectContext) var managedObjectContext
+        
+        
+        
         var body: some View {
             NavigationView {
-             Text("Energy Details will go here")
+                Text("Coming soon...")
             }
-            }
+        }
+        
+        @FetchRequest(
+            entity: Readiness.entity(),
+            sortDescriptors: [NSSortDescriptor(keyPath: \Readiness.time, ascending: false)]
+        ) var coreDataRequest: FetchedResults<Readiness>
+        
+        
+        
+        func loadCoreDataValuesIntoDictionary() {
+            coreDataTimeArray = coreDataRequest.map {$0.time!}
+            coreDataCalculationArray = coreDataRequest.map {$0.calculation}
+            
+            print("Core Data times: \(coreDataTimeArray)")
+            print("Core Data Calculations: \(coreDataCalculationArray)")
+            
+            coreDataDictionary[coreDataTimeArray] = coreDataCalculationArray
+            print(coreDataDictionary)
+        }
+        
     }
 
 //MARK: - Body Load View
