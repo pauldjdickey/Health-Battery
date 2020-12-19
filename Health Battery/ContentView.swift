@@ -412,11 +412,16 @@ extension DateFormatter {
                                                                        print("Moving back to the foreground!")
                                            print("Right now is: \(Date())")
                                            print("Last Midnight is: \(lastMidnight)")
+                                            rightNow = Date()
+                                            lastMidnight = calendar.startOfDay(for: rightNow)
                                                                    finalLoadFunction()
                                                                    newReadinessCalculation()
                                                                }
                                        .onAppear(perform: {
                                                                print("Recovery Appeared using OnAppear")
+                                        rightNow = Date()
+                                        
+                                        lastMidnight = calendar.startOfDay(for: rightNow)
                                                                finalLoadFunction()
                                                                newReadinessCalculation()
                                                            })
@@ -647,7 +652,10 @@ extension DateFormatter {
         
         func initialActiveEnergyArray(_ completion : @escaping()->()) {
             dateFormatter.dateFormat = "yyyy-MM-dd HH:mm"
-            rightNow = Date()
+//            rightNow = Date()
+//            //For some reason lastmidnight does not change but Date() does...
+//            lastMidnight = calendar.startOfDay(for: rightNow)
+//            //Add the above to our other functions
             hkm.activeEnergy(from: lastMidnight, to: Date()) { (results) in
                 print("Last midnight from initial active energy array: \(lastMidnight)")
                 print("Last midnight formatted from initial active energy array: \(lastMidnightFormatted)")
@@ -709,7 +717,7 @@ extension DateFormatter {
         //MARK: - New Energy Functions
         func newReadinessCalculation() {
             //Where all of our functions will be put in and then called
-            rightNow = Date()
+            ///rightNow = Date()
             findNewHRVReading {
                 findOldCoreDataReading {
                     compareNewAndOldData {
