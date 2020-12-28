@@ -31,9 +31,16 @@ class HealthKitManager {
     
     //This gets our most recent active energy but i dont think adds it together...
     public func activeEnergy(from: Date, to: Date, handler: @escaping ([HKQuantitySample]) -> ()) {
+        
         let predicate = HKQuery.predicateForSamples(withStart: from, end: to, options: [.strictStartDate, .strictEndDate])
-        let activeEnergyQuery = HKSampleQuery(sampleType: .activeEnergyType, predicate: predicate, limit: HKObjectQueryNoLimit, sortDescriptors: nil) { (query, results, error) in
-            guard let results = results as? [HKQuantitySample] else { NSLog("HealthKitManager: activeEnergy: nil AE samples.. auth'd?"); return}
+        let sortDescriptor = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)
+
+        let activeEnergyQuery = HKSampleQuery(sampleType: .activeEnergyType, predicate: predicate, limit: HKObjectQueryNoLimit, sortDescriptors: [sortDescriptor]) { (query, results, error) in
+            
+            guard let results = results as? [HKQuantitySample] else {
+                NSLog("HealthKitManager: activeEnergy: nil AE samples.. auth'd?")
+                return
+            }
             handler(results)
         }
         health.execute(activeEnergyQuery)

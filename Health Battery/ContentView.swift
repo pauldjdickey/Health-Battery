@@ -11,6 +11,7 @@ import SwiftProgress
 import PZCircularControl
 import SwiftUICharts
 import ActivityIndicatorView
+import OrderedDictionary
 
 let delegate = UIApplication.shared.delegate as! AppDelegate
 
@@ -95,6 +96,18 @@ var coreDataTimeArray = [Date]()
 var coreDataCalculationArray = [Double]()
 var coreDataTodayTimeArray = [Date]()
 var coreDataTodayCalculationArray = [Double]()
+//
+var activeEnergyArrayEachHour = [Double]()
+var activeEnergyRetrieveArrayAdded = 0.0
+
+var earlyTime = calendar.startOfDay(for: rightNow).addingTimeInterval(0) //Starts at midnight
+var lateTime = calendar.startOfDay(for: rightNow).addingTimeInterval(3600) //Starts 1 hour after midnight
+var hourAfter = calendar.startOfDay(for: rightNow).addingTimeInterval(3600)
+
+var earlyTimeInterval = 0
+var lateTimeInterval = 3600
+
+var arrayTest = [Double]()
 
 
 typealias FinishedGettingHealthData = () -> ()
@@ -117,6 +130,7 @@ var yesterdayStartDate = calendar.startOfDay(for: Date.yesterday)
 var weekAgoStartDate = calendar.startOfDay(for: Date.weekAgo)
 var monthAgoStartDate = calendar.startOfDay(for: Date.monthAgo)
 var lastMidnight = calendar.startOfDay(for: rightNow)
+
 var lastMidnightFormatted = dateFormatter.string(from: lastMidnight)
 
 
@@ -175,8 +189,15 @@ extension Date {
     static var tomorrow:  Date { return rightNow.dayAfter }
     static var weekAgo: Date { return rightNow.weekAgo }
     static var monthAgo: Date { return rightNow.monthAgo }
+    static var hourAgo: Date { return rightNow.hourBefore }
     var dayBefore: Date {
         return Calendar.current.date(byAdding: .day, value: -1, to: noon)!
+    }
+    var hourBefore: Date {
+        return Calendar.current.date(byAdding: .hour, value: -1, to: self)!
+    }
+    var hourAfter: Date {
+        return Calendar.current.date(byAdding: .hour, value: 1, to: self)!
     }
     var dayAfter: Date {
         return Calendar.current.date(byAdding: .day, value: 1, to: noon)!
@@ -420,7 +441,6 @@ extension DateFormatter {
                                        .onAppear(perform: {
                                                                print("Recovery Appeared using OnAppear")
                                         rightNow = Date()
-                                        
                                         lastMidnight = calendar.startOfDay(for: rightNow)
                                                                finalLoadFunction()
                                                                newReadinessCalculation()
@@ -497,6 +517,12 @@ extension DateFormatter {
                             .frame(width: geometry.size.width * 0.90)
                             .multilineTextAlignment(.center)
 //                        Text("With an Energy Level of XX, Load your body XX.X more points to reach your recommended Day Load of XX.X")
+                        Button(action: {
+                            activeEnergytoActivityTest()
+                        }) {
+                            // How the button looks like
+                            Text("TEST")
+                        }
                         if !alertTextHidden {
                             Text("\(alertText)")
                                 .font(.footnote)
@@ -504,7 +530,7 @@ extension DateFormatter {
                                 .multilineTextAlignment(.center)
                         }
                         if !recommendationTextHidden {
-                            Text("With an Energy Level of \(finalReadinessPercentage), Load your body XX.X more points to reach your recommended Day Load of XX.X")
+                            Text("With an Energy Level of \(finalReadinessPercentage), your recommended Day Load is XX.X")
                                 .font(.footnote)
                                 .frame(width: geometry.size.width * 0.90, height: 70)
                                 .multilineTextAlignment(.center)
@@ -650,12 +676,306 @@ extension DateFormatter {
             }
         }
         
+        func activeEnergyFinalFunctionTest() {
+            activeEnergyEveryHour {
+                    //This runs after the while loop goes for 12 or so times?
+                    print("Why doesnt this run?")
+                    
+                    let testFinalLoadForDay = activeEnergyArrayEachHour.reduce(0, +)
+                    print("Test Final Load: \(testFinalLoadForDay)")
+            }
+        }
+        
+        
+        func requestItemsTest(_ completion : @escaping()->()) {
+                //This is working now... I think... NOPE
+                //Need to reset array each time
+
+            hkm.activeEnergy(from: earlyTime, to: lateTime) { (results) in
+                var activeEnergyRetrieveArray = [Double]()
+                var activeEnergyRetrieve = 0.0
+                var activeEnergyTimeEndRetrieve: Date? = nil
+                var orderedDictionary: OrderedDictionary<Date, Double> = [:]
+                
+                for result in results {
+                    activeEnergyRetrieve = result.quantity.doubleValue(for: .kilocalorie())
+                    activeEnergyTimeEndRetrieve = result.endDate
+                    //var orderedDictionary: OrderedDictionary<Date, Double> = [activeEnergyTimeEndRetrieve!: activeEnergyRetrieve]
+                    orderedDictionary[activeEnergyTimeEndRetrieve!] = activeEnergyRetrieve
+                }
+                print(activeEnergyRetrieveArray)
+                let activeEnergyArrayAdded = activeEnergyRetrieveArray.reduce(0, +)
+                print("Active Energy Array Added: \(activeEnergyArrayAdded)")
+                //This is where it appends to our total array
+                //Everytime this loop runs, it clears array and starts fresh
+                
+                let activeEnergyPerMinute = activeEnergyArrayAdded / 10.0
+                
+                activeEnergyArrayEachHour.append(activeEnergyPerMinute)
+                print("Active Energy Array Hour: \(activeEnergyArrayEachHour)")
+                
+            }
+            
+            //As setup, this is currently creating an array every 10 minutes since midnight that appends the calories / minute to each 10 minute period!
+            completion()
+            
+            
+        }
+        
+        func activeEnergytoActivityTest() {
+            //Late time is resetting to tomorrow at 0:00?
+            rightNow = Date()
+            earlyTime = calendar.startOfDay(for: rightNow).addingTimeInterval(0)
+            lateTime = calendar.startOfDay(for: rightNow).addingTimeInterval(3600)
+            earlyTimeInterval = 0
+            lateTimeInterval = 3600
+            arrayTest.removeAll()
+            print("1")
+                
+            hkm.activeEnergy(from: lastMidnight, to: rightNow) { (results) in
+                //var activeEnergyRetrieveArray = [Double]()
+                print("2")
+                
+                var activeEnergyRetrieve = 0.0
+                var activeEnergyTimeEndRetrieve: Date? = nil
+                var orderedDictionary: OrderedDictionary<Date, Double> = [:]
+                var regularDictionary = [Date:Double]()
+                
+                for result in results {
+                    activeEnergyRetrieve = result.quantity.doubleValue(for: .kilocalorie())
+                    activeEnergyTimeEndRetrieve = result.endDate
+                    //var orderedDictionary: OrderedDictionary<Date, Double> = [activeEnergyTimeEndRetrieve!: activeEnergyRetrieve]
+                    orderedDictionary[activeEnergyTimeEndRetrieve!] = activeEnergyRetrieve
+                    regularDictionary[activeEnergyTimeEndRetrieve!] = activeEnergyRetrieve
+                    print("3")
+
+
+                }
+                print("Ordered Dictionary: \(orderedDictionary)")
+                print("Regular Dictionary: \(regularDictionary)")
+                print(activeEnergyRetrieve)
+                print(activeEnergyTimeEndRetrieve)
+                
+                print("4")
+                
+                let sortedRegularDictionary = regularDictionary.sorted( by: { $0.0 < $1.0 })
+                
+                print("Sorted regular dictionary: \(sortedRegularDictionary)")
+                
+                print("5")
+                
+                while lateTime < rightNow {
+                    print("6")
+
+                    let filtered = regularDictionary.filter { $0.key >= earlyTime && $0.key <= lateTime }
+                    
+                    print(filtered)
+
+                    let values = filtered.values
+                    print("Values: \(values)")
+                    
+                    
+                    let valuesAdded = values.reduce(0, +)
+
+                    if filtered.isEmpty {
+                        print("1 Early Time: \(earlyTime)")
+                        arrayTest.append(0.0)
+                        print("1 Late Time: \(lateTime)")
+
+                    } else {
+                        print("2 Early Time: \(earlyTime)")
+                        arrayTest.append(valuesAdded)
+                        print("2 Late Time: \(lateTime)")
+                    }
+                    //arrayTest has all our values!
+                    //But, when we re-initialize it... it adds the 25 to the last value only... It is taking our array and just adding the first hour... Why is that?
+                    //Something with timing each initialize...
+                    
+                    
+                    print("Array Test: \(arrayTest)")
+
+                    earlyTimeInterval += 3600
+                    
+                    lateTimeInterval += 3600
+
+                    earlyTime = calendar.startOfDay(for: rightNow).addingTimeInterval(TimeInterval(earlyTimeInterval))
+                    lateTime = calendar.startOfDay(for: rightNow).addingTimeInterval(TimeInterval(lateTimeInterval))
+                    print("Late Time: \(lateTime)")
+                    print("Right Now: \(rightNow)")
+                    
+                }//While loop
+
+            } //HKM
+
+        } //Fullfunction
+        
+        func activeEnergyEveryHour(_ completion : @escaping()->()) {
+            
+            //Need to loop through this
+            //Start with last midnight, find data 1 hour later
+            //Then find data from last midnight + 1 hour later -> +2 hours later
+            //Keep doing this until we get to current time
+            
+            //Everytime we get a result, we should add it together, apply a function, then append it to an array
+            //Then we can take that array and all together to find our number to put into a strain/load algorithm
+            //This finds our load for the day
+                        
+            
+            
+            //This while statement will run until we hit right now...
+            //Change this to start of hour for right now?
+            
+            
+            
+            //This works, turn it into a loop and then apply a formula of activity / min
+            //Then change it to every 5 mins loop!
+//            hkm.activeEnergy(from: calendar.startOfDay(for: rightNow).addingTimeInterval(0), to: calendar.startOfDay(for: rightNow).addingTimeInterval(3600)) { (results) in
+//                print("Last midnight from initial active energy array: \(lastMidnight)")
+//                print("Last midnight formatted from initial active energy array: \(lastMidnightFormatted)")
+//                print("Right now: \(rightNow)")
+//                var activeEnergyRetrieve = 0.0
+//                var activeEnergyRetrieveArray = [Double]()
+//                
+//                for result in results {
+//                    print("Getting Results")
+//                    activeEnergyRetrieve = result.quantity.doubleValue(for: .kilocalorie())
+//                    activeEnergyRetrieveArray.append(activeEnergyRetrieve)
+//                }
+//                print(activeEnergyRetrieveArray)
+//                let activeEnergyArrayAdded = activeEnergyRetrieveArray.reduce(0, +)
+//                print("Active Energy Array Added 1: \(activeEnergyArrayAdded)")
+//                activeEnergyArrayEachHour.append(activeEnergyArrayAdded)
+//                print("Active Energy Array Hour 1: \(activeEnergyArrayEachHour)")
+//
+//            }
+//            hkm.activeEnergy(from: calendar.startOfDay(for: rightNow).addingTimeInterval(3600), to: calendar.startOfDay(for: rightNow).addingTimeInterval(7200)) { (results) in
+//                print("Last midnight from initial active energy array: \(lastMidnight)")
+//                print("Last midnight formatted from initial active energy array: \(lastMidnightFormatted)")
+//                print("Right now: \(rightNow)")
+//                var activeEnergyRetrieve = 0.0
+//                var activeEnergyRetrieveArray = [Double]()
+//                
+//                for result in results {
+//                    print("Getting Results")
+//                    activeEnergyRetrieve = result.quantity.doubleValue(for: .kilocalorie())
+//                    activeEnergyRetrieveArray.append(activeEnergyRetrieve)
+//                }
+//                print(activeEnergyRetrieveArray)
+//                let activeEnergyArrayAdded = activeEnergyRetrieveArray.reduce(0, +)
+//                print("Active Energy Array Added 2: \(activeEnergyArrayAdded)")
+//                activeEnergyArrayEachHour.append(activeEnergyArrayAdded)
+//                print("Active Energy Array Hour 2: \(activeEnergyArrayEachHour)")
+//            }
+            
+//            for _ in stride(from: 0 as Double, to: 70 as Double, by: +1 as Double) {
+//                requestItemsTest {
+//                    earlyTimeInterval += 600
+//
+//                    lateTimeInterval += 600
+//
+//                    earlyTime = calendar.startOfDay(for: rightNow).addingTimeInterval(TimeInterval(earlyTimeInterval))
+//                    lateTime = calendar.startOfDay(for: rightNow).addingTimeInterval(TimeInterval(lateTimeInterval))
+//                    print("Late Time: \(lateTime)")
+//                    print("Right Now: \(rightNow)")
+//                }
+//            }
+            
+            while earlyTime <= rightNow {
+
+                requestItemsTest {
+                    earlyTimeInterval += 600
+
+                    lateTimeInterval += 600
+
+                    earlyTime = calendar.startOfDay(for: rightNow).addingTimeInterval(TimeInterval(earlyTimeInterval))
+                    lateTime = calendar.startOfDay(for: rightNow).addingTimeInterval(TimeInterval(lateTimeInterval))
+                    print("Late Time: \(lateTime)")
+                    print("Right Now: \(rightNow)")
+                }
+
+                //Its doing things out of order... How to make it go in order?
+                //It loops but then goes to completion then keeps looping...
+            }
+            completion()
+            
+           
+            
+            
+            
+            
+            
+            
+//            while lateTime < rightNow {
+//                //run hkm.function then add 1 hour to each
+//
+//                hkm.activeEnergy(from: earlyTime, to: lateTime) { (results) in
+//                    var activeEnergyRetrieve = 0.0
+//                    var activeEnergyRetrieveArray = [Double]()
+//
+//                    for result in results {
+//                        activeEnergyRetrieve = result.quantity.doubleValue(for: .kilocalorie())
+//                        activeEnergyRetrieveArray.append(activeEnergyRetrieve)
+//                        //This will get all the data from the hours shown above
+//                        print("Active Energy Retrieve: \(activeEnergyRetrieve)")
+//                        print("Active Energy Retrieve Array: \(activeEnergyRetrieveArray)")
+//                    }
+//                    //Need to add that data together then append to an array created outside this while loop
+//                    activeEnergyRetrieveArrayAdded = activeEnergyRetrieveArray.reduce(0, +)
+//                    //ActiveEnergyRetrieveArrayAdded is now appended to array
+//                }
+//
+//                //This adds an hour to each pass
+//                earlyTimeInterval += 3600
+//                lateTimeInterval += 3600
+//
+//                print("Early Time Interval: \(earlyTimeInterval)")
+//                print("Late Time Interval: \(lateTimeInterval)")
+//
+//                //This applies that hour change to time interval
+//                earlyTime = calendar.startOfDay(for: rightNow).addingTimeInterval(TimeInterval(earlyTimeInterval))
+//                lateTime = calendar.startOfDay(for: rightNow).addingTimeInterval(TimeInterval(lateTimeInterval))
+//
+//                print("Early Time: \(earlyTime)")
+//                print("Late Time: \(lateTime)")
+//                activeEnergyArrayEachHour.append(activeEnergyRetrieveArrayAdded)
+//
+//                print("Active Energy Array Each Hour: \(activeEnergyArrayEachHour)")
+//            }
+            
+//            hkm.activeEnergy(from: lastMidnight, to: Date()) { (results) in
+//
+//                //It runs through this once...
+//                var activeEnergyRetrieve = 0.0
+//                var activeEnergyRetrieveArray = [Double]()
+//
+//                for result in results {
+//                    //It runs through this over and over until it gets all results in given time period
+//                    //Can we change the request time in here, or have to put our hkm.activeEnergy into its own loop, so it loops through for a time period, then switches time period, then loops through, appending to array for 1 loop each time?
+//                    activeEnergyRetrieve = result.quantity.doubleValue(for: .kilocalorie())
+//                    activeEnergyRetrieveArray.append(activeEnergyRetrieve)
+//                    //Will loop through to get results
+//                    //Append all results in given time to array
+//                    //Will add that array up into a variable
+//                    //Will append that to a final array
+//                    //Will then loop through this over and over until last hour -> Date()
+//                }
+//                //Add and append to array here before looping
+//                print(activeEnergyRetrieveArray)
+//                //This finds ALL data points since last midnight and appends them to an array
+//            }
+        }
+        
         func initialActiveEnergyArray(_ completion : @escaping()->()) {
             dateFormatter.dateFormat = "yyyy-MM-dd HH:mm"
 //            rightNow = Date()
 //            //For some reason lastmidnight does not change but Date() does...
 //            lastMidnight = calendar.startOfDay(for: rightNow)
 //            //Add the above to our other functions
+            let hourAgo = Date.hourAgo
+            let hourAfterMidnight = calendar.startOfDay(for: rightNow).addingTimeInterval(3600)
+            var twoHourAfterMidnight = calendar.startOfDay(for: rightNow).addingTimeInterval(7200)
+
+
             hkm.activeEnergy(from: lastMidnight, to: Date()) { (results) in
                 print("Last midnight from initial active energy array: \(lastMidnight)")
                 print("Last midnight formatted from initial active energy array: \(lastMidnightFormatted)")
@@ -664,6 +984,7 @@ extension DateFormatter {
                 var activeEnergyRetrieveArray = [Double]()
                 
                 for result in results {
+                    print("Getting Results")
                     activeEnergyRetrieve = result.quantity.doubleValue(for: .kilocalorie())
                     activeEnergyRetrieveArray.append(activeEnergyRetrieve)
                 }
@@ -991,7 +1312,7 @@ extension DateFormatter {
                                 }
                             }  else if coreDataHRVCalculation > 65 && coreDataHRVCalculation <= 85 { //in green
                                 if recentHRVCalculation <= 25 {
-                                    newFinalHRVCalculation = 25
+                                    newFinalHRVCalculation = 30
                                 } else if recentHRVCalculation > 25 && recentHRVCalculation <= 40 {
                                     newFinalHRVCalculation = 35
                                 } else if recentHRVCalculation > 40 && recentHRVCalculation <= 65 {

@@ -37,6 +37,7 @@
 		2D8DE90B2579B0AE00EF656C /* SwiftProgress in Frameworks */ = {isa = PBXBuildFile; productRef = 2D8DE90A2579B0AE00EF656C /* SwiftProgress */; };
 		2DACACB225802FA2007AF98F /* PZCircularControl in Frameworks */ = {isa = PBXBuildFile; productRef = 2DACACB125802FA2007AF98F /* PZCircularControl */; };
 		2DACACBE25828DD7007AF98F /* SwiftUICharts in Frameworks */ = {isa = PBXBuildFile; productRef = 2DACACBD25828DD7007AF98F /* SwiftUICharts */; };
+		2DBDFC91259A7DC2000A2497 /* OrderedDictionary in Frameworks */ = {isa = PBXBuildFile; productRef = 2DBDFC90259A7DC2000A2497 /* OrderedDictionary */; };
 		2DFA2252258D58C0004A9153 /* BarChart in Frameworks */ = {isa = PBXBuildFile; productRef = 2DFA2251258D58C0004A9153 /* BarChart */; };
 /* End PBXBuildFile section */
 
@@ -157,6 +158,7 @@
 				2DACACB225802FA2007AF98F /* PZCircularControl in Frameworks */,
 				2DACACBE25828DD7007AF98F /* SwiftUICharts in Frameworks */,
 				2D674A83253940B400040B66 /* HealthKit.framework in Frameworks */,
+				2DBDFC91259A7DC2000A2497 /* OrderedDictionary in Frameworks */,
 				2D8DE90B2579B0AE00EF656C /* SwiftProgress in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -351,6 +353,7 @@
 				2DACACBD25828DD7007AF98F /* SwiftUICharts */,
 				2D668634258985940002DC69 /* ActivityIndicatorView */,
 				2DFA2251258D58C0004A9153 /* BarChart */,
+				2DBDFC90259A7DC2000A2497 /* OrderedDictionary */,
 			);
 			productName = "Health Battery";
 			productReference = 2D674A4225393FCF00040B66 /* Health Battery.app */;
@@ -435,6 +438,7 @@
 				2DACACBC25828DD7007AF98F /* XCRemoteSwiftPackageReference "ChartView" */,
 				2D668633258985940002DC69 /* XCRemoteSwiftPackageReference "ActivityIndicatorView" */,
 				2DFA2250258D58C0004A9153 /* XCRemoteSwiftPackageReference "BarChart" */,
+				2DBDFC8F259A7DC2000A2497 /* XCRemoteSwiftPackageReference "OrderedDictionary" */,
 			);
 			productRefGroup = 2D674A4325393FCF00040B66 /* Products */;
 			projectDirPath = "";
@@ -1016,6 +1020,14 @@
 				minimumVersion = 1.5.4;
 			};
 		};
+		2DBDFC8F259A7DC2000A2497 /* XCRemoteSwiftPackageReference "OrderedDictionary" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/lukaskubanek/OrderedDictionary.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.0.1;
+			};
+		};
 		2DFA2250258D58C0004A9153 /* XCRemoteSwiftPackageReference "BarChart" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/dawigr/BarChart.git";
@@ -1046,6 +1058,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 2DACACBC25828DD7007AF98F /* XCRemoteSwiftPackageReference "ChartView" */;
 			productName = SwiftUICharts;
+		};
+		2DBDFC90259A7DC2000A2497 /* OrderedDictionary */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2DBDFC8F259A7DC2000A2497 /* XCRemoteSwiftPackageReference "OrderedDictionary" */;
+			productName = OrderedDictionary;
 		};
 		2DFA2251258D58C0004A9153 /* BarChart */ = {
 			isa = XCSwiftPackageProductDependency;
