@@ -108,6 +108,8 @@ var earlyTimeInterval = 0
 var lateTimeInterval = 3600
 
 var arrayTest = [Double]()
+var basalArray = [Double]()
+var finalActivityArrayPerTime = [Double]()
 
 
 typealias FinishedGettingHealthData = () -> ()
@@ -155,6 +157,7 @@ func authorizeHealthKit(completion: @escaping (Bool, Error?) -> Swift.Void) {
             let variability = HKObjectType.quantityType(forIdentifier: .heartRateVariabilitySDNN),
             let restingHR = HKObjectType.quantityType(forIdentifier: .restingHeartRate),
             let stepsTest = HKObjectType.quantityType(forIdentifier: .stepCount),
+            let basalEnergy = HKObjectType.quantityType(forIdentifier: .basalEnergyBurned),
             let activeEnergy = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) else {
         
         completion(false, HealthkitSetupError.dataTypeNotAvailable)
@@ -168,6 +171,7 @@ func authorizeHealthKit(completion: @escaping (Bool, Error?) -> Swift.Void) {
     let healthKitTypesToRead: Set<HKObjectType> = [dateOfBirth,
                                                    bloodType,
                                                    activeEnergy,
+                                                   basalEnergy,
                                                    biologicalSex,
                                                    bodyMassIndex,
                                                    height,
@@ -518,7 +522,8 @@ extension DateFormatter {
                             .multilineTextAlignment(.center)
 //                        Text("With an Energy Level of XX, Load your body XX.X more points to reach your recommended Day Load of XX.X")
                         Button(action: {
-                            activeEnergytoActivityTest()
+                            //activeEnergytoActivityTest()
+                            finalActiveandBasalTest()
                         }) {
                             // How the button looks like
                             Text("TEST")
@@ -722,7 +727,90 @@ extension DateFormatter {
             
         }
         
-        func activeEnergytoActivityTest() {
+        func finalActiveandBasalTest() {
+            basalEnergyTest {
+                activeEnergytoActivityTest {
+                    finalArrayCalculation()
+                }
+            }
+            
+        }
+        
+        func finalArrayCalculation() {
+            finalActivityArrayPerTime = zip(arrayTest, basalArray).map {
+                if $0 == $1 {
+                    return 0.0
+                } else {
+                    return $0 / ($0 + $1)
+                }
+            }
+            print("Final Activity Array: \(finalActivityArrayPerTime)")
+        }
+        
+        func basalEnergyTest(_ completion : @escaping()->()) {
+            
+            rightNow = Date()
+            earlyTime = calendar.startOfDay(for: rightNow).addingTimeInterval(0)
+            lateTime = calendar.startOfDay(for: rightNow).addingTimeInterval(3600)
+            earlyTimeInterval = 0
+            lateTimeInterval = 3600
+            basalArray.removeAll()
+            
+            hkm.basalEnergy(from: lastMidnight, to: rightNow) { (results) in
+                var basalEnergyRetrieve = 0.0
+                var basalEnergyTimeEndRetrieve: Date? = nil
+                var orderedDictionary: OrderedDictionary<Date, Double> = [:]
+                var regularDictionary = [Date:Double]()
+                
+                for result in results {
+                    basalEnergyRetrieve = result.quantity.doubleValue(for: .kilocalorie())
+                    basalEnergyTimeEndRetrieve = result.startDate
+                    
+                    orderedDictionary[basalEnergyTimeEndRetrieve!] = basalEnergyRetrieve
+                    regularDictionary[basalEnergyTimeEndRetrieve!] = basalEnergyRetrieve
+                }
+                print("Ordered Basal Dictionary: \(orderedDictionary)")
+                print("Regular Basal Dictionary: \(regularDictionary)")
+                
+                let sortedRegularDictionary = regularDictionary.sorted( by: { $0.0 < $1.0 })
+
+                while lateTime < rightNow {
+                    
+                    let filtered = regularDictionary.filter { $0.key >= earlyTime && $0.key <= lateTime }
+                    
+                    print(filtered)
+                    
+                    let values = filtered.values
+                    
+                    print("Values: \(values)")
+
+                    let valuesAdded = values.reduce(0, +)
+                    
+                    if filtered.isEmpty {
+                        basalArray.append(0.0)
+                    } else {
+                        basalArray.append(valuesAdded)
+                    }
+                    
+                    print("Basal Array: \(basalArray)")
+                    
+                    earlyTimeInterval += 3600
+                    
+                    lateTimeInterval += 3600
+
+                    earlyTime = calendar.startOfDay(for: rightNow).addingTimeInterval(TimeInterval(earlyTimeInterval))
+                    lateTime = calendar.startOfDay(for: rightNow).addingTimeInterval(TimeInterval(lateTimeInterval))
+                    print("Late Time: \(lateTime)")
+                    print("Right Now: \(rightNow)")
+                    
+                }
+                completion()
+                
+            }
+            
+        }
+        
+        func activeEnergytoActivityTest(_ completion : @escaping()->()) {
             //Late time is resetting to tomorrow at 0:00?
             rightNow = Date()
             earlyTime = calendar.startOfDay(for: rightNow).addingTimeInterval(0)
@@ -743,7 +831,7 @@ extension DateFormatter {
                 
                 for result in results {
                     activeEnergyRetrieve = result.quantity.doubleValue(for: .kilocalorie())
-                    activeEnergyTimeEndRetrieve = result.endDate
+                    activeEnergyTimeEndRetrieve = result.startDate
                     //var orderedDictionary: OrderedDictionary<Date, Double> = [activeEnergyTimeEndRetrieve!: activeEnergyRetrieve]
                     orderedDictionary[activeEnergyTimeEndRetrieve!] = activeEnergyRetrieve
                     regularDictionary[activeEnergyTimeEndRetrieve!] = activeEnergyRetrieve
@@ -804,9 +892,9 @@ extension DateFormatter {
                     print("Right Now: \(rightNow)")
                     
                 }//While loop
-
+                completion()
             } //HKM
-
+            
         } //Fullfunction
         
         func activeEnergyEveryHour(_ completion : @escaping()->()) {

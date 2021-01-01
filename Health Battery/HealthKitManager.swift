@@ -16,6 +16,7 @@ extension HKObjectType {
     static let stepsType = HKQuantityType.quantityType(forIdentifier: .stepCount)!
     static let workoutType = HKObjectType.workoutType()
     static let activeEnergyType = HKQuantityType.quantityType(forIdentifier: .activeEnergyBurned)!
+    static let basalEnergyType = HKQuantityType.quantityType(forIdentifier: .basalEnergyBurned)!
 }
 
 /* useful for converting from HealthKit's weird output formats */
@@ -44,6 +45,22 @@ class HealthKitManager {
             handler(results)
         }
         health.execute(activeEnergyQuery)
+    }
+    
+    public func basalEnergy(from: Date, to: Date, handler: @escaping ([HKQuantitySample]) -> ()) {
+        
+        let predicate = HKQuery.predicateForSamples(withStart: from, end: to, options: [.strictStartDate, .strictEndDate])
+        let sortDescriptor = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)
+        
+        let basalEnergyQuery = HKSampleQuery(sampleType: .basalEnergyType, predicate: predicate, limit: HKObjectQueryNoLimit, sortDescriptors: [sortDescriptor]) { (query, results, error) in
+            
+            guard let results = results as? [HKQuantitySample] else {
+                NSLog("HealthKitManager: basalEnergy: nil AE samples.. auth'd?")
+                return
+            }
+            handler(results)
+        }
+        health.execute(basalEnergyQuery)
     }
     
     //I think this will get our total active energy for the day.
