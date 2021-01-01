@@ -413,7 +413,8 @@ extension DateFormatter {
         @State private var recommendationTitle = ""
         @State private var recommendationText = ""
         @State private var recommendationTextColor:Color = .primary
-
+        //
+        @State private var activityArrayAddedState = 0.0
 
         
         
@@ -548,6 +549,7 @@ extension DateFormatter {
                     VStack {
                         HStack {
                             Spacer()
+                            Text("Activity Array Added: \(activityArrayAddedState)")
 //                            if !hrvMorningRecordedAlertHidden {
 //                                ZStack {
 //                                    Rectangle()
@@ -730,13 +732,15 @@ extension DateFormatter {
         func finalActiveandBasalTest() {
             basalEnergyTest {
                 activeEnergytoActivityTest {
-                    finalArrayCalculation()
+                    finalArrayCalculation {
+                        finalArrayAddedTogether()
+                    }
                 }
             }
             
         }
         
-        func finalArrayCalculation() {
+        func finalArrayCalculation(_ completion : @escaping()->()) {
             finalActivityArrayPerTime = zip(arrayTest, basalArray).map {
                 if $0 == $1 {
                     return 0.0
@@ -745,6 +749,17 @@ extension DateFormatter {
                 }
             }
             print("Final Activity Array: \(finalActivityArrayPerTime)")
+            completion()
+        }
+        
+        func finalArrayAddedTogether() {
+            
+            let finalActivityArrayAdded = finalActivityArrayPerTime.reduce(0, +)
+            
+            activityArrayAddedState = finalActivityArrayAdded
+            
+            print(finalActivityArrayAdded)
+            
         }
         
         func basalEnergyTest(_ completion : @escaping()->()) {
