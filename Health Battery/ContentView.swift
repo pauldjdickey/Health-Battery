@@ -101,15 +101,17 @@ var activeEnergyArrayEachHour = [Double]()
 var activeEnergyRetrieveArrayAdded = 0.0
 
 var earlyTime = calendar.startOfDay(for: rightNow).addingTimeInterval(0) //Starts at midnight
-var lateTime = calendar.startOfDay(for: rightNow).addingTimeInterval(3600) //Starts 1 hour after midnight
-var hourAfter = calendar.startOfDay(for: rightNow).addingTimeInterval(3600)
+var lateTime = calendar.startOfDay(for: rightNow).addingTimeInterval(120) //Starts 1 hour after midnight
+var hourAfter = calendar.startOfDay(for: rightNow).addingTimeInterval(120)
 
 var earlyTimeInterval = 0
-var lateTimeInterval = 3600
+var lateTimeInterval = 120
 
 var arrayTest = [Double]()
 var basalArray = [Double]()
 var finalActivityArrayPerTime = [Double]()
+
+var heartRateArray = [Double]()
 
 
 typealias FinishedGettingHealthData = () -> ()
@@ -156,6 +158,7 @@ func authorizeHealthKit(completion: @escaping (Bool, Error?) -> Swift.Void) {
             let bodyMass = HKObjectType.quantityType(forIdentifier: .bodyMass),
             let variability = HKObjectType.quantityType(forIdentifier: .heartRateVariabilitySDNN),
             let restingHR = HKObjectType.quantityType(forIdentifier: .restingHeartRate),
+            let heartRate = HKObjectType.quantityType(forIdentifier: .heartRate),
             let stepsTest = HKObjectType.quantityType(forIdentifier: .stepCount),
             let basalEnergy = HKObjectType.quantityType(forIdentifier: .basalEnergyBurned),
             let activeEnergy = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) else {
@@ -174,6 +177,7 @@ func authorizeHealthKit(completion: @escaping (Bool, Error?) -> Swift.Void) {
                                                    basalEnergy,
                                                    biologicalSex,
                                                    bodyMassIndex,
+                                                   heartRate,
                                                    height,
                                                    stepsTest,
                                                    variability,
@@ -523,8 +527,7 @@ extension DateFormatter {
                             .multilineTextAlignment(.center)
 //                        Text("With an Energy Level of XX, Load your body XX.X more points to reach your recommended Day Load of XX.X")
                         Button(action: {
-                            //activeEnergytoActivityTest()
-                            finalActiveandBasalTest()
+                            getHeartRatesTest1()
                         }) {
                             // How the button looks like
                             Text("TEST")
@@ -728,6 +731,82 @@ extension DateFormatter {
             
             
         }
+        
+        //MARK: - Start Heart Rate Functions
+        
+        func getHeartRatesTest1() {
+            
+            self.recentHRVTimeState = "Start"
+            
+            rightNow = Date()
+            earlyTime = calendar.startOfDay(for: rightNow).addingTimeInterval(0)
+            lateTime = calendar.startOfDay(for: rightNow).addingTimeInterval(120)
+            earlyTimeInterval = 0
+            lateTimeInterval = 120
+            heartRateArray.removeAll()
+            
+            hkm.heartRate(from: lastMidnight, to: rightNow) { (results) in
+                var recentHRRetrieve = 0.0
+                var recentHRTimeStartRetrieve: Date? = nil
+                var recentHRTimeEndRetrieve: Date? = nil
+                var allHRArray = [Double]()
+                var hrDictionary = [Date:Double]()
+                
+                for result in results {
+                    recentHRRetrieve = result.quantity.doubleValue(for: .heartRateUnit)
+                    recentHRTimeStartRetrieve = result.startDate
+                    recentHRTimeEndRetrieve = result.endDate
+                    allHRArray.append(recentHRRetrieve)
+                    hrDictionary[recentHRTimeEndRetrieve!] = recentHRRetrieve
+                    print("Recent HR Value:\(recentHRRetrieve)")
+                    print("Recent HR Value Start Time:\(recentHRTimeStartRetrieve)")
+                    print("Recent HR Value End Time:\(recentHRTimeEndRetrieve)")
+                    
+                }
+                print("All HR array: \(allHRArray)")
+                print("All HR dictionary: \(hrDictionary)") //Not in order since its a dictionary
+                
+                while lateTime < rightNow {
+                    
+                    let filtered = hrDictionary.filter { $0.key >= earlyTime && $0.key <= lateTime }
+                    
+                    let values = filtered.values
+                    
+                    let valuesSum = values.reduce(0, +)
+                    
+                    let valuesAverage = valuesSum / Double(values.count)
+                    
+                    if filtered.isEmpty {
+                        heartRateArray.append(0.0)
+                        //This is where we find the below and above and create an average?
+                        //If no below and above...?
+                        //Maybe if nothing, we look at below and above, if there are 2 numbers to divide, then we do it
+                        //Else if there is a 0 within those neighboring, we just do 0.0
+                    } else {
+                        heartRateArray.append(valuesAverage)
+                    }
+                    
+                    earlyTimeInterval += 120
+                    
+                    lateTimeInterval += 120
+
+                    earlyTime = calendar.startOfDay(for: rightNow).addingTimeInterval(TimeInterval(earlyTimeInterval))
+                    lateTime = calendar.startOfDay(for: rightNow).addingTimeInterval(TimeInterval(lateTimeInterval))
+                    print("Late Time: \(lateTime)")
+                    print("Right Now: \(rightNow)")
+                    
+                }
+                print("Heart Rate Array: \(heartRateArray)")
+                self.recentHRVTimeState = "End"
+                print(heartRateArray.count )
+
+                
+            }
+            
+        }
+        
+        
+        //MARK: - End Heart Rate Functions
         
         func finalActiveandBasalTest() {
             basalEnergyTest {
