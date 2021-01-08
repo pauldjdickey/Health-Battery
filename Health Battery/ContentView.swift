@@ -777,11 +777,45 @@ extension DateFormatter {
                     let valuesAverage = valuesSum / Double(values.count)
                     
                     if filtered.isEmpty {
-                        heartRateArray.append(0.0)
+                        
+                        let twoMinsBefore = earlyTime - 120
+                        let twoMinsAfter = lateTime + 120
+                        
+                        let twoMinsBeforeValues = hrDictionary.filter { $0.key >= twoMinsBefore && $0.key <= earlyTime }
+                        let twoMinsAfterValues = hrDictionary.filter { $0.key >= lateTime && $0.key <= twoMinsAfter }
+                        
+                        if twoMinsBeforeValues.isEmpty || twoMinsAfterValues.isEmpty {
+                            heartRateArray.append(0.0)
+                        } else {
+                            let earlyValues = twoMinsBeforeValues.values
+                            let lateValues = twoMinsAfterValues.values
+                            
+                            let earlyValueSum = earlyValues.reduce(0, +)
+                            let lateValueSum = lateValues.reduce(0, +)
+                            
+                            let earlyValueAverage = earlyValueSum / Double(earlyValues.count)
+                            let lateValueAverage = lateValueSum / Double(lateValues.count)
+                            
+                            let newValueAveraged = (earlyValueAverage + lateValueAverage) / 2
+                            
+                            heartRateArray.append(newValueAveraged)
+                        }
+                        
+                        // if twoMinsBeforeValues.isEmpty OR twoMinsAfterValues.isEmpty
+                        // then append 0.0
+                        //else
+                        //Find average and append
+                        
+                        
+                        
+                        //Check the number 2 minutes earlier
+                        //Check number 2 minutes later
+                        //If any of these numbers have a 0, or nil, don't calculate and just put 0.0
+                        //If they do have numbers or values, then find the average and append!
                         //This is where we find the below and above and create an average?
                         //If no below and above...?
                         //Maybe if nothing, we look at below and above, if there are 2 numbers to divide, then we do it
-                        //Else if there is a 0 within those neighboring, we just do 0.0
+                        //Else if there is a 0 within those neighboring, we just do 0.0, most likely this means the watrch was off and isnt just lack of data in the 2 minute period
                     } else {
                         heartRateArray.append(valuesAverage)
                     }
