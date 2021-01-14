@@ -114,6 +114,11 @@ var finalActivityArrayPerTime = [Double]()
 var heartRateArray = [Double]()
 var heartRateRatioArray = [Double]()
 
+private let userHealthProfile = UserHealthProfile()
+
+var age = 0
+
+
 
 precedencegroup PowerPrecedence { higherThan: MultiplicationPrecedence }
 infix operator ^^ : PowerPrecedence
@@ -397,6 +402,7 @@ extension DateFormatter {
 // Active Cals
     var activeCalsAdded = 0.0
     var loadCalculation = 0.0
+    var finalActivity = 0.0
 
     struct HomeView: View {
         //Core Data SwiftUI Object Management
@@ -451,14 +457,16 @@ extension DateFormatter {
                                            print("Last Midnight is: \(lastMidnight)")
                                             rightNow = Date()
                                             lastMidnight = calendar.startOfDay(for: rightNow)
-                                                                   finalLoadFunction()
+                                                                   //finalLoadFunction()
+                                                                    finalActivityFunction()
                                                                    newReadinessCalculation()
                                                                }
                                        .onAppear(perform: {
                                                                print("Recovery Appeared using OnAppear")
                                         rightNow = Date()
                                         lastMidnight = calendar.startOfDay(for: rightNow)
-                                                               finalLoadFunction()
+                                                               //finalLoadFunction()
+                                                                finalActivityFunction()
                                                                newReadinessCalculation()
                                                            })
                                    Text("Energy")
@@ -510,7 +518,7 @@ extension DateFormatter {
                                         .frame(width: geometry.size.width * 0.33 - 30, alignment: .leading)
                                         .multilineTextAlignment(.center)
                                         
-                                    Text("Load")
+                                    Text("Activity")
                                         .fontWeight(.heavy)
                                         .foregroundColor(Color(UIColor.systemTeal))
                                         .frame(width: geometry.size.width * 0.33 - 30, alignment: .leading)
@@ -534,7 +542,7 @@ extension DateFormatter {
                             .multilineTextAlignment(.center)
 //                        Text("With an Energy Level of XX, Load your body XX.X more points to reach your recommended Day Load of XX.X")
                         Button(action: {
-                            getHeartRatesTest1()
+                            finalActivityFunction()
                         }) {
                             // How the button looks like
                             Text("TEST")
@@ -546,7 +554,7 @@ extension DateFormatter {
                                 .multilineTextAlignment(.center)
                         }
                         if !recommendationTextHidden {
-                            Text("With an Energy Level of \(finalReadinessPercentage), your recommended Day Load is XX.X")
+                            Text("With an Energy Level of \(finalReadinessPercentage), your recommended Day Activity is XX.X")
                                 .font(.footnote)
                                 .frame(width: geometry.size.width * 0.90, height: 70)
                                 .multilineTextAlignment(.center)
@@ -684,6 +692,14 @@ extension DateFormatter {
             
         }
         
+        func finalActivityFunction() {
+            getHeartRatesTest1 {
+                DispatchQueue.main.async {
+                    saveNewActivityCalculationToCD()
+                }
+            }
+        }
+        
         
         func finalLoadFunction() {
             initialActiveEnergyArray {
@@ -739,9 +755,39 @@ extension DateFormatter {
             
         }
         
+        //MARK: - Get Age Functions
+        
+        func getAgeAndBloodType() throws -> (age: Int, biologicalSex: HKBiologicalSex) {
+            let healthKitStore = HKHealthStore()
+            
+            do {
+                let birthdayComponents = try healthKitStore.dateOfBirthComponents()
+                let biologicalSex = try healthKitStore.biologicalSex()
+                
+                let today = Date()
+                let calendar = Calendar.current
+                let todayDateComponents = calendar.dateComponents([.year], from: today)
+                //This is only doing year without birthday being included.
+                
+                let thisYear = todayDateComponents.year!
+                print("ThisYear = \(thisYear)")
+
+                let age = thisYear - birthdayComponents.year!
+                
+                print("Birthday Year: \(birthdayComponents.year!)")
+                print("Age per get function: \(age)")
+                
+                let unwrappedBiologicalSex = biologicalSex.biologicalSex
+                
+                return (age, unwrappedBiologicalSex)
+            }
+        }
+        
         //MARK: - Start Heart Rate Functions
         
-        func getHeartRatesTest1() {
+        func getHeartRatesTest1(_ completion : @escaping()->()) {
+            
+            self.showLoadingIndicator = true
             
             //self.recentHRVTimeState = "Start"
             
@@ -752,6 +798,17 @@ extension DateFormatter {
             lateTimeInterval = 120
             heartRateArray.removeAll()
             heartRateRatioArray.removeAll()
+            
+            
+            do {
+                let userAgeSexAndBloodType = try getAgeAndBloodType()
+                userHealthProfile.age = userAgeSexAndBloodType.age
+                userHealthProfile.biologicalSex = userAgeSexAndBloodType.biologicalSex
+                age = userHealthProfile.age ?? 0
+                
+            } catch let error {
+                print(error)
+            }
             
             hkm.heartRate(from: lastMidnight, to: rightNow) { (results) in
                 var recentHRRetrieve = 0.0
@@ -820,7 +877,8 @@ extension DateFormatter {
                             heartRateArray.append(newValueAveraged)
                             
                             //Append to ratio array a value based on where newvalueaveraged is in an if then statement accoring to max HR
-                            let maxHR = 211 - (0.64 * 26)
+                            let maxHR = 211 - (0.64 * Double(age))
+                            print("Max HR is: \(maxHR)")
                             let percentOfMax = newValueAveraged / maxHR
                             
                             if percentOfMax <= 0.35 {
@@ -859,7 +917,8 @@ extension DateFormatter {
                         heartRateArray.append(valuesAverage)
                         
                         //Append to ratio array a value based on where valuesaverage is in an if then statement according to max HR
-                        let maxHR = 211 - (0.64 * 26)
+                        let maxHR = 211 - (0.64 * Double(age))
+                        print("Max HR is: \(maxHR)")
                         let percentOfMax = valuesAverage / maxHR
                         
                         if percentOfMax <= 0.35 {
@@ -905,13 +964,16 @@ extension DateFormatter {
                 //let strain = 21.94158 + (1.275316 - 21.94158) / (1.0 + (pow(Double((arrayRatioSum/18.99556))), Double(1.062108)))
 //                let strain1 =
 //                let strain2 =
-                let finalStrain = (21.94158 + ((1.275316 - 21.94158)) / ((1.0) + (pow(Double(arrayRatioSum/18.99556),Double(1.062108)))))
+                finalActivity = (21.94158 + ((1.275316 - 21.94158)) / ((1.0) + (pow(Double(arrayRatioSum/18.99556),Double(1.062108)))))
                 let powTest = pow(Double(2),Double(3))
                 print(powTest)
-                print("Strain: \(finalStrain)")
-                
-                self.activityArrayAddedState = finalStrain
-                
+                print("Strain: \(finalActivity)")
+                print("Age is: \(age)")
+                self.activityArrayAddedState = finalActivity
+                self.activeCalsState = finalActivity
+                self.showLoadingIndicator = false
+
+                completion()
             }
             
         }
@@ -1293,6 +1355,38 @@ extension DateFormatter {
             
             
         }
+        func saveNewActivityCalculationToCD() {
+            
+            //Need to delete any items in today before writing to CD
+            let context = delegate.persistentContainer.viewContext
+            let predicate = NSPredicate(format: "date >= %@", lastMidnight as NSDate)
+            let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Load")
+            
+            fetchRequest.predicate = predicate
+            
+            do {
+                let result = try context.fetch(fetchRequest)
+                print(result.count)
+                if result.count > 0 {
+                    for object in result {
+                        context.delete(object as! NSManagedObject)
+                    }
+                }
+            } catch {
+                
+            }
+            
+            
+            
+            print("Start saving load to CD")
+            let newLoadCalculationWrite = Load(context: managedObjectContext)
+            
+            newLoadCalculationWrite.calculation = finalActivity
+            newLoadCalculationWrite.date = Date()
+            
+            saveContext()
+            print("End saving load to CD")
+        }
         
         func saveNewLoadCalculationToCD() {
             
@@ -1495,7 +1589,7 @@ extension DateFormatter {
                 self.recommendationTextHidden = true
                 self.alertTextHidden = false
                 self.recommendationTitle = "Calculating your baseline"
-                self.alertText = "Please wear your watch and come back regularly to see your energy levels and load"
+                self.alertText = "Please wear your watch and come back regularly to see your energy levels and activity"
                 self.recommendationTextColor = .blue
 
                 return
@@ -1703,7 +1797,7 @@ extension DateFormatter {
                 self.recommendationTextHidden = true
                 self.alertTextHidden = false
                 self.recommendationTitle = "Calculating your baseline"
-                self.alertText = "Please wear your watch and come back regularly to see your energy levels and load"
+                self.alertText = "Please wear your watch and come back regularly to see your energy levels and activity"
                 self.recommendationTextColor = .blue
             } else {
                 self.recommendationTextHidden = false
@@ -1859,7 +1953,7 @@ extension DateFormatter {
 struct LoadView: View {
     var body: some View {
         NavigationView {
-            Text("Load Details will go here")
+            Text("Activity Details will go here")
 
             
         }
@@ -2036,7 +2130,7 @@ struct LoadView: View {
                 LoadView()
                     .tabItem {
                         Image(systemName: "bolt.fill")
-                        Text("Load")
+                        Text("Activity")
                     }
                 SettingsView()
                     .tabItem {
