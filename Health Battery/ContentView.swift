@@ -824,11 +824,11 @@ extension DateFormatter {
                             let percentOfMax = newValueAveraged / maxHR
                             
                             if percentOfMax <= 0.35 {
-                                heartRateRatioArray.append(0.028)
+                                heartRateRatioArray.append(0.0028)
                             } else if percentOfMax > 0.35 && percentOfMax <= 0.45 {
-                                heartRateRatioArray.append(0.066)
+                                heartRateRatioArray.append(0.0066)
                             } else if percentOfMax > 0.46 && percentOfMax <= 0.55 {
-                                heartRateRatioArray.append(0.13)
+                                heartRateRatioArray.append(0.013)
                             } else if percentOfMax > 0.56 && percentOfMax <= 0.65 {
                                 heartRateRatioArray.append(0.230)
                             } else if percentOfMax > 0.66 && percentOfMax <= 0.75 {
@@ -863,11 +863,11 @@ extension DateFormatter {
                         let percentOfMax = valuesAverage / maxHR
                         
                         if percentOfMax <= 0.35 {
-                            heartRateRatioArray.append(0.028)
+                            heartRateRatioArray.append(0.0028)
                         } else if percentOfMax > 0.35 && percentOfMax <= 0.45 {
-                            heartRateRatioArray.append(0.066)
+                            heartRateRatioArray.append(0.0066)
                         } else if percentOfMax > 0.46 && percentOfMax <= 0.55 {
-                            heartRateRatioArray.append(0.13)
+                            heartRateRatioArray.append(0.013)
                         } else if percentOfMax > 0.56 && percentOfMax <= 0.65 {
                             heartRateRatioArray.append(0.230)
                         } else if percentOfMax > 0.66 && percentOfMax <= 0.75 {
