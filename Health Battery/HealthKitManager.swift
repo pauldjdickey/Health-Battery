@@ -17,6 +17,7 @@ extension HKObjectType {
     static let workoutType = HKObjectType.workoutType()
     static let activeEnergyType = HKQuantityType.quantityType(forIdentifier: .activeEnergyBurned)!
     static let basalEnergyType = HKQuantityType.quantityType(forIdentifier: .basalEnergyBurned)!
+    static let dateOfBirth = HKObjectType.characteristicType(forIdentifier: .dateOfBirth)!
 }
 
 /* useful for converting from HealthKit's weird output formats */
@@ -28,6 +29,9 @@ extension HKUnit {
 class HealthKitManager {
     
     fileprivate let health = HKHealthStore()
+    
+    
+    //MARK: - To get age, sex, bloodtype
     
     
     //This gets our most recent active energy but i dont think adds it together...

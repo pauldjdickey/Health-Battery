@@ -112,7 +112,14 @@ var basalArray = [Double]()
 var finalActivityArrayPerTime = [Double]()
 
 var heartRateArray = [Double]()
+var heartRateRatioArray = [Double]()
 
+
+precedencegroup PowerPrecedence { higherThan: MultiplicationPrecedence }
+infix operator ^^ : PowerPrecedence
+func ^^ (radix: Int, power: Int) -> Int {
+    return Int(pow(Double(radix), Double(power)))
+}
 
 typealias FinishedGettingHealthData = () -> ()
 
@@ -552,7 +559,7 @@ extension DateFormatter {
                     VStack {
                         HStack {
                             Spacer()
-                            Text("Activity Array Added: \(activityArrayAddedState)")
+                            Text("Strain: \(activityArrayAddedState)")
 //                            if !hrvMorningRecordedAlertHidden {
 //                                ZStack {
 //                                    Rectangle()
@@ -736,7 +743,7 @@ extension DateFormatter {
         
         func getHeartRatesTest1() {
             
-            self.recentHRVTimeState = "Start"
+            //self.recentHRVTimeState = "Start"
             
             rightNow = Date()
             earlyTime = calendar.startOfDay(for: rightNow).addingTimeInterval(0)
@@ -744,6 +751,7 @@ extension DateFormatter {
             earlyTimeInterval = 0
             lateTimeInterval = 120
             heartRateArray.removeAll()
+            heartRateRatioArray.removeAll()
             
             hkm.heartRate(from: lastMidnight, to: rightNow) { (results) in
                 var recentHRRetrieve = 0.0
@@ -785,7 +793,18 @@ extension DateFormatter {
                         let twoMinsAfterValues = hrDictionary.filter { $0.key >= lateTime && $0.key <= twoMinsAfter }
                         
                         if twoMinsBeforeValues.isEmpty || twoMinsAfterValues.isEmpty {
+                            
+                            //Max HR = 211 - (0.64 * Age(26))
+                            //Average HR for me is 70, which is 40% max
+                            //MARK: - ANSWER THIS
+                            //Maybe dont do this? Just apply 0?
+                            //let averageHR = (211 - (0.64 * 26)) * 0.40
+                            //heartRateArray.append(averageHR)
                             heartRateArray.append(0.0)
+                            
+                            //Append to ratio array a value of 0
+                            heartRateRatioArray.append(0.0)
+                            
                         } else {
                             let earlyValues = twoMinsBeforeValues.values
                             let lateValues = twoMinsAfterValues.values
@@ -799,6 +818,26 @@ extension DateFormatter {
                             let newValueAveraged = (earlyValueAverage + lateValueAverage) / 2
                             
                             heartRateArray.append(newValueAveraged)
+                            
+                            //Append to ratio array a value based on where newvalueaveraged is in an if then statement accoring to max HR
+                            let maxHR = 211 - (0.64 * 26)
+                            let percentOfMax = newValueAveraged / maxHR
+                            
+                            if percentOfMax <= 0.35 {
+                                heartRateRatioArray.append(0.0028)
+                            } else if percentOfMax > 0.35 && percentOfMax <= 0.45 {
+                                heartRateRatioArray.append(0.0066)
+                            } else if percentOfMax > 0.46 && percentOfMax <= 0.55 {
+                                heartRateRatioArray.append(0.013)
+                            } else if percentOfMax > 0.56 && percentOfMax <= 0.65 {
+                                heartRateRatioArray.append(0.230)
+                            } else if percentOfMax > 0.66 && percentOfMax <= 0.75 {
+                                heartRateRatioArray.append(0.375)
+                            } else if percentOfMax > 0.76 && percentOfMax <= 0.85 {
+                                heartRateRatioArray.append(0.575)
+                            } else if percentOfMax > 0.86 {
+                                heartRateRatioArray.append(1.0)
+                            }
                         }
                         
                         // if twoMinsBeforeValues.isEmpty OR twoMinsAfterValues.isEmpty
@@ -818,7 +857,31 @@ extension DateFormatter {
                         //Else if there is a 0 within those neighboring, we just do 0.0, most likely this means the watrch was off and isnt just lack of data in the 2 minute period
                     } else {
                         heartRateArray.append(valuesAverage)
+                        
+                        //Append to ratio array a value based on where valuesaverage is in an if then statement according to max HR
+                        let maxHR = 211 - (0.64 * 26)
+                        let percentOfMax = valuesAverage / maxHR
+                        
+                        if percentOfMax <= 0.35 {
+                            heartRateRatioArray.append(0.0028)
+                        } else if percentOfMax > 0.35 && percentOfMax <= 0.45 {
+                            heartRateRatioArray.append(0.0066)
+                        } else if percentOfMax > 0.46 && percentOfMax <= 0.55 {
+                            heartRateRatioArray.append(0.013)
+                        } else if percentOfMax > 0.56 && percentOfMax <= 0.65 {
+                            heartRateRatioArray.append(0.230)
+                        } else if percentOfMax > 0.66 && percentOfMax <= 0.75 {
+                            heartRateRatioArray.append(0.375)
+                        } else if percentOfMax > 0.76 && percentOfMax <= 0.85 {
+                            heartRateRatioArray.append(0.575)
+                        } else if percentOfMax > 0.86 {
+                            heartRateRatioArray.append(1.0)
+                        }
+                        
+
                     }
+                    
+                    
                     
                     earlyTimeInterval += 120
                     
@@ -831,9 +894,23 @@ extension DateFormatter {
                     
                 }
                 print("Heart Rate Array: \(heartRateArray)")
-                self.recentHRVTimeState = "End"
-                print(heartRateArray.count )
-
+                print("Ratio Array: \(heartRateRatioArray)")
+                //self.recentHRVTimeState = "End"
+                print("Heart Rate Array Count: \(heartRateArray.count)")
+                print("Heart Rate Ratio Array Count: \(heartRateRatioArray.count)")
+                
+                let arrayRatioSum = heartRateRatioArray.reduce(0, +)
+                print("Ratio Sum: \(arrayRatioSum)")
+                
+                //let strain = 21.94158 + (1.275316 - 21.94158) / (1.0 + (pow(Double((arrayRatioSum/18.99556))), Double(1.062108)))
+//                let strain1 =
+//                let strain2 =
+                let finalStrain = (21.94158 + ((1.275316 - 21.94158)) / ((1.0) + (pow(Double(arrayRatioSum/18.99556),Double(1.062108)))))
+                let powTest = pow(Double(2),Double(3))
+                print(powTest)
+                print("Strain: \(finalStrain)")
+                
+                self.activityArrayAddedState = finalStrain
                 
             }
             
