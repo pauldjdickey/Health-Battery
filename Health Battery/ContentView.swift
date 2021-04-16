@@ -163,15 +163,15 @@ func authorizeHealthKit(completion: @escaping (Bool, Error?) -> Swift.Void) {
     }
     //2. Prepare the data types that will interact with HealthKit
     guard   let dateOfBirth = HKObjectType.characteristicType(forIdentifier: .dateOfBirth),
-            let bloodType = HKObjectType.characteristicType(forIdentifier: .bloodType),
+            //let bloodType = HKObjectType.characteristicType(forIdentifier: .bloodType),
             let biologicalSex = HKObjectType.characteristicType(forIdentifier: .biologicalSex),
-            let bodyMassIndex = HKObjectType.quantityType(forIdentifier: .bodyMassIndex),
+            //let bodyMassIndex = HKObjectType.quantityType(forIdentifier: .bodyMassIndex),
             let height = HKObjectType.quantityType(forIdentifier: .height),
             let bodyMass = HKObjectType.quantityType(forIdentifier: .bodyMass),
             let variability = HKObjectType.quantityType(forIdentifier: .heartRateVariabilitySDNN),
             let restingHR = HKObjectType.quantityType(forIdentifier: .restingHeartRate),
-            let heartRate = HKObjectType.quantityType(forIdentifier: .heartRate),
-            let stepsTest = HKObjectType.quantityType(forIdentifier: .stepCount),
+            //let heartRate = HKObjectType.quantityType(forIdentifier: .heartRate),
+            //let stepsTest = HKObjectType.quantityType(forIdentifier: .stepCount),
             let basalEnergy = HKObjectType.quantityType(forIdentifier: .basalEnergyBurned),
             let activeEnergy = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) else {
         
@@ -179,19 +179,13 @@ func authorizeHealthKit(completion: @escaping (Bool, Error?) -> Swift.Void) {
         return
     }
     //3. Prepare a list of types you want HealthKit to read and write
-    let healthKitTypesToWrite: Set<HKSampleType> = [bodyMassIndex,
-                                                    activeEnergy,
-                                                    HKObjectType.workoutType()]
+    let healthKitTypesToWrite: Set<HKSampleType> = []
     
     let healthKitTypesToRead: Set<HKObjectType> = [dateOfBirth,
-                                                   bloodType,
                                                    activeEnergy,
                                                    basalEnergy,
                                                    biologicalSex,
-                                                   bodyMassIndex,
-                                                   heartRate,
                                                    height,
-                                                   stepsTest,
                                                    variability,
                                                    restingHR,
                                                    bodyMass,
@@ -403,6 +397,14 @@ extension DateFormatter {
     var loadCalculation = 0.0
     var finalActivity = 0.0
 
+///
+//NEW BELOW
+
+    var workoutStartTime: Date? = nil
+    var workoutEndTime: Date? = nil
+    
+    var heartRateTimePeriod = 0.0
+
     //MARK: - HomeView Start
     struct HomeView: View {
         //Core Data SwiftUI Object Management
@@ -411,10 +413,13 @@ extension DateFormatter {
         //MARK: - SwiftUI
         var body: some View {
             VStack {
+                Text("Calculated Strain: ##.##")
+                Text("Calcualted Tolerance: ##.##")
+                Text("Training Load: ##.##")
                 Button(action: {
-                    //Function to calculate goes here
+                    getLastWorkout()
                 }, label: {
-                    Text("Calculate")
+                    Text("Test Calculation")
                 })
             }
         }
@@ -433,6 +438,54 @@ extension DateFormatter {
         ) var coreDataItems: FetchedResults<Readiness>
         
         //MARK: - Functions to Calculate
+        
+        func getLastWorkout () {
+            hkm.workouts(from: yesterdayStartDate, to: Date()) { (results) in
+                var lastWorkout = 0
+                var lastWorkoutDuration = 0.0
+                var lastWorkoutStart = Date()
+                var lastWorkoutEnd = Date()
+                
+                for result in results {
+                    lastWorkout = Int(result.workoutActivityType.rawValue)
+                    lastWorkoutDuration = result.duration
+                    lastWorkoutStart = result.startDate
+                    lastWorkoutEnd = result.endDate
+                    
+                }
+                print("Workout Key Value: \(lastWorkout)")
+                print("Workout duration in seconds: \(lastWorkoutDuration)")
+                print("Workout Start time: \(lastWorkoutStart)")
+                print("Workout End time: \(lastWorkoutEnd)")
+                
+                workoutStartTime = lastWorkoutStart
+                workoutEndTime = lastWorkoutEnd
+                
+                print("The last workout was from \(workoutStartTime!) to \(workoutEndTime!)")
+            }
+        }
+        
+        //Now we can create a function that uses that workout start and end date to find heart rate details to calculate
+        
+        func getHeartRatesBetweenTimesAndPutIntoDictionary () {
+            hkm.heartRate(from: workoutStartTime!, to: workoutEndTime!) { (results) in
+                var heartRateItem = 0.0
+                var heartRateTimeStart: Date? = nil
+                var heartRateTimeEnd: Date? = nil
+                var heartRateTimeDifference = 0.0
+                
+                for result in results {
+                    heartRateItem = result.quantity.doubleValue(for: .heartRateUnit)
+                    heartRateTimeStart = result.startDate
+                    heartRateTimeEnd = result.endDate
+                    //Now we need to format these dates and find the difference in seconds as an integer
+                    
+                }
+            }
+        }
+        
+        
+        
         
     //MARK: - HomeView End
     }
