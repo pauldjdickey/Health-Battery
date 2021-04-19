@@ -173,6 +173,7 @@ func authorizeHealthKit(completion: @escaping (Bool, Error?) -> Swift.Void) {
             //let heartRate = HKObjectType.quantityType(forIdentifier: .heartRate),
             //let stepsTest = HKObjectType.quantityType(forIdentifier: .stepCount),
             let basalEnergy = HKObjectType.quantityType(forIdentifier: .basalEnergyBurned),
+            let heartRate = HKObjectType.quantityType(forIdentifier: .heartRate),
             let activeEnergy = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) else {
         
         completion(false, HealthkitSetupError.dataTypeNotAvailable)
@@ -186,6 +187,7 @@ func authorizeHealthKit(completion: @escaping (Bool, Error?) -> Swift.Void) {
                                                    basalEnergy,
                                                    biologicalSex,
                                                    height,
+                                                   heartRate,
                                                    variability,
                                                    restingHR,
                                                    bodyMass,
@@ -400,10 +402,13 @@ extension DateFormatter {
 ///
 //NEW BELOW
 
-    var workoutStartTime: Date? = nil
-    var workoutEndTime: Date? = nil
+    var workoutStartTime: Date? = Date()
+    var workoutEndTime: Date? = Date()
     
     var heartRateTimePeriod = 0.0
+
+    var heartRateArrayForWorkout = [Double]()
+    var heartRateDictionaryForWorkout = [Date: Double]()
 
     //MARK: - HomeView Start
     struct HomeView: View {
@@ -419,7 +424,17 @@ extension DateFormatter {
                 Button(action: {
                     getLastWorkout()
                 }, label: {
-                    Text("Test Calculation")
+                    Text("Test Workout")
+                })
+                Button(action: {
+                    getHeartRatesBetweenTimesAndPutIntoDictionary()
+                }, label: {
+                    Text("Test HR")
+                })
+                Button(action: {
+                    organizeWorkoutHeartRateDictionaryByTimeToDetermineHowLongEachHRWasFor()
+                }, label: {
+                    Text("Test Sort Dictionary by Key (Time)")
                 })
             }
         }
@@ -468,20 +483,55 @@ extension DateFormatter {
         //Now we can create a function that uses that workout start and end date to find heart rate details to calculate
         
         func getHeartRatesBetweenTimesAndPutIntoDictionary () {
+            heartRateArrayForWorkout.removeAll()
+            heartRateDictionaryForWorkout.removeAll()
             hkm.heartRate(from: workoutStartTime!, to: workoutEndTime!) { (results) in
                 var heartRateItem = 0.0
-                var heartRateTimeStart: Date? = nil
-                var heartRateTimeEnd: Date? = nil
-                var heartRateTimeDifference = 0.0
+                var heartRateTimeStart: Date? = Date()
+                var heartRateTimeEnd: Date? = Date()
+                var heartRateTimeDifference = ""
                 
                 for result in results {
                     heartRateItem = result.quantity.doubleValue(for: .heartRateUnit)
                     heartRateTimeStart = result.startDate
                     heartRateTimeEnd = result.endDate
+                    
+//                    let formatter = DateComponentsFormatter()
+//                    formatter.allowedUnits = [.second]
+//                    formatter.unitsStyle = .full
+//                    heartRateTimeDifference = formatter.string(from: heartRateTimeStart ?? Date(), to: heartRateTimeEnd ?? Date()) ?? "0"
+                    
+                    heartRateArrayForWorkout.append(heartRateItem)
+                    heartRateDictionaryForWorkout[heartRateTimeStart ?? Date()] = heartRateItem
+
                     //Now we need to format these dates and find the difference in seconds as an integer
                     
                 }
+                
+                print("First Heart Rate from Tests is \(heartRateItem)")
+                print("Start of HR Reading is \(heartRateTimeStart)")
+                print("End of HR Reading is \(heartRateTimeEnd)")
+                print("HR Array for Workout is: \(heartRateArrayForWorkout)")
+                print("HR Dictionary for Workout is: \(heartRateDictionaryForWorkout)")
+                print("HR TIme Difference Test is: \(heartRateTimeDifference)")
+                print("Amount of Array items = \(heartRateArrayForWorkout.count)")
+                print("Amount of Dictionary items = \(heartRateDictionaryForWorkout.count)")
             }
+        }
+        
+        func organizeWorkoutHeartRateDictionaryByTimeToDetermineHowLongEachHRWasFor () {
+            let sortedDictionary = heartRateDictionaryForWorkout.sorted{$0.key < $1.key} //Goes up
+            print(sortedDictionary)
+            
+            
+        }
+        
+        func calculateHowLongEachHRWasActiveForInDictionary () {
+            
+        }
+        
+        func organizeWorkoutHeartRateDictionaryValuesByHR () {
+            
         }
         
         
