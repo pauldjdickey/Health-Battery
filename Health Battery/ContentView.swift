@@ -466,16 +466,20 @@ extension DateFormatter {
                 var lastWorkoutDuration = 0.0
                 var lastWorkoutStart = Date()
                 var lastWorkoutEnd = Date()
+                var workoutUUID = UUID()
+
                 
                 for result in results {
                     lastWorkout = Int(result.workoutActivityType.rawValue)
                     lastWorkoutDuration = result.duration
                     lastWorkoutStart = result.startDate
                     lastWorkoutEnd = result.endDate
+                    workoutUUID = result.uuid
                     
                 }
                 print("Workout Key Value: \(lastWorkout)")
                 print("Workout duration in seconds: \(lastWorkoutDuration)")
+                print("UUID for this workout is: \(workoutUUID)")
                 print("Workout Start time: \(lastWorkoutStart)")
                 print("Workout End time: \(lastWorkoutEnd)")
                 
@@ -495,7 +499,6 @@ extension DateFormatter {
                 var heartRateItem = 0.0
                 var heartRateTimeStart: Date? = Date()
                 var heartRateTimeEnd: Date? = Date()
-                var heartRateTimeDifference = ""
                 
                 for result in results {
                     heartRateItem = result.quantity.doubleValue(for: .heartRateUnit)
@@ -519,7 +522,6 @@ extension DateFormatter {
                 print("End of HR Reading is \(heartRateTimeEnd)")
                 print("HR Array for Workout is: \(heartRateArrayForWorkout)")
                 print("HR Dictionary for Workout is: \(heartRateDictionaryForWorkout)")
-                print("HR TIme Difference Test is: \(heartRateTimeDifference)")
                 print("Amount of Array items = \(heartRateArrayForWorkout.count)")
                 print("Amount of Dictionary items = \(heartRateDictionaryForWorkout.count)")
             }
