@@ -409,6 +409,7 @@ extension DateFormatter {
 
     var heartRateArrayForWorkout = [Double]()
     var heartRateDictionaryForWorkout = [Date: Double]()
+    var sortedDictionary = OrderedDictionary<Date, Double>()
 
     //MARK: - HomeView Start
     struct HomeView: View {
@@ -435,6 +436,11 @@ extension DateFormatter {
                     organizeWorkoutHeartRateDictionaryByTimeToDetermineHowLongEachHRWasFor()
                 }, label: {
                     Text("Test Sort Dictionary by Key (Time)")
+                })
+                Button(action: {
+                    calculateHowLongEachHRWasActiveForInDictionaryAndPutIntoNewDictionary()
+                }, label: {
+                    Text("Test Subtract to find How Long Each HR Was")
                 })
             }
         }
@@ -520,14 +526,39 @@ extension DateFormatter {
         }
         
         func organizeWorkoutHeartRateDictionaryByTimeToDetermineHowLongEachHRWasFor () {
-            let sortedDictionary = heartRateDictionaryForWorkout.sorted{$0.key < $1.key} //Goes up
+            sortedDictionary = heartRateDictionaryForWorkout.sorted{$0.key < $1.key} //Goes up
             print(sortedDictionary)
+            print(sortedDictionary.count)
+            print(sortedDictionary.first?.value)
+            print(sortedDictionary.first?.key)
+            
+            //Above all works! Puts it in order by time so no we can calculate how long each was starting with the second index!
+            //Value = HR
+            //Key = Time
             
             
         }
         
-        func calculateHowLongEachHRWasActiveForInDictionary () {
+        func calculateHowLongEachHRWasActiveForInDictionaryAndPutIntoNewDictionary () {
+            //This function is to refactor the original dictionary into a new one with the existing Hr's and time spent in each HR (previous time - current time)
             
+            
+            
+            
+            
+            
+            var dollarRemovedArr = [60, 40, 10, 30, 100, 50, 90, 80, 20, 70]
+            var dollarRemovedArray = [50, 30, 0, 20, 90, 40, 80, 70, 10, 60]
+            var outputArray = [Int]()
+            
+            for var index in (0 ..< dollarRemovedArr.count) {
+                guard let  dollarRemovedArrayString =  dollarRemovedArray[index] as? String,let dollarRemovedArrayItem = Int(dollarRemovedArrayString),   dollarRemovedArr.count > index  else {
+                    continue
+                }
+                outputArray.append(dollarRemovedArrayItem - dollarRemovedArr[index])
+
+            }
+            print(outputArray)
         }
         
         func organizeWorkoutHeartRateDictionaryValuesByHR () {
