@@ -461,7 +461,7 @@ extension DateFormatter {
         //MARK: - Functions to Calculate
         
         func getLastWorkout () {
-            hkm.workouts(from: yesterdayStartDate, to: Date()) { (results) in
+            hkm.workouts(from: lastMidnight, to: Date()) { (results) in
                 var lastWorkout = 0
                 var lastWorkoutDuration = 0.0
                 var lastWorkoutStart = Date()
@@ -544,9 +544,66 @@ extension DateFormatter {
         func calculateHowLongEachHRWasActiveForInDictionaryAndPutIntoNewDictionary () {
             //This function is to refactor the original dictionary into a new one with the existing Hr's and time spent in each HR (previous time - current time)
             
+            var newDictionary = [Double: Double]()
+            var dictionaryTest = [Int: Double]()
+            var dictionaryArrayTest = Dictionary<Int, Array<Double>>()
+            var arrayTest = [Double]()
+            var trimpValue = 0.0
+            var sumTrimp = 0.0
             
+            for var index in (1 ..< sortedDictionary.count) {
+                print(index)
+                print(sortedDictionary[index].key) //time
+                print(sortedDictionary[index].value) //hr
+                //These are working...
+                let differenceInTime = sortedDictionary[index].key.timeIntervalSince(sortedDictionary[index - 1].key)
+
+                
+                if sortedDictionary[index].value <= 97 {
+                    trimpValue = 0.0
+                } else if sortedDictionary[index].value >= 98 && sortedDictionary[index].value <= 116 {
+                    trimpValue = 1.0
+                } else if sortedDictionary[index].value >= 117 && sortedDictionary[index].value <= 135 {
+                    trimpValue = 2.0
+                } else if sortedDictionary[index].value >= 136 && sortedDictionary[index].value <= 155 {
+                    trimpValue = 3.0
+                } else if sortedDictionary[index].value >= 156 && sortedDictionary[index].value <= 174 {
+                    trimpValue = 4.0
+                } else if sortedDictionary[index].value >= 175 {
+                    trimpValue = 5.0
+                }
+                
+                let finalCalculatedValue = trimpValue * differenceInTime
+                
+                arrayTest.append(finalCalculatedValue)
+                
+                //If HR is within different percentages, then multiply difference in time by the trimp value, then append to an array
+                //Maybe now we take the time difference, check the value based on max HR, and apply into an array that then is added together to get trimp?
+                //Each time it goes through an index, it determines the difference in time, looks at the HR value, then adds a value to an array of differenceInTime * TRIMP number based on HR Percentage
+            }
+            print("Array test with Trimp: \(arrayTest)")
             
+            sumTrimp = arrayTest.reduce(0, +)
             
+            print("Sum of trimp: \(sumTrimp)")
+            
+            var dict = Dictionary<String, Array<Int>>()
+            dict["key"] = [1, 2, 3]
+        
+            print("My dictionary test: \(dict)")
+            
+            dict["key", default: [Int]()].append(4)
+
+            print("My dictionary test after append: \(dict)")
+            
+            dict["key2", default: [Int]()].append(contentsOf: [5, 6, 7])
+            
+            print("My dictionary test after append 2: \(dict)")
+            print("Dictionary of Key2 only: \(dict["key2"]!)")
+
+            print(dictionaryTest)
+            print(newDictionary)
+            print(newDictionary.count)
             
             
             var dollarRemovedArr = [60, 40, 10, 30, 100, 50, 90, 80, 20, 70]
